@@ -183,7 +183,7 @@ comment on column sys_user.remark       is '备注';
 -- ----------------------------
 -- 初始化-用户信息表数据
 -- ----------------------------
-insert into sys_user values(1761100000000000001, 1761000000000000103, 'admin', 'iot', 'sys_user', 'iot@163.com', '15888888888', '1', null, '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.ulu33dHOiBE8ByOhJIrdAu2', '0', '0', '127.0.0.1', sysdate, 1761000000000000103, 1761100000000000001, sysdate, NULL, null, '管理员');
+insert into sys_user values(1761100000000000001, 1761000000000000103, 'admin', '云澈', 'sys_user', 'iot@163.com', '15888888888', '1', null, '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.ulu33dHOiBE8ByOhJIrdAu2', '0', '0', '127.0.0.1', sysdate, 1761000000000000103, 1761100000000000001, sysdate, NULL, null, '管理员');
 insert into sys_user values(1761100000000000003, 1761000000000000108, 'test', '本部门及以下 密码666666', 'sys_user', '', '', '0', null, '$2a$10$b8yUzN0C71sbz.PhNOCgJe.Tu1yWC3RNrTyjSQ8p1W0.aaUXUJ.Ne', '0', '0', '127.0.0.1', sysdate, 1761000000000000103, 1761100000000000001, sysdate, NULL, null, '');
 insert into sys_user values(1761100000000000004, 1761000000000000102, 'test1', '仅本人 密码666666', 'sys_user', '', '', '0', null, '$2a$10$b8yUzN0C71sbz.PhNOCgJe.Tu1yWC3RNrTyjSQ8p1W0.aaUXUJ.Ne', '0', '0', '127.0.0.1', sysdate, 1761000000000000103, 1761100000000000001, sysdate, NULL, null, '');
 

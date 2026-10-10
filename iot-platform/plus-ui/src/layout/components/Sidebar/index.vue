@@ -46,11 +46,14 @@ const activeMenu = computed(() => {
   return path;
 });
 
-const bgColor = computed(() => (sideTheme.value === 'theme-dark' ? '#111827' : '#ffffff'));
-const textColor = computed(() => (sideTheme.value === 'theme-dark' ? '#e5edf8' : '#1f2937'));
+const isDarkSide = computed(() => sideTheme.value === 'theme-dark');
+const shellBg = computed(() =>
+  isDarkSide.value ? '#111827' : 'linear-gradient(180deg, #f2f8ff 0%, #e2eeff 100%)'
+);
+const menuBg = computed(() => (isDarkSide.value ? '#111827' : '#eef5ff'));
+const textColor = computed(() => (isDarkSide.value ? '#e5edf8' : '#274060'));
 const menuStyle = computed(() => ({
-  backgroundColor: bgColor.value,
-  '--el-menu-bg-color': bgColor.value,
+  '--el-menu-bg-color': menuBg.value,
   '--el-menu-text-color': textColor.value,
   '--el-menu-active-color': theme.value
 }));
@@ -66,7 +69,7 @@ const menuStyle = computed(() => ({
   border: 1px solid var(--app-sidebar-border);
   border-radius: var(--app-radius-base);
   box-shadow: var(--app-shadow-sm);
-  background: v-bind(bgColor) !important;
+  background: v-bind(shellBg) !important;
   overflow: hidden;
 }
 

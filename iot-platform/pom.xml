@@ -22,7 +22,7 @@
     <packaging>pom</packaging>
 
     <name>iot-platform</name>
-    <description>IoT 物联网平台（Nacos + Spring Boot + Elasticsearch + PostgreSQL + Redis + Kafka/MQTT + 阿里云 + Vue3）</description>
+    <description>Snail-IoT（Nacos + Spring Boot + Elasticsearch + PostgreSQL + Redis + Kafka/MQTT + 阿里云 + Vue3）</description>
 
     <properties>
         <iot.version>1.0.0</iot.version>

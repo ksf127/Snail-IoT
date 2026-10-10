@@ -194,9 +194,9 @@ springdoc:
     enabled: true
   info:
     # 标题
-    title: '标题：IoT 物联网平台_接口文档'
+    title: '标题：Snail-IoT_接口文档'
     # 描述
-    description: '描述：IoT 物联网平台，涵盖设备管理、数据采集(MQTT/HTTPS)、设备与服务器监控、链路追踪、档案管理、报表与自动化部署等模块。'
+    description: '描述：Snail-IoT，涵盖设备管理、数据采集(MQTT/HTTPS)、设备与服务器监控、链路追踪、档案管理、报表与自动化部署等模块。'
     # 版本
     version: '版本号: ${project.version}'
     # 作者信息

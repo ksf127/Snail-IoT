@@ -21,7 +21,15 @@ export const useSettingsStore = defineStore('setting', () => {
   });
   const title = ref<string>(defaultSettings.title);
   const theme = ref<string>(storageSetting.value.theme);
-  const sideTheme = ref<string>(storageSetting.value.sideTheme);
+  // 品牌改版：旧的深色侧栏偏好一次性迁移为浅蓝主题
+  const initialSideTheme =
+    !storageSetting.value.sideTheme || storageSetting.value.sideTheme === 'theme-dark'
+      ? defaultSettings.sideTheme
+      : storageSetting.value.sideTheme;
+  if (storageSetting.value.sideTheme !== initialSideTheme) {
+    storageSetting.value.sideTheme = initialSideTheme;
+  }
+  const sideTheme = ref<string>(initialSideTheme);
   const showSettings = ref<boolean>(defaultSettings.showSettings);
   const tagsView = ref<boolean>(storageSetting.value.tagsView);
   const tagsViewPersist = ref<boolean>(storageSetting.value.tagsViewPersist);

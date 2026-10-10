@@ -2,7 +2,7 @@
   <div class="home">
     <section class="hero-panel">
       <div class="hero-copy">
-        <h1>iot-vue-plus 控制台</h1>
+        <h1>Snail-IoT 控制台</h1>
         <p>
           企业级后台管理系统 重写 iot-vue 所有功能 集成 Sa-Token、Mybatis-Plus、WarmFlow、SpringDoc、Hutool、OSS
           等组件

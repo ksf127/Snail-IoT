@@ -98,7 +98,7 @@ public class AuthController {
                 PushPayloadDTO.of(
                     PushTypeEnum.MESSAGE,
                     PushSourceEnum.BACKEND,
-                    DateUtils.getTodayHour(new Date()) + "好，欢迎登录 IoT 物联网平台",
+                    DateUtils.getTodayHour(new Date()) + "好，欢迎登录 Snail-IoT",
                     null
                 )
             );

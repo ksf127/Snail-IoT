@@ -1,4 +1,4 @@
-# Snail IoT Platform
+# Snail-IoT
 
 > 一站式物联网（IoT）平台工作区：设备接入与采集、产品/设备管理、统一认证、报表、自动化部署、聚合支付，以及配套的 AI 智能体与管理后台框架。
 
@@ -27,8 +27,7 @@ snail/
 │   ├── iot-platform-modules/   # 业务模块聚合（device/permission/collect/...）
 │   ├── iot-platform-admin/     # 启动入口（Spring Boot 主类 + 配置 + 安全）
 │   ├── plus-ui/                # 前端工程（Vue3 + TS + Element Plus + Vite）
-│   ├── script/                 # 部署编排与 SQL
-│   └── docs/                   # 阶段性交付记录
+│   └── script/                 # 部署编排与 SQL
 │
 └── thirdparty/                 # ② 第三方/上游源码归档（框架底座）
     ├── iot-vue-plus/           # IoVue-Plus 6.0.0 框架（提供父 POM 与通用能力）
@@ -87,6 +86,9 @@ docker compose -f script/docker/docker-compose.yml up -d --build
 | MinIO 控制台 | http://localhost:9001 | `ruoyi` / `ruoyi123` |
 | PostgreSQL | localhost:5432（库 `ruoyi`） | `postgres` / `postgres` |
 | Redis | localhost:6379 | 密码 `123456` |
+| Spring Boot Admin | http://localhost/admin（监控） | `admin` / `admin123` |
+| SnailJob | http://localhost/snail-job（调度） | `admin` / `admin123` |
+| SnailAI | http://localhost/snail-ai（AI 控制台） | `admin` / `admin123` |
 
 完整说明见 [账号与初始化说明](file:///d:/DevProjects/snail/docs/04-账号与初始化说明.md)。
 

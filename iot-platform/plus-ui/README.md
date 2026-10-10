@@ -1,6 +1,6 @@
 # plus-ui —— IoT 平台前端
 
-> Snail IoT 平台 Web 前端工程，基于 Vue 3 + TypeScript + Element Plus + Vite。
+> Snail-IoT Web 前端工程，基于 Vue 3 + TypeScript + Element Plus + Vite。
 
 本工程是 [iot-platform](file:///d:/DevProjects/snail/iot-platform) 的独立前端，配套后端产品服务使用；由框架底座 [iot-vue-plus](file:///d:/DevProjects/snail/thirdparty/iot-vue-plus) 派生，工程 `package.json` 的 `name` 为 `iot-vue-plus`。
 

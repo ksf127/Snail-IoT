@@ -1,9 +1,9 @@
 -- ============================================================================
--- IoT 物联网平台 - 聚合支付（阶段四）
+-- Snail-IoT - 聚合支付（阶段四）
 --
 -- 使用前提：
 --   1. 已导入 iot 基础脚本
---   2. 已导入 iot_platform.sql（含"物联网平台"一级目录 menu_id=1900000000000000001）
+--   2. 已导入 iot_platform.sql（含"Snail-IoT"一级目录 menu_id=1900000000000000001）
 --
 -- 执行方式：
 --   docker exec -i ruoyi-postgres psql -U postgres -d ruoyi < iot_pay.sql
@@ -159,7 +159,7 @@ COMMENT ON COLUMN iot_pay_channel_config.update_by   IS '更新者';
 COMMENT ON COLUMN iot_pay_channel_config.update_time IS '更新时间';
 
 -- ----------------------------------------------------------------------------
--- 4. 菜单与权限（挂在"物联网平台"一级目录 1900000000000000001 下）
+-- 4. 菜单与权限（挂在"Snail-IoT"一级目录 1900000000000000001 下）
 -- ----------------------------------------------------------------------------
 DELETE FROM sys_menu WHERE menu_id BETWEEN 1900000000000003001 AND 1900000000000003999;
 

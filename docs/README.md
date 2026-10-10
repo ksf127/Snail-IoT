@@ -1,6 +1,6 @@
 # 平台文档索引
 
-本目录是 Snail IoT 平台的长期维护文档，涵盖架构、部署、构建、账号与模块说明，并附可离线打开的独立 HTML 图表。
+本目录是 Snail-IoT 平台的长期维护文档，涵盖架构、部署、构建、账号与模块说明，并附可离线打开的独立 HTML 图表。
 
 > 工作区总览请见上级 [README.md](file:///d:/DevProjects/snail/README.md)。
 

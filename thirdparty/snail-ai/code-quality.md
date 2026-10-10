@@ -16,7 +16,7 @@
 | ~~`SkillService.java`~~ | ~~965~~ | ✅ 已拆分（2026-07-20）：门面 537 行 + `SkillPackageService`(207) + `SkillFileService`(398) + `SkillMarkdownParser`(114)，public 签名与事务边界不变 | 完成 |
 | ~~`AiModelConfigService.java`~~ | ~~663~~ | ✅ 已拆分（2026-07-20）：门面 367 行 + `ModelConfigValidator`(186) + `ModelCredentialCipher`(76) + `ModelConnectivityTester`(129，由 ModelTestService 更名归并) + `ModelConfigQueryService`(310) | 完成 |
 | ~~`RagDocumentService.java`~~ | ~~752~~ | ✅ 已拆分（2026-07-20）：门面 393 行 + `RagDocumentUploadService`(306) + `RagDocumentProcessOrchestrator`(195) + `RagDocumentAssembler`(125) | 完成 |
-| `UserService.java` | 586 | 见 task.md 安全项；同时口令加解密 / JWT / 用户 CRUD 混杂 | 抽 `PasswordEncoder` / `TokenService` 与用户 CRUD 解耦（**与 task.md A1 安全整改一并做**，避免两次动认证逻辑） |
+| `UserService.java` | 586 | 口令加解密 / JWT / 用户 CRUD 混杂，存在安全整改项 | 抽 `PasswordEncoder` / `TokenService` 与用户 CRUD 解耦（**与 JWT 签名密钥整改一并做**，避免两次动认证逻辑） |
 | `ClientInstanceManager.java` | 526 | 客户端实例状态管理 | 评估状态机抽取 |
 | ~~`AgentService.java`~~ | ~~590~~ | ✅ 已拆分（2026-07-20）：门面 342 行 + `AgentValidator`(88) + `AgentAssembler`(319)，调用方零改动 | 完成 |
 
@@ -46,7 +46,7 @@
 
 1. **中英文混用**：日志文案中英文混杂（如 `persistAll start` 与「知识库不存在」并存）。建议统一一种语言（推荐英文 key + 结构化字段，或全中文，团队二选一并写入规范）。
 2. **级别使用**：
-   - 异步持久化失败仅 `log.error` 无补偿（见 task.md #6），日志不能替代可靠性机制。
+   - 异步持久化失败仅 `log.error`、无队列 / 重试 / 补偿，日志不能替代可靠性机制。
    - `printStackTrace()` 1 处（`JsonUtil`）、`System.out` 2 处（`QueryDbTool`、`StartListener`）——应替换为 logger。
 3. **结构化与脱敏**：
    - 禁止打印敏感信息（token、密码哈希、API Key、密钥）。需专项排查 `log.*` 是否带敏感字段。
@@ -93,7 +93,7 @@
 - 初期设为 `warn`，统计基线后，**新增代码零新增告警**（增量门禁），存量逐步清。
 
 ### 阶段 3：CI 门禁 + 增量治理
-- 在 CI（结合 `task.md` #4 取消 `skipTests=true` 一起做）加：`spotless:check` + `checkstyle:check` 阻断；
+- 在 CI（结合取消 `skipTests=true`、补齐测试一起做）加：`spotless:check` + `checkstyle:check` 阻断；
 - 用「增量扫描」（只校验本次 PR 改动文件）实现**只进不退**，避免被存量问题卡死；
 - 配 Bugbot / 评审 checklist：超长类 / 长方法 / 魔法值 / 敏感日志四项硬性 review。
 

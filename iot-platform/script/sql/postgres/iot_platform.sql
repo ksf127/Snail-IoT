@@ -1,5 +1,5 @@
 -- ============================================================================
--- IoT 物联网平台 - PostgreSQL 业务表与菜单初始化脚本
+-- Snail-IoT - PostgreSQL 业务表与菜单初始化脚本
 --
 -- 使用前提：
 --   1. 已导入 iot-vue-plus 基础脚本：
@@ -121,8 +121,8 @@ DELETE FROM sys_menu WHERE menu_id BETWEEN 1900000000000000001 AND 1900000000000
 -- 4.1 一级目录
 INSERT INTO sys_menu (menu_id, menu_name, parent_id, order_num, path, component, query_param, is_frame, is_cache,
                       menu_type, visible, status, perms, icon, create_dept, create_by, create_time, update_by, update_time, remark)
-VALUES (1900000000000000001, '物联网平台', 0, 50, 'iot', NULL, '', 'N', 'Y',
-        'M', '0', '0', '', 'iot', 103, 1, now(), 1, now(), 'IoT 物联网平台目录');
+VALUES (1900000000000000001, 'Snail-IoT', 0, 50, 'iot', NULL, '', 'N', 'Y',
+        'M', '0', '0', '', 'iot', 103, 1, now(), 1, now(), 'Snail-IoT 目录');
 
 -- 4.2 二级菜单
 INSERT INTO sys_menu (menu_id, menu_name, parent_id, order_num, path, component, query_param, is_frame, is_cache,

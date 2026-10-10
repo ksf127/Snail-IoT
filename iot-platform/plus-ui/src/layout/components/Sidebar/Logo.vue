@@ -19,7 +19,7 @@
 
 <script setup lang="ts">
 import animateConfig from '@/animate';
-import logo from '@/assets/logo/logo.png';
+import logo from '@/assets/logo/logo.svg';
 import { NavTypeEnum } from '@/enums/NavTypeEnum';
 import { useSettingsStore } from '@/store/modules/settings';
 
@@ -35,9 +35,9 @@ const settingsStore = useSettingsStore();
 const sideTheme = computed(() => settingsStore.sideTheme);
 const isTopNav = computed(() => settingsStore.navType === NavTypeEnum.TOP);
 const isDarkSide = computed(() => !isTopNav.value && sideTheme.value === 'theme-dark');
-const logoSurface = computed(() => (isDarkSide.value ? 'rgba(255, 255, 255, 0.04)' : '#f8fafc'));
-const logoBorder = computed(() => (isDarkSide.value ? 'rgba(148, 163, 184, 0.12)' : '#e5e7eb'));
-const logoTextColor = computed(() => (isDarkSide.value ? '#f8fbff' : 'var(--app-text-title)'));
+const logoSurface = computed(() => (isDarkSide.value ? 'rgba(255, 255, 255, 0.04)' : 'rgba(255, 255, 255, 0.86)'));
+const logoBorder = computed(() => (isDarkSide.value ? 'rgba(148, 163, 184, 0.12)' : '#cfe2fb'));
+const logoTextColor = computed(() => (isDarkSide.value ? '#f8fbff' : '#1e3a5f'));
 </script>
 
 <style lang="scss" scoped>

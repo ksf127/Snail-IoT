@@ -1,4 +1,4 @@
-# iot-platform · IoT 物联网平台
+# Snail-IoT · iot-platform
 
 > 自研 IoT 业务产品：设备接入与采集、产品/设备管理、三线权限、统一认证、档案/报表/部署、聚合支付。
 > 基于 `org.dromara:iot-vue-plus:6.0.0` 框架底座构建。
@@ -41,10 +41,9 @@ iot-platform/
 │   └── iot-platform-pay/          # 聚合支付
 ├── iot-platform-admin/         # 启动入口（IotApplication）与配置
 ├── plus-ui/                    # 前端工程（Vue3 + Vite）
-├── script/
-│   ├── docker/docker-compose.yml  # 统一容器编排
-│   └── sql/postgres/              # 业务建表脚本
-└── docs/                       # 阶段性交付记录
+└── script/
+    ├── docker/docker-compose.yml  # 统一容器编排
+    └── sql/postgres/              # 业务建表脚本
 ```
 
 ---
@@ -150,3 +149,8 @@ docker compose -f script/docker/docker-compose.yml up -d --build
 | Nacos | http://localhost:8848/nacos | `nacos` / `123456` |
 | EMQX | http://localhost:18083 | `admin` / `public` |
 | MinIO | http://localhost:9001 | `ruoyi` / `ruoyi123` |
+| Spring Boot Admin | http://localhost/admin | `admin` / `admin123` |
+| SnailJob | http://localhost/snail-job | `admin` / `admin123` |
+| SnailAI | http://localhost/snail-ai | `admin` / `admin123` |
+
+> 上述控制台均由 `iot-web`（80）反向代理，也可直连端口（SBA 9090、SnailJob 8800、SnailAI 8900）。完整说明见 [04 账号与初始化说明](file:///d:/DevProjects/snail/docs/04-账号与初始化说明.md)。
