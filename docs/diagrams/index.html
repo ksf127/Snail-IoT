@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Snail IoT Platform · 图表索引</title>
+<style>
+  *{box-sizing:border-box;}
+  body{margin:0;padding:56px 16px;
+    background:radial-gradient(1000px 500px at 50% -10%, #1e293b 0%, #0b1220 60%, #070b14 100%);
+    font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;color:#e6edf7;}
+  .wrap{max-width:900px;margin:0 auto;}
+  h1{font-size:26px;margin:0 0 8px;}
+  p.sub{color:#8fa3bf;font-size:14px;margin:0 0 28px;}
+  a.card{display:block;text-decoration:none;color:inherit;background:rgba(17,28,52,.75);
+    border:1px solid rgba(80,120,180,.28);border-radius:14px;padding:18px 20px;margin-bottom:16px;
+    transition:.18s;box-shadow:0 12px 34px rgba(0,0,0,.35);}
+  a.card:hover{border-color:rgba(96,165,250,.7);transform:translateY(-2px);}
+  a.card h2{margin:0 0 6px;font-size:17px;color:#cfe0f7;}
+  a.card span{font-size:13px;color:#93a9c6;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Snail IoT Platform · 图表索引</h1>
+  <p class="sub">以下为可离线打开的独立 HTML 图表（内嵌 SVG，无外部依赖）。</p>
+
+  <a class="card" href="01-系统架构图.html">
+    <h2>01 · 系统架构图</h2>
+    <span>分层架构：接入层 → 应用层 → 业务模块层 → 通用能力层 → 框架底座 → 基础设施</span>
+  </a>
+  <a class="card" href="02-部署拓扑图.html">
+    <h2>02 · 部署拓扑图</h2>
+    <span>两层 Compose 编排、容器与端口、网络 devprojects_default、启动顺序</span>
+  </a>
+  <a class="card" href="03-数据采集流程.html">
+    <h2>03 · 数据采集流程</h2>
+    <span>MQTT 上行 → EMQX → Kafka → Elasticsearch / PostgreSQL 双写</span>
+  </a>
+</div>
+</body>
+</html>

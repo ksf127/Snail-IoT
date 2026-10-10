@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>iot-vue-plus</artifactId>
+        <groupId>org.dromara</groupId>
+        <version>${revision}</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>iot-common</artifactId>
+    <packaging>pom</packaging>
+
+    <description>
+        common 通用模块
+    </description>
+
+    <modules>
+        <module>iot-common-bom</module>
+        <module>iot-common-social</module>
+        <module>iot-common-core</module>
+        <module>iot-common-doc</module>
+        <module>iot-common-excel</module>
+        <module>iot-common-job</module>
+        <module>iot-common-log</module>
+        <module>iot-common-mail</module>
+        <module>iot-common-mybatis</module>
+        <module>iot-common-oss</module>
+        <module>iot-common-redis</module>
+        <module>iot-common-satoken</module>
+        <module>iot-common-security</module>
+        <module>iot-common-sms</module>
+        <module>iot-common-elasticsearch</module>
+        <module>iot-common-web</module>
+        <module>iot-common-translation</module>
+        <module>iot-common-sensitive</module>
+        <module>iot-common-json</module>
+        <module>iot-common-encrypt</module>
+        <module>iot-common-push</module>
+        <module>iot-common-liteflow</module>
+        <module>iot-common-mqtt</module>
+        <module>iot-common-ai</module>
+        <module>iot-common-mcp</module>
+    </modules>
+
+</project>

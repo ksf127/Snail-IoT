@@ -1,0 +1,58 @@
+# ============================================================
+# Snail IoT Platform —— 根工作区 .gitignore
+# 多工程并列：iot-platform（自研产品）+ thirdparty（框架与 AI 底座）
+# ============================================================
+
+# ---- 构建产物 ----
+**/target/
+**/dist/
+**/build/
+*.class
+*.jar
+*.war
+!.mvn/wrapper/maven-wrapper.jar
+*.flattened-pom.xml
+.flattened-pom.xml
+
+# ---- 前端 ----
+**/node_modules/
+**/.pnpm-store/
+**/.vite/
+**/unpackage/
+*.tsbuildinfo
+
+# ---- 本地构建沙箱（受限环境专用）----
+.mvn-home/
+
+# ---- 日志与运行时 ----
+**/logs/
+*.log
+*.pid
+*.tmp
+*.bak
+
+# ---- 环境变量（保留 *.example / *.example.*）----
+.env
+.env.local
+.env.*.local
+!**/.env.example
+
+# ---- IDE / 编辑器 ----
+.idea/
+.run/
+*.iml
+*.ipr
+*.iws
+.vscode/
+*.swp
+
+# ---- 操作系统 ----
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---- 数据卷与本地数据 ----
+**/data/mysql/
+**/data/postgres/
+**/data/redis/*
+!**/data/redis/README.md

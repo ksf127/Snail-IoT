@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <groupId>org.dromara</groupId>
+        <artifactId>iot-platform-modules</artifactId>
+        <version>1.0.0</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>iot-platform-collect</artifactId>
+
+    <description>
+        数据采集模块：MQTT / HTTPS 协议接入，Kafka 削峰投递，Elasticsearch 时序存储
+    </description>
+
+    <dependencies>
+        <!-- IoT 公共模块 -->
+        <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>iot-platform-common</artifactId>
+        </dependency>
+        <!-- 设备模型（采集需校验设备编码/密钥） -->
+        <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>iot-platform-device</artifactId>
+        </dependency>
+
+        <!-- 通用工具 -->
+        <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>iot-common-core</artifactId>
+        </dependency>
+
+        <!-- 接口模块 -->
+        <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>iot-common-doc</artifactId>
+        </dependency>
+
+        <!-- 数据库服务 -->
+        <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>iot-common-mybatis</artifactId>
+        </dependency>
+
+        <!-- web服务（HTTPS 协议上报入口） -->
+        <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>iot-common-web</artifactId>
+        </dependency>
+
+        <!-- 安全模块 -->
+        <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>iot-common-security</artifactId>
+        </dependency>
+
+        <!-- 日志记录 -->
+        <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>iot-common-log</artifactId>
+        </dependency>
+
+        <!-- 缓存服务（设备在线状态、上报幂等） -->
+        <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>iot-common-redis</artifactId>
+        </dependency>
+
+        <!-- JSON 序列化 -->
+        <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>iot-common-json</artifactId>
+        </dependency>
+
+        <!-- MQTT 客户端（设备接入） -->
+        <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>iot-common-mqtt</artifactId>
+        </dependency>
+
+        <!-- Elasticsearch（设备数据落库与检索） -->
+        <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>iot-common-elasticsearch</artifactId>
+        </dependency>
+
+        <!-- Kafka（采集数据削峰、异步投递）版本由 Spring Boot BOM 管理 -->
+        <dependency>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka</artifactId>
+        </dependency>
+    </dependencies>
+
+</project>

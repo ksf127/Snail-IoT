@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>iot-platform</artifactId>
+        <groupId>org.dromara</groupId>
+        <version>1.0.0</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+    <packaging>jar</packaging>
+    <artifactId>iot-platform-admin</artifactId>
+
+    <description>
+        IoT 平台服务入口（聚合iot系统能力与 IoT 业务模块）
+    </description>
+
+    <dependencies>
+
+        <!-- PostgreSQL 驱动 -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+        </dependency>
+
+        <!-- 接口文档 -->
+        <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>iot-common-doc</artifactId>
+        </dependency>
+
+        <!-- 授权认证（三方登录 / 单点登录基础能力） -->
+        <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>iot-common-social</artifactId>
+        </dependency>
+
+        <!-- 邮件服务 -->
+        <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>iot-common-mail</artifactId>
+        </dependency>
+
+        <!-- api模块 -->
+        <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>iot-api</artifactId>
+        </dependency>
+
+        <!-- 系统模块（权限管理 / 用户管理 / 日志记录） -->
+        <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>iot-system</artifactId>
+        </dependency>
+
+        <!-- 调度任务模块 -->
+        <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>iot-job</artifactId>
+        </dependency>
+
+        <!-- 代码生成模块（系统工具菜单） -->
+        <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>iot-gen</artifactId>
+        </dependency>
+
+        <!-- 工作流模块（工作流 / 我的任务菜单） -->
+        <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>iot-workflow</artifactId>
+        </dependency>
+
+        <!-- 演示模块（测试菜单） -->
+        <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>iot-demo</artifactId>
+        </dependency>
+
+        <!-- AI 模块（AI 会话菜单） -->
+        <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>iot-ai</artifactId>
+        </dependency>
+
+        <!-- Spring Boot Admin 客户端 -->
+        <dependency>
+            <groupId>de.codecentric</groupId>
+            <artifactId>spring-boot-admin-starter-client</artifactId>
+        </dependency>
+
+        <!-- ==================== IoT 业务模块 ==================== -->
+        <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>iot-platform-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>iot-platform-device</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>iot-platform-permission</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>iot-platform-collect</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>iot-platform-monitor</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>iot-platform-sso</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>iot-platform-archive</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>iot-platform-report</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>iot-platform-deploy</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>iot-platform-pay</artifactId>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <finalName>${project.artifactId}</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>${spring-boot.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>${maven-jar-plugin.version}</version>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <!--
+            Nacos 服务注册（默认不激活）。
+            激活：mvn -Pnacos clean package
+            版本由根 POM 的 nacos profile 导入的 spring-cloud-alibaba-dependencies 管理。
+        -->
+        <profile>
+            <id>nacos</id>
+            <dependencies>
+                <dependency>
+                    <groupId>com.alibaba.cloud</groupId>
+                    <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
+                </dependency>
+                <!--
+                    配置中心需额外引入（本地仓库尚未落盘时请先执行一次联网构建）：
+                    <dependency>
+                        <groupId>com.alibaba.cloud</groupId>
+                        <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
+                    </dependency>
+                -->
+            </dependencies>
+        </profile>
+    </profiles>
+
+</project>

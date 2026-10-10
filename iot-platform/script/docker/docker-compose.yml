@@ -1,0 +1,298 @@
+# ============================================================================
+# IoT 物联网平台 - Docker 统一编排
+#
+# 统一入口：前端容器 iot-web 暴露 80 端口，/prod-api 反向代理到 iot-server:8080
+#
+# 启动全部：   docker compose -f script/docker/docker-compose.yml up -d --build
+# 关闭：       docker compose -f script/docker/docker-compose.yml down
+#
+# 前置条件：
+#   1. 宿主机已执行 mvn -Pprod clean package，产出 iot-platform-admin/target/iot-platform-admin.jar
+#   2. 已存在本机 iot 基础设施容器（ruoyi-postgres / ruoyi-redis）并位于
+#      devprojects_default 网络，本编排通过外部网络直接复用，不重复启动。
+#   3. 现有 ruoyi 库已补齐 iot_product / iot_device / flow_* 等表（见 script/sql）
+# ============================================================================
+
+services:
+
+  # ---------------- Nacos（注册中心 / 配置中心） ----------------
+  nacos:
+    image: nacos/nacos-server:v2.4.3
+    container_name: iot-nacos
+    restart: unless-stopped
+    environment:
+      MODE: standalone
+      PREFER_HOST_MODE: hostname
+      JVM_XMS: 256m
+      JVM_XMX: 512m
+      NACOS_AUTH_ENABLE: "true"
+      # 鉴权令牌：需 base64 且解码后 ≥32 字节（生产环境请替换为自己的值）
+      NACOS_AUTH_TOKEN: aW90LXBsYXRmb3JtLW5hY29zLWF1dGgtdG9rZW4tMjAyNi1wbGVhc2UtY2hhbmdlLWluLXByb2Q=
+      NACOS_AUTH_IDENTITY_KEY: serverIdentity
+      NACOS_AUTH_IDENTITY_VALUE: security
+      TZ: Asia/Shanghai
+    ports:
+      - "8848:8848"   # 控制台 / OpenAPI
+      - "9848:9848"   # gRPC（客户端 2.x 必开）
+    volumes:
+      - iot-nacos-data:/home/nacos/data
+      - iot-nacos-logs:/home/nacos/logs
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8848/nacos/v1/console/health/readiness || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 15
+      # Nacos 冷启动较慢（Spring 上下文初始化约 90s，整体约 3 分钟），给足启动宽限期
+      start_period: 180s
+
+  # ---------------- Elasticsearch（设备时序检索） ----------------
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.3
+    container_name: iot-elasticsearch
+    restart: unless-stopped
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      xpack.security.enrollment.enabled: "false"
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+      TZ: Asia/Shanghai
+    ports:
+      - "9200:9200"
+    volumes:
+      - iot-es-data:/usr/share/elasticsearch/data
+    healthcheck:
+      # ES 镜像不一定带 curl，使用 bash 内建 /dev/tcp 做端口探测
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/9200' || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+
+  # ---------------- Kafka（KRaft 单节点，免 Zookeeper） ----------------
+  kafka:
+    image: apache/kafka:3.9.0
+    container_name: iot-kafka
+    restart: unless-stopped
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      # INTERNAL 供容器内互访，EXTERNAL 供宿主机调试
+      KAFKA_LISTENERS: INTERNAL://:9092,CONTROLLER://:9093,EXTERNAL://:9094
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://iot-kafka:9092,EXTERNAL://localhost:9094
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      CLUSTER_ID: iot-platform-kraft-cluster
+      TZ: Asia/Shanghai
+    ports:
+      - "9094:9094"   # 宿主机调试入口（应用内部走 iot-kafka:9092）
+    volumes:
+      - iot-kafka-data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      # KRaft 格式化/选主期间不宜计失败，给 30s 启动宽限期
+      start_period: 30s
+
+  # ---------------- EMQX（MQTT Broker，设备数据采集入口） ----------------
+  emqx:
+    image: emqx/emqx:5.8.4
+    container_name: iot-emqx
+    restart: unless-stopped
+    environment:
+      EMQX_DASHBOARD__DEFAULT_PASSWORD: public
+      EMQX_ALLOW_ANONYMOUS: "true"
+      TZ: Asia/Shanghai
+    ports:
+      - "1883:1883"     # MQTT
+      - "8083:8083"     # MQTT over WebSocket
+      - "18083:18083"   # Dashboard（默认 admin/public）
+    volumes:
+      - iot-emqx-data:/opt/emqx/data
+      - iot-emqx-log:/opt/emqx/log
+    healthcheck:
+      test: ["CMD-SHELL", "emqx ctl status || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+
+  # ---------------- MinIO（对象存储，S3 协议） ----------------
+  # 与 sys_oss_config 默认配置(config_key=minio)匹配：AK=ruoyi / SK=ruoyi123 / bucket=ruoyi
+  minio:
+    image: minio/minio:latest
+    container_name: iot-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ruoyi
+      MINIO_ROOT_PASSWORD: ruoyi123
+      TZ: Asia/Shanghai
+    ports:
+      - "9000:9000"   # S3 API（后端 endpoint 走 iot-minio:9000）
+      - "9001:9001"   # 控制台
+    volumes:
+      - iot-minio-data:/data
+
+  # 初始化 MinIO：创建 ruoyi 桶并设为公共读（upload 后浏览器可直接访问）
+  minio-init:
+    image: minio/mc:latest
+    container_name: iot-minio-init
+    depends_on:
+      - minio
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        until mc alias set iot http://minio:9000 ruoyi ruoyi123; do echo '等待 MinIO 就绪...'; sleep 2; done
+        mc mb --ignore-existing iot/ruoyi
+        mc anonymous set download iot/ruoyi
+        echo 'MinIO 初始化完成'
+    restart: "no"
+
+  # ---------------- 后端服务（Spring Boot） ----------------
+  iot-server:
+    build:
+      context: ../../iot-platform-admin
+    image: iot-platform/iot-platform-admin:1.0.0
+    container_name: iot-server
+    restart: unless-stopped
+    environment:
+      # 激活 prod 配置（application-prod.yml 中所有连接均由环境变量注入）
+      SPRING_PROFILES_ACTIVE: prod
+      # PostgreSQL：复用现有 ruoyi-postgres 容器
+      POSTGRES_HOST: ruoyi-postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: ruoyi
+      POSTGRES_USERNAME: postgres
+      POSTGRES_PASSWORD: postgres
+      # Redis：复用现有 ruoyi-redis 容器（已通过 requirepass 设置密码）
+      REDIS_HOST: ruoyi-redis
+      REDIS_PORT: "6379"
+      REDIS_DATABASE: "0"
+      REDIS_PASSWORD: "123456"
+      # Elasticsearch
+      ES_HOST: iot-elasticsearch
+      ES_PORT: "9200"
+      EASY_ES_ENABLE: "true"
+      # Kafka
+      KAFKA_SERVERS: iot-kafka:9092
+      # MQTT（EMQX）
+      MQTT_HOST: iot-emqx
+      MQTT_PORT: "1883"
+      MQTT_CLIENT_ENABLED: "true"
+      MQTT_CLIENT_ID: iot-platform-server
+      # 控制台 Server 地址（iot-server 作为客户端注册 / 连接三大控制台）
+      SBA_HOST: iot-sba
+      SBA_PORT: "9090"
+      SNAILJOB_HOST: iot-snailjob
+      SNAILAI_HOST: iot-snailai
+      TZ: Asia/Shanghai
+    ports:
+      - "8080:8080"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+  # ---------------- Spring Boot Admin Server（应用监控中心 /admin） ----------------
+  iot-sba:
+    build:
+      context: ../../../thirdparty/iot-vue-plus/iot-extend/iot-monitor-admin
+    image: iot-platform/monitor-admin:6.0.0
+    container_name: iot-sba
+    restart: unless-stopped
+    environment:
+      TZ: Asia/Shanghai
+    ports:
+      - "9090:9090"
+
+  # ---------------- SnailJob Server（任务调度中心 /snail-job） ----------------
+  iot-snailjob:
+    build:
+      context: ../../../thirdparty/iot-vue-plus/iot-extend/iot-snailjob-server
+    image: iot-platform/snailjob-server:2.0.2
+    container_name: iot-snailjob
+    restart: unless-stopped
+    environment:
+      TZ: Asia/Shanghai
+      # Dockerfile 为 shell 形式 ENTRYPOINT，JAVA_OPTS 会被 /bin/bash -c 词法拆分，故不可含 & 等 shell 元字符
+      # 使用无查询串的 PostgreSQL URL 覆盖内置 MySQL 数据源
+      JAVA_OPTS: >-
+        -Dspring.profiles.active=prod
+        -Dspring.datasource.driver-class-name=org.postgresql.Driver
+        -Dspring.datasource.url=jdbc:postgresql://ruoyi-postgres:5432/ruoyi
+        -Dspring.datasource.username=postgres
+        -Dspring.datasource.password=postgres
+        -Dspring.boot.admin.client.url=http://iot-sba:9090/admin
+    ports:
+      - "8800:8800"     # Dashboard / OpenAPI
+      - "17888:17888"   # 客户端通信端口
+    depends_on:
+      - iot-sba
+
+  # ---------------- SnailAI Server（AI 控制台 /snail-ai） ----------------
+  iot-snailai:
+    build:
+      context: ../../../thirdparty/iot-vue-plus/iot-extend/iot-snailai-server
+    image: iot-platform/snailai-server:1.1.1
+    container_name: iot-snailai
+    restart: unless-stopped
+    environment:
+      TZ: Asia/Shanghai
+      # 同上：JAVA_OPTS 不可含 & 等 shell 元字符
+      JAVA_OPTS: >-
+        -Dspring.profiles.active=prod
+        -Dspring.datasource.driver-class-name=org.postgresql.Driver
+        -Dspring.datasource.url=jdbc:postgresql://ruoyi-postgres:5432/ruoyi
+        -Dspring.datasource.username=postgres
+        -Dspring.datasource.password=postgres
+        -Dspring.boot.admin.client.url=http://iot-sba:9090/admin
+      # 本地未部署 docling（127.0.0.1:5100），关闭 RAG 文档解析避免无谓报错
+      SNAIL_AI_RAG_DOCLING_ENABLED: "false"
+    ports:
+      - "8900:8900"     # Admin UI / OpenAPI
+      - "18888:18888"   # gRPC
+    depends_on:
+      - iot-sba
+
+  # ---------------- 前端服务（官方 iot-plus-ui + Nginx 统一入口） ----------------
+  iot-web:
+    build:
+      context: ../../plus-ui
+    image: iot-platform/plus-ui:1.0.0
+    container_name: iot-web
+    restart: unless-stopped
+    environment:
+      TZ: Asia/Shanghai
+    ports:
+      - "80:80"
+    depends_on:
+      - iot-server
+      - iot-sba
+      - iot-snailjob
+      - iot-snailai
+
+# 复用 iot 基础设施所在的既有外部网络：
+# 该网络由 d:/DevProjects/snail/docker-compose.yml 创建（含 ruoyi-postgres / ruoyi-redis）。
+# 所有服务加入该网络后，可直接用服务名（iot-server / iot-kafka ...）互相解析。
+networks:
+  default:
+    external: true
+    name: devprojects_default
+
+volumes:
+  iot-nacos-data:
+  iot-nacos-logs:
+  iot-es-data:
+  iot-kafka-data:
+  iot-emqx-data:
+  iot-emqx-log:
+  iot-minio-data:

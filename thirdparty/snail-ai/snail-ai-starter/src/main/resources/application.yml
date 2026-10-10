@@ -1,0 +1,92 @@
+server:
+  port: 8900
+  servlet:
+    context-path: /snail-ai
+
+spring:
+  threads:
+    virtual:
+      enabled: true
+  servlet:
+    multipart:
+      enabled: true
+      # 单个文件的最大限制 (根据 RAG 需求建议设为 50MB - 100MB)
+      max-file-size: 50MB
+      # 单次请求的总文件大小限制 (如果支持多文件并行上传，调大此项)
+      max-request-size: 100MB
+  web:
+    resources:
+      static-locations: classpath:admin/
+  profiles:
+    active: dev
+  datasource:
+    name: snail_ai
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/snail_ai?allowMultiQueries=true
+    username: postgres
+    password: postgres
+    type: com.zaxxer.hikari.HikariDataSource
+    hikari:
+      connection-timeout: 30000
+      minimum-idle: 5
+      maximum-pool-size: 20
+      auto-commit: true
+      idle-timeout: 30000
+      pool-name: snail_ai
+      max-lifetime: 1800000
+      connection-test-query: SELECT 1
+snail-ai:
+  server:
+    grpc-port: 18888
+  skill:
+    upload-dir: ./upload/skills
+  crypto:
+    secret-key: ${SNAIL_AI_CRYPTO_KEY:0123456789abcdef0123456789abcdef}
+    iv: ${SNAIL_AI_CRYPTO_IV:fedcba9876543210fedcba9876543210}
+  resource:
+    storage-type: LOCAL
+    upload-dir: ./upload/resource
+    minio:
+      endpoint: http://localhost:9000
+      access-key: minioadmin
+      secret-key: minioadmin
+      bucket: snail-ai
+  rag:
+    docling:
+      enabled: false
+      url: http://127.0.0.1:5100
+      timeout-seconds: 300
+      concurrency: 3
+      health-timeout-millis: 3000
+      poll-interval-millis: 3000
+      status-timeout-millis: 10000
+      result-timeout-millis: 30000
+      max-image-count: 100
+      max-image-bytes: 10485760
+      paddle-ocr-enabled: false
+      paddle-ocr-url: http://127.0.0.1:8866/ocr
+      paddle-ocr-timeout-millis: 180000
+      paddle-ocr-batch-size: 5
+      vision-ocr-fallback-enabled: false
+  # 短期记忆配置
+  memory:
+    short-term:
+      # 存储类型选项: memory(内存) | db(数据库)
+      # - memory: 适用于单机部署，高性能，重启后数据丢失
+      # - db: 适用于分布式部署，数据持久化，性能较低
+      store-type: memory
+
+mybatis-plus:
+  typeAliasesPackage: com.aizuda.snail.ai.persistence
+  global-config:
+    db-config:
+      capital-mode: false
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+  configuration:
+    map-underscore-to-camel-case: true
+    cache-enabled: true
+
+# 日志配置
+logging:
+  config: classpath:logback-boot.xml

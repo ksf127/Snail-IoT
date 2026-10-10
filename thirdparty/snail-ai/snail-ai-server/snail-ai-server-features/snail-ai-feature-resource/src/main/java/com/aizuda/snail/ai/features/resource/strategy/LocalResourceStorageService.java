@@ -1,0 +1,99 @@
+package com.aizuda.snail.ai.features.resource.strategy;
+
+import com.aizuda.snail.ai.common.execption.SnailAiException;
+import com.aizuda.snail.ai.features.resource.config.ResourceConfig;
+import com.aizuda.snail.ai.features.resource.enums.ResourceStorageTypeEnum;
+import com.aizuda.snail.ai.features.resource.util.StorageKeyGenerator;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+
+/**
+ * 本地文件系统资源存储策略，将资源写入配置的上传根目录，并对存储键做路径穿越校验。
+ *
+ * @author opensnail
+ * @since 2026-06-14
+ */
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class LocalResourceStorageService implements ResourceStorageService {
+
+    private static final String FILES_ACCESS_PREFIX = "/files/";
+
+    private final ResourceConfig resourceConfig;
+
+    @Override
+    public String getType() {
+        return ResourceStorageTypeEnum.LOCAL.getValue();
+    }
+
+    @Override
+    public String store(String bizType, String fileName, InputStream inputStream) {
+        try {
+            String storageKey = StorageKeyGenerator.generate(bizType, fileName);
+            Path targetPath = resolveAbsolute(storageKey);
+            Files.createDirectories(targetPath.getParent());
+            Files.copy(inputStream, targetPath, StandardCopyOption.REPLACE_EXISTING);
+            log.info("Resource stored: {}", targetPath);
+            return storageKey;
+        } catch (IOException e) {
+            throw new SnailAiException("Failed to store resource: " + fileName, e);
+        }
+    }
+
+    @Override
+    public InputStream load(String storageKey) {
+        try {
+            Path path = resolveAbsolute(storageKey);
+            if (!Files.exists(path)) {
+                throw new SnailAiException("Resource not found: " + storageKey);
+            }
+            return Files.newInputStream(path);
+        } catch (IOException e) {
+            throw new SnailAiException("Failed to load resource: " + storageKey, e);
+        }
+    }
+
+    @Override
+    public void delete(String storageKey) {
+        try {
+            Files.deleteIfExists(resolveAbsolute(storageKey));
+            log.debug("本地资源删除完成 storageKey={}", storageKey);
+        } catch (IOException e) {
+            log.warn("Failed to delete resource: {}", storageKey, e);
+        }
+    }
+
+    @Override
+    public String getAccessUrl(Long resourceId, String storageKey) {
+        return FILES_ACCESS_PREFIX + storageKey;
+    }
+
+    @Override
+    public boolean exists(String storageKey) {
+        return Files.exists(resolveAbsolute(storageKey));
+    }
+
+    /**
+     * 将存储键解析为根目录下的绝对路径，并校验未越出根目录（防止路径穿越攻击）
+     *
+     * @param storageKey 资源存储键
+     * @return 规范化后的绝对路径
+     */
+    private Path resolveAbsolute(String storageKey) {
+        Path root = Paths.get(resourceConfig.getUploadDir()).toAbsolutePath().normalize();
+        Path resolved = root.resolve(storageKey).normalize();
+        if (!resolved.startsWith(root)) {
+            throw new SnailAiException("Invalid resource storage key: " + storageKey);
+        }
+        return resolved;
+    }
+}

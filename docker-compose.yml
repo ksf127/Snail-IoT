@@ -1,0 +1,23 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: ruoyi-postgres
+    environment:
+      POSTGRES_DB: ruoyi
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports: ["5432:5432"]
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init-vector.sql:/docker-entrypoint-initdb.d/init-vector.sql
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: ruoyi-redis
+    command: redis-server --requirepass 123456
+    ports: ["6379:6379"]
+    restart: unless-stopped
+
+volumes:
+  pgdata:

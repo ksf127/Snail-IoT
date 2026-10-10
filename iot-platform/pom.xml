@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!--
+        复用 iot-vue-plus 6.0.0 作为父 POM：
+        直接继承其 Spring Boot 4.1.0 / Sa-Token / MyBatis-Plus / Easy-ES / mica-mqtt /
+        iot-common-bom 等全部依赖与版本管理，避免版本漂移。
+    -->
+    <parent>
+        <groupId>org.dromara</groupId>
+        <artifactId>iot-vue-plus</artifactId>
+        <version>6.0.0</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>org.dromara</groupId>
+    <artifactId>iot-platform</artifactId>
+    <version>1.0.0</version>
+    <packaging>pom</packaging>
+
+    <name>iot-platform</name>
+    <description>IoT 物联网平台（Nacos + Spring Boot + Elasticsearch + PostgreSQL + Redis + Kafka/MQTT + 阿里云 + Vue3）</description>
+
+    <properties>
+        <iot.version>1.0.0</iot.version>
+        <!-- Spring Cloud / Spring Cloud Alibaba（Nacos 注册与配置中心） -->
+        <spring-cloud.version>2025.1.0</spring-cloud.version>
+        <spring-cloud-alibaba.version>2025.1.0.0</spring-cloud-alibaba.version>
+        <ijpay.version>2.9.13</ijpay.version>
+        <!-- 前端构建（由 plus-ui 子目录独立管理，此处仅占位说明） -->
+        <node.version>v22.14.0</node.version>
+        <pnpm.version>9.15.5</pnpm.version>
+    </properties>
+
+    <modules>
+        <module>iot-platform-common</module>
+        <module>iot-platform-modules</module>
+        <module>iot-platform-admin</module>
+    </modules>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- IoT 内部公共模块 -->
+            <dependency>
+                <groupId>org.dromara</groupId>
+                <artifactId>iot-platform-common</artifactId>
+                <version>${iot.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.dromara</groupId>
+                <artifactId>iot-platform-device</artifactId>
+                <version>${iot.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.dromara</groupId>
+                <artifactId>iot-platform-permission</artifactId>
+                <version>${iot.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.dromara</groupId>
+                <artifactId>iot-platform-collect</artifactId>
+                <version>${iot.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.dromara</groupId>
+                <artifactId>iot-platform-monitor</artifactId>
+                <version>${iot.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.dromara</groupId>
+                <artifactId>iot-platform-sso</artifactId>
+                <version>${iot.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.dromara</groupId>
+                <artifactId>iot-platform-archive</artifactId>
+                <version>${iot.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.dromara</groupId>
+                <artifactId>iot-platform-report</artifactId>
+                <version>${iot.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.dromara</groupId>
+                <artifactId>iot-platform-deploy</artifactId>
+                <version>${iot.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.dromara</groupId>
+                <artifactId>iot-platform-pay</artifactId>
+                <version>${iot.version}</version>
+            </dependency>
+
+            <!-- IJPay 聚合支付 SDK（iot 父 POM 未纳管，此处显式锁版本） -->
+            <dependency>
+                <groupId>com.github.javen205</groupId>
+                <artifactId>IJPay-Core</artifactId>
+                <version>${ijpay.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.javen205</groupId>
+                <artifactId>IJPay-WxPay</artifactId>
+                <version>${ijpay.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.javen205</groupId>
+                <artifactId>IJPay-AliPay</artifactId>
+                <version>${ijpay.version}</version>
+            </dependency>
+
+        </dependencies>
+    </dependencyManagement>
+
+    <profiles>
+        <!--
+            Nacos 相关依赖放在独立 profile，默认不激活。
+            原因：Spring Cloud Alibaba 2025.1.0.0 官方适配 Spring Boot 4.0.0，
+            而 iot-vue-plus 6.0.0 使用 Spring Boot 4.1.0，存在版本错位风险。
+            默认构建不引入 Nacos，保证工程可编译可启动；
+            需要接入 Nacos 时执行：mvn -Pnacos clean package
+        -->
+        <profile>
+            <id>nacos</id>
+            <dependencyManagement>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.springframework.cloud</groupId>
+                        <artifactId>spring-cloud-dependencies</artifactId>
+                        <version>${spring-cloud.version}</version>
+                        <type>pom</type>
+                        <scope>import</scope>
+                    </dependency>
+                    <dependency>
+                        <groupId>com.alibaba.cloud</groupId>
+                        <artifactId>spring-cloud-alibaba-dependencies</artifactId>
+                        <version>${spring-cloud-alibaba.version}</version>
+                        <type>pom</type>
+                        <scope>import</scope>
+                    </dependency>
+                </dependencies>
+            </dependencyManagement>
+        </profile>
+    </profiles>
+
+</project>

@@ -1,0 +1,188 @@
+# ============================================================
+# Snail AI 一体化部署（Windows / Linux 通用 · bridge 网络 · PostgreSQL）
+# ============================================================
+# 与项目自带 docker-compose.yml 的区别：
+#   1. 自带版用 network_mode: "host" —— 仅 Linux 有效，Windows Docker Desktop 不支持；
+#      本文件改用 bridge 网络 + 端口映射，Windows / macOS / Linux 均可运行。
+#   2. 自带版默认 MySQL；本文件按你当前实际环境改为 PostgreSQL(pgvector)。
+#   3. 本文件把 Ollama 一并容器化，实现「模型 + 数据 + 后端」一键拉起。
+#
+# ★ 构建前提（重要）：后端镜像是「先打 jar 再 COPY」，不是多阶段构建。
+#   必须先在项目根目录执行：
+#       mvn clean package -DskipTests
+#   生成 snail-ai-starter/target/snail-ai-server-exec.jar
+#      与 snail-ai-agent-example/target/snail-ai-agent-example.jar 后才能 build。
+#
+# ★ 数据库两种用法（二选一）：
+#   (A) 复用现有 ruoyi-postgres / ruoyi-redis（推荐，数据已在）：
+#       直接 `docker compose -f docker-compose.full.yml up -d`
+#       后端通过 host.docker.internal 访问宿主机 5432/6379，无需改动现有容器。
+#   (B) 全新一体化（连 compose 自带的 postgres/redis，空库需重新初始化）：
+#       `docker compose -f docker-compose.full.yml --profile fresh-db up -d`
+#       并把下方 SNAIL_AI_DATASOURCE_URL 的 host.docker.internal 改成 postgres
+# ============================================================
+
+name: snail-ai
+
+networks:
+  snail-net:
+    driver: bridge
+
+volumes:
+  # ollama-data:   # 已改用宿主机模型目录挂载（见 ollama 服务）；如需独立 volume 再取消注释
+  snail-pg-data:
+
+services:
+
+  # ----------------------------------------------------------
+  # 本地大模型推理引擎（容器化）
+  # Windows 若想继续用宿主机 Ollama：删除本服务，
+  # 并把数据库 sai_model_config.api_endpoint 改为 http://host.docker.internal:11434/v1
+  # ----------------------------------------------------------
+  ollama:
+    # 版本说明：0.5.7 太旧，拉 qwen3:8b 会报 "requires a newer version"。
+    # 生产建议钉具体稳定版（如 0.6.x），开发期用 latest 最省心。
+    image: ollama/ollama:latest
+    container_name: snail-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      # 复用宿主机已下载的模型目录（4.4GB），避免重复下载与重复占盘。
+      # ★ 启用容器后必须停掉宿主机 Ollama，防止两个进程同时写该目录。
+      - ${USERPROFILE}/.ollama:/root/.ollama
+    environment:
+      TZ: Asia/Shanghai
+      # ---- 内存优化（16GB 内存机器的关键配置）----
+      OLLAMA_KEEP_ALIVE: 5m          # 闲置 5 分钟自动卸载模型，释放内存
+      OLLAMA_MAX_LOADED_MODELS: 1    # 最多同时驻留 1 个模型（chat/embedding 轮换加载）
+      OLLAMA_NUM_PARALLEL: 1         # 单路推理不并发，省内存/显存
+      # OLLAMA_MAX_VRAM: 6GiB        # 有 N 卡且显存紧张时再开启
+    deploy:
+      resources:
+        limits:
+          memory: 6G                 # 容器内存硬上限，防止吃光宿主机
+    networks:
+      - snail-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "ollama list >/dev/null 2>&1 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    # Linux + NVIDIA GPU 时取消注释（需先装 nvidia-container-toolkit）：
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+  # ----------------------------------------------------------
+  # 关系型数据库 PostgreSQL + pgvector（可选：仅 fresh-db 模式启用）
+  # ----------------------------------------------------------
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: snail-postgres
+    profiles: ["fresh-db"]
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: snail_ai
+      TZ: Asia/Shanghai
+    ports:
+      - "5432:5432"
+    volumes:
+      - snail-pg-data:/var/lib/postgresql/data
+    networks:
+      - snail-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d snail_ai"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # ----------------------------------------------------------
+  # 缓存 Redis（可选：仅 fresh-db 模式启用）
+  # ----------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: snail-redis
+    profiles: ["fresh-db"]
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    networks:
+      - snail-net
+    restart: unless-stopped
+
+  # ----------------------------------------------------------
+  # Snail AI Server（OpenAPI / Admin / gRPC 调度）
+  # 端口：8900 HTTP，18888 gRPC（供 agent 注册）
+  # ----------------------------------------------------------
+  snail-ai-server:
+    build:
+      context: ../../snail-ai-starter
+      dockerfile: Dockerfile
+    image: snail-ai-server:latest
+    container_name: snail-ai-server
+    environment:
+      TZ: Asia/Shanghai
+      JAVA_OPTS: >-
+        -Xms256m -Xmx1g -XX:+UseZGC -XX:+ZGenerational
+        -Dspring.datasource.driver-class-name=org.postgresql.Driver
+        -Dspring.datasource.url=${SNAIL_AI_DATASOURCE_URL:-jdbc:postgresql://host.docker.internal:5432/snail_ai?allowMultiQueries=true}
+        -Dspring.datasource.username=${POSTGRES_USER:-postgres}
+        -Dspring.datasource.password=${POSTGRES_PASSWORD:-postgres}
+        -Dsnail-ai.crypto.secret-key=${SNAIL_AI_CRYPTO_KEY:-0123456789abcdef0123456789abcdef}
+        -Dsnail-ai.crypto.iv=${SNAIL_AI_CRYPTO_IV:-fedcba9876543210fedcba9876543210}
+    ports:
+      - "8900:8900"
+      - "18888:18888"
+    volumes:
+      - ./snail-ai-server/log:/snailai/server/data/log
+      - ./snail-ai-server/upload:/snailai/server/upload
+    networks:
+      - snail-net
+    restart: unless-stopped
+    depends_on:
+      ollama:
+        condition: service_started
+    # fresh-db 模式下让 server 等 postgres 就绪：
+    # depends_on:
+    #   postgres:
+    #     condition: service_healthy
+
+  # ----------------------------------------------------------
+  # Snail AI Agent（执行 LLM 调用，gRPC 连接 server）
+  # 端口：18889 gRPC
+  # ★ token 必须与 Admin 后台「客户端节点 / 应用」里的凭证一致
+  # ----------------------------------------------------------
+  snail-ai-agent:
+    build:
+      context: ../../snail-ai-agent-example
+      dockerfile: Dockerfile
+    image: snail-ai-agent-example:latest
+    container_name: snail-ai-agent
+    environment:
+      TZ: Asia/Shanghai
+      JAVA_OPTS: >-
+        -Xms128m -Xmx512m -XX:+UseZGC -XX:+ZGenerational
+        -Dsnail-ai.server.host=snail-ai-server
+        -Dsnail-ai.server.port=18888
+        -Dsnail-ai.app-id=${SNAIL_AI_APP_ID:-snail-ai-agent-demo}
+        -Dsnail-ai.token=${SNAIL_AI_AGENT_TOKEN:-SAI_ad27bd9de937499c8387336c8deb4cf0}
+        -Dsnail-ai.port=18889
+        -Dsnail-ai.host=0.0.0.0
+    ports:
+      - "18889:18889"
+    volumes:
+      - ./snail-ai-agent/log:/snailai/agent/data/log
+    networks:
+      - snail-net
+    restart: unless-stopped
+    depends_on:
+      - snail-ai-server
+      - ollama

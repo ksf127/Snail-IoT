@@ -1,0 +1,49 @@
+// IoT 业务页面（自 iot-ui 迁移）使用的布局工具类
+
+.search-bar {
+  padding: 16px 16px 0;
+  margin-bottom: 12px;
+  background: var(--app-surface-bg, #fff);
+  border-radius: 4px;
+}
+
+.table-card {
+  padding: 16px;
+  background: var(--app-surface-bg, #fff);
+  border-radius: 4px;
+}
+
+.table-toolbar {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.pagination-wrap {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+@media (max-width: 768px) {
+  .search-bar .el-form-item,
+  .search-bar .el-input,
+  .search-bar .el-select,
+  .search-bar .el-date-editor {
+    width: 100%;
+  }
+
+  .search-bar .el-form-item__content {
+    flex-wrap: wrap;
+  }
+
+  .table-toolbar {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .pagination-wrap {
+    justify-content: center;
+    overflow-x: auto;
+  }
+}

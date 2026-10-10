@@ -1,0 +1,46 @@
+package com.aizuda.snail.ai.model.common;
+
+import java.util.List;
+
+/**
+ * 模型适配默认值与解析工具，提供默认适配器键、模型类型常量及按模型类型解析适配器键。
+ *
+ * @author opensnail
+ * @since 2026-06-14
+ */
+public final class ModelAdapterDefaults {
+
+    public static final String CHAT_MODEL_TYPE = "CHAT";
+    public static final String EMBEDDING_MODEL_TYPE = "EMBEDDING";
+    public static final String RERANKER_MODEL_TYPE = "RERANKER";
+
+    public static final String OPENAI_COMPATIBLE_ADAPTER = "openai-compatible";
+    public static final String QWEN_RERANK = "qwen-rerank";
+
+    private static final ModelAdapterDescriptor CHAT_OPENAI_COMPATIBLE = ModelAdapterDescriptor.of(
+            OPENAI_COMPATIBLE_ADAPTER, "OpenAI Compatible", ModelCapability.CHAT);
+    private static final ModelAdapterDescriptor EMBEDDING_OPENAI_COMPATIBLE = ModelAdapterDescriptor.of(
+            OPENAI_COMPATIBLE_ADAPTER, "OpenAI Compatible", ModelCapability.EMBEDDING);
+    private static final ModelAdapterDescriptor RERANK = ModelAdapterDescriptor.of(
+            QWEN_RERANK, "QWEN RERANK", ModelCapability.RERANKER);
+
+    private ModelAdapterDefaults() {
+    }
+
+    public static String resolve(String adapterKey, String modelType) {
+        if (adapterKey != null && !adapterKey.isBlank()) {
+            return adapterKey.trim();
+        }
+        if (CHAT_MODEL_TYPE.equalsIgnoreCase(modelType) || EMBEDDING_MODEL_TYPE.equalsIgnoreCase(modelType)) {
+            return OPENAI_COMPATIBLE_ADAPTER;
+        }
+        if (RERANKER_MODEL_TYPE.equalsIgnoreCase(modelType)) {
+            return QWEN_RERANK;
+        }
+        return OPENAI_COMPATIBLE_ADAPTER;
+    }
+
+    public static List<ModelAdapterDescriptor> defaultDescriptors() {
+        return List.of(CHAT_OPENAI_COMPATIBLE, EMBEDDING_OPENAI_COMPATIBLE, RERANK);
+    }
+}

@@ -1,0 +1,161 @@
+services:
+  ### 数据库
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: postgres
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: snail_ai
+    ports:
+      - "5432:5432"
+    volumes:
+      - ${POSTGRES_HOME:-./postgres}/data:/var/lib/postgresql/data
+    network_mode: "host"
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 100M
+
+  mysql:
+    image: mysql:8.0.42
+    container_name: mysql
+    environment:
+      TZ: Asia/Shanghai
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: snail_ai
+    ports:
+      - "3306:3306"
+    volumes:
+      - ${MYSQL_HOME:-./mysql}/data:/var/lib/mysql
+      - ${MYSQL_HOME:-./mysql}/conf:/etc/mysql/conf.d
+    command:
+      --default-authentication-plugin=mysql_native_password
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_general_ci
+      --explicit_defaults_for_timestamp=true
+      --lower_case_table_names=1
+      --performance-schema=off
+    privileged: true
+    network_mode: "host"
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 200M
+
+  ### 数据库管理（Web 端）
+  cloudbeaver:
+    image: dbeaver/cloudbeaver:latest
+    container_name: cloudbeaver
+    environment:
+      TZ: Asia/Shanghai
+    ports:
+      - "8978:8978"
+    volumes:
+      - ${CLOUDBEAVER_HOME:-./cloudbeaver}/workspace:/opt/cloudbeaver/workspace
+    network_mode: "host"
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  ### 反向代理
+  nginx:
+    image: nginx:1.23.4
+    container_name: nginx
+    environment:
+      TZ: Asia/Shanghai
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ${NGINX_HOME:-./nginx}/cert:/etc/nginx/cert
+      - ${NGINX_HOME:-./nginx}/conf/nginx.conf:/etc/nginx/nginx.conf
+      - ${NGINX_HOME:-./nginx}/conf/vhost:/etc/nginx/vhost
+      - ${NGINX_HOME:-./nginx}/html:/usr/share/nginx/html
+      - ${NGINX_HOME:-./nginx}/log:/var/log/nginx
+    privileged: true
+    network_mode: "host"
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+
+  ### 模型部署（演示环境可选）
+  ollama:
+    image: ollama/ollama:0.5.7
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ${OLLAMA_HOME:-./ollama}:/root/.ollama
+    network_mode: "host"
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  ### Snail AI 应用服务
+  snail-ai-server:
+    build:
+      context: ${SNAIL_AI_STARTER_PATH}
+      dockerfile: Dockerfile
+    image: snail-ai-server:latest
+    container_name: snail-ai-server
+    environment:
+      TZ: Asia/Shanghai
+      JAVA_OPTS: >-
+        -Xms64m -Xmx256m -XX:+UseZGC -XX:+ZGenerational
+        -Dspring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+        -Dspring.datasource.url=jdbc:mysql://localhost:3306/snail_ai?useSSL=false&allowPublicKeyRetrieval=true&characterEncoding=utf8&useUnicode=true
+        -Dspring.datasource.username=root
+        -Dspring.datasource.password=123456
+        -Dsnail-ai.crypto.secret-key=0123456789abcdef0123456789abcdef
+        -Dsnail-ai.crypto.iv=fedcba9876543210fedcba9876543210
+    ports:
+      - "8900:8900"
+      - "18888:18888"
+    volumes:
+      - ${SNAIL_AI_SERVER_HOME:-./snail-ai-server}/log:/snailai/server/data/log
+      - ${SNAIL_AI_SERVER_HOME:-./snail-ai-server}/upload:/snailai/server/upload
+    network_mode: "host"
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 350M
+
+  snail-ai-agent-example:
+    build:
+      context: ${SNAIL_AI_AGENT_EXAMPLE_PATH}
+      dockerfile: Dockerfile
+    image: snail-ai-agent-example:latest
+    container_name: snail-ai-agent-example
+    environment:
+      TZ: Asia/Shanghai
+      JAVA_OPTS: >-
+        -Xms32m -Xmx128m -XX:+UseZGC -XX:+ZGenerational
+        -Dsnail-ai.server.host=127.0.0.1
+        -Dsnail-ai.server.port=18888
+        -Dsnail-ai.app-id=snail-ai-agent-demo
+        -Dsnail-ai.token=SAI_ad27bd9de937499c8387336c8deb4cf0
+        -Dsnail-ai.port=18889
+        -Dsnail-ai.host=127.0.0.1
+    ports:
+      - "8081:8081"
+      - "18889:18889"
+    volumes:
+      - ${SNAIL_AI_AGENT_HOME:-./snail-ai-agent}/log:/snailai/agent/data/log
+    network_mode: "host"
+    restart: unless-stopped
+    depends_on:
+      - snail-ai-server
+    deploy:
+      resources:
+        limits:
+          memory: 200M

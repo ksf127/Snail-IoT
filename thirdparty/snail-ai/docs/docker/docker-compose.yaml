@@ -1,0 +1,224 @@
+
+name: snail-ai
+
+volumes:
+    snail-ai-upload: { }
+    snail-ai-log: { }
+    elasticsearch: { }
+    etcd: { }
+    minio: { }
+    milvus: { }
+    mysql: { }
+    pgvector: { }
+    docling-models: { }
+    paddle-ocr-cache: { }
+    paddle-paddlex-cache: { }
+
+services:
+    snail-ai:
+        image: opensnail/snail-ai:latest
+        restart: unless-stopped
+        environment:
+            TZ: Asia/Shanghai
+            SPRING_PROFILES_ACTIVE: dev
+            SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.cj.jdbc.Driver
+            SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-snail_ai}?useSSL=false&allowPublicKeyRetrieval=true&characterEncoding=utf8&useUnicode=true
+            SPRING_DATASOURCE_USERNAME: root
+            SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+            SNAIL_AI_SKILL_UPLOAD_DIR: /snailai/server/upload/skills
+            SNAIL_AI_RAG_DOCLING_URL: ${SNAIL_AI_RAG_DOCLING_URL:-http://docling-api:5100}
+            SNAIL_AI_RAG_DOCLING_PADDLE_OCR_URL: ${SNAIL_AI_RAG_DOCLING_PADDLE_OCR_URL:-http://paddle-ocr-api:8866/ocr}
+        ports:
+            - "8900:8900"
+            - "18888:18888"
+        volumes:
+            - snail-ai-upload:/snailai/server/upload
+            - snail-ai-log:/snailai/server/data/log
+        depends_on:
+            mysql:
+                condition: service_healthy
+
+    docling-api:
+        build:
+            context: ../../tools/docling-api/server
+            dockerfile: Dockerfile
+            args:
+                DEBIAN_MIRROR: ${DEBIAN_MIRROR:-https://mirrors.aliyun.com}
+                PIP_INDEX_URL: ${PIP_INDEX_URL:-https://mirrors.aliyun.com/pypi/simple/}
+                PYTORCH_CPU_WHEEL_BASE: ${PYTORCH_CPU_WHEEL_BASE:-https://mirrors.aliyun.com/pytorch-wheels/cpu}
+        image: opensnail/docling-api:latest
+        restart: unless-stopped
+        environment:
+            TZ: Asia/Shanghai
+            DOCLING_HOST: 0.0.0.0
+            DOCLING_PORT: 5100
+            DOCLING_TASK_TTL: ${DOCLING_TASK_TTL:-3600}
+            DOCLING_MAX_CONCURRENCY: ${DOCLING_MAX_CONCURRENCY:-3}
+            DOCLING_MODEL_DIR: /models/docling
+            DOCLING_DOWNLOAD_MODELS: ${DOCLING_DOWNLOAD_MODELS:-true}
+            DOCLING_API_KEY: ${DOCLING_API_KEY:-}
+            HF_ENDPOINT: ${DOCLING_HF_ENDPOINT:-https://hf-mirror.com}
+        ports:
+            - "${DOCLING_PORT:-5100}:5100"
+        volumes:
+            - docling-models:/models/docling
+
+    paddle-ocr-api:
+        build:
+            context: ../../tools/paddle-ocr-api/server
+            dockerfile: Dockerfile
+            args:
+                DEBIAN_MIRROR: ${DEBIAN_MIRROR:-https://mirrors.aliyun.com}
+                PIP_INDEX_URL: ${PIP_INDEX_URL:-https://mirrors.aliyun.com/pypi/simple/}
+                PADDLEPADDLE_VERSION: ${PADDLEPADDLE_VERSION:-3.2.2}
+                PADDLEPADDLE_PACKAGE: ${PADDLEPADDLE_PACKAGE:-paddlepaddle}
+                PADDLEPADDLE_INDEX: ${PADDLEPADDLE_INDEX:-https://www.paddlepaddle.org.cn/packages/stable/cpu/}
+        image: opensnail/paddle-ocr-api:latest
+        restart: unless-stopped
+        environment:
+            TZ: Asia/Shanghai
+            PADDLE_OCR_HOST: 0.0.0.0
+            PADDLE_OCR_PORT: 8866
+            PADDLE_OCR_LANG: ${PADDLE_OCR_LANG:-ch}
+            PADDLE_OCR_DEVICE: ${PADDLE_OCR_DEVICE:-cpu}
+            PADDLE_OCR_CPU_THREADS: ${PADDLE_OCR_CPU_THREADS:-1}
+            PADDLE_OCR_USE_TEXTLINE_ORIENTATION: ${PADDLE_OCR_USE_TEXTLINE_ORIENTATION:-true}
+            PADDLE_OCR_TEXT_RECOGNITION_BATCH_SIZE: ${PADDLE_OCR_TEXT_RECOGNITION_BATCH_SIZE:-}
+            PADDLE_OCR_TEXTLINE_ORIENTATION_BATCH_SIZE: ${PADDLE_OCR_TEXTLINE_ORIENTATION_BATCH_SIZE:-}
+            PADDLE_OCR_API_KEY: ${PADDLE_OCR_API_KEY:-}
+            PADDLE_OCR_MAX_IMAGE_MB: ${PADDLE_OCR_MAX_IMAGE_MB:-20}
+            PADDLE_OCR_MAX_CONCURRENCY: ${PADDLE_OCR_MAX_CONCURRENCY:-1}
+            PADDLE_OCR_QUEUE_TIMEOUT_SECONDS: ${PADDLE_OCR_QUEUE_TIMEOUT_SECONDS:-300}
+            PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK: ${PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK:-True}
+            FLAGS_use_mkldnn: ${PADDLE_FLAGS_USE_MKLDNN:-0}
+            OMP_NUM_THREADS: ${PADDLE_OMP_NUM_THREADS:-1}
+            OPENBLAS_NUM_THREADS: ${PADDLE_OPENBLAS_NUM_THREADS:-1}
+            MKL_NUM_THREADS: ${PADDLE_MKL_NUM_THREADS:-1}
+        ports:
+            - "${PADDLE_OCR_PORT:-8866}:8866"
+        volumes:
+            - paddle-ocr-cache:/root/.paddleocr
+            - paddle-paddlex-cache:/root/.paddlex
+
+    elasticsearch:
+        build:
+            context: ./elasticsearch
+            dockerfile: Dockerfile
+        image: elasticsearch9:9.4.1
+        restart: unless-stopped
+        environment:
+            TZ: Asia/Shanghai
+            discovery.type: single-node
+            ES_JAVA_OPTS: -Xmx1g -Xms1g
+            ELASTIC_PASSWORD: SnailAi
+        ports:
+            - "9200:9200"
+            - "9300:9300"
+        volumes:
+            - elasticsearch:/usr/share/elasticsearch/
+        # 允许容器内进程无限制地锁定物理内存，防止内存被交换到Swap
+        ulimits:
+            memlock:
+                soft: -1
+                hard: -1
+
+    etcd:
+        image: quay.io/coreos/etcd:v3.5.25
+        restart: unless-stopped
+        environment:
+            TZ: Asia/Shanghai
+            ETCD_AUTO_COMPACTION_MODE: revision
+            ETCD_AUTO_COMPACTION_RETENTION: 1000
+            ETCD_QUOTA_BACKEND_BYTES: 4294967296
+            ETCD_SNAPSHOT_COUNT: 50000
+        volumes:
+            - etcd:/etcd
+        command: etcd -advertise-client-urls=http://etcd:2379 -listen-client-urls http://0.0.0.0:2379 --data-dir /etcd
+        healthcheck:
+            test: [ "CMD", "etcdctl", "endpoint", "health" ]
+            interval: 30s
+            timeout: 20s
+            retries: 3
+
+    minio:
+        image: minio/minio:RELEASE.2024-12-18T13-15-44Z
+        environment:
+            TZ: Asia/Shanghai
+            MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+            MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+        ports:
+            - "9001:9001"
+            - "9000:9000"
+        volumes:
+            - minio:/minio_data
+        command: minio server /minio_data --console-address ":9001"
+        healthcheck:
+            test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
+            interval: 30s
+            timeout: 20s
+            retries: 3
+
+    milvus:
+        image: milvusdb/milvus:v3.0-beta
+        command: [ "milvus", "run", "standalone" ]
+        security_opt:
+            - seccomp:unconfined
+        environment:
+            TZ: Asia/Shanghai
+            ETCD_ENDPOINTS: etcd:2379
+            MINIO_ADDRESS: minio:9000
+            MQ_TYPE: woodpecker
+        ports:
+            - "19530:19530"
+            - "9091:9091"
+        volumes:
+            - milvus:/var/lib/milvus
+        healthcheck:
+            test: [ "CMD", "curl", "-f", "http://localhost:9091/healthz" ]
+            interval: 30s
+            start_period: 90s
+            timeout: 20s
+            retries: 3
+        depends_on:
+            - etcd
+            - minio
+
+    mysql:
+        image: mysql:8.4
+        restart: unless-stopped
+        environment:
+            TZ: Asia/Shanghai
+            MYSQL_DATABASE: ${MYSQL_DATABASE:-snail_ai}
+            MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+        command:
+            - --character-set-server=utf8mb4
+            - --collation-server=utf8mb4_unicode_ci
+        ports:
+            - "13306:3306"
+        volumes:
+            - mysql:/var/lib/mysql
+            - ../sql/snail_ai_schema.sql:/docker-entrypoint-initdb.d/01-snail-ai-schema.sql:ro
+        healthcheck:
+            test: [ "CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$${MYSQL_ROOT_PASSWORD} --silent" ]
+            interval: 10s
+            timeout: 5s
+            retries: 10
+
+    pgvector:
+        image: pgvector/pgvector:pg16
+        restart: unless-stopped
+        environment:
+            TZ: Asia/Shanghai
+            POSTGRES_DB: ${POSTGRES_DB:-snail_ai}
+            POSTGRES_USER: ${POSTGRES_USER:-root}
+            POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-root}
+        ports:
+            - "15432:5432"
+        volumes:
+            - pgvector:/var/lib/postgresql/data
+            - ../sql/snail_ai_schema_pgsql.sql:/docker-entrypoint-initdb.d/01-snail-ai-schema.sql:ro
+        healthcheck:
+            test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}" ]
+            interval: 10s
+            timeout: 5s
+            retries: 10

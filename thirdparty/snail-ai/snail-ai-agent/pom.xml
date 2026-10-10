@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.aizuda</groupId>
+        <artifactId>snail-ai</artifactId>
+        <version>${revision}</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>snail-ai-agent</artifactId>
+    <packaging>pom</packaging>
+    <name>snail-ai-agent</name>
+    <description>snail-ai-agent</description>
+
+    <modules>
+        <module>snail-ai-agent-common</module>
+        <module>snail-ai-agent-executor</module>
+        <module>snail-ai-agent-openapi</module>
+        <module>snail-ai-agent-chat</module>
+    </modules>
+</project>

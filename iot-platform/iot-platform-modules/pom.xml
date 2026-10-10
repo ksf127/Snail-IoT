@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <groupId>org.dromara</groupId>
+        <artifactId>iot-platform</artifactId>
+        <version>1.0.0</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>iot-platform-modules</artifactId>
+    <packaging>pom</packaging>
+
+    <description>
+        IoT 业务模块聚合
+    </description>
+
+    <modules>
+        <!-- 设备管理：产品、设备、物模型、分组 -->
+        <module>iot-platform-device</module>
+        <!-- 权限模块：分组(数据线)、数据集(数据线)、应用(服务线) 三线交汇 -->
+        <module>iot-platform-permission</module>
+        <!-- 数据采集：MQTT / HTTPS 接入，Kafka 投递 -->
+        <module>iot-platform-collect</module>
+        <!-- 运行监控：设备监控、服务器监控、链路追踪 -->
+        <module>iot-platform-monitor</module>
+        <!-- 单点登录：全平台统一认证 -->
+        <module>iot-platform-sso</module>
+        <!-- 档案管理 -->
+        <module>iot-platform-archive</module>
+        <!-- 报表与批量上传下载 -->
+        <module>iot-platform-report</module>
+        <!-- 自动化部署 -->
+        <module>iot-platform-deploy</module>
+        <!-- 聚合支付：统一下单、回调、退款 -->
+        <module>iot-platform-pay</module>
+    </modules>
+
+</project>

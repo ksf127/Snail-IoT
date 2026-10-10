@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Snail IoT Platform · 部署拓扑图</title>
+<style>
+  *{box-sizing:border-box;}
+  body{
+    margin:0;padding:32px 16px 56px;
+    background:radial-gradient(1200px 600px at 50% -10%, #1e293b 0%, #0b1220 60%, #070b14 100%);
+    font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    color:#e6edf7;
+  }
+  .wrap{max-width:1280px;margin:0 auto;}
+  h1{font-size:24px;margin:0 0 6px;font-weight:700;letter-spacing:.5px;}
+  .sub{color:#8fa3bf;font-size:13px;margin:0 0 22px;}
+  .card{background:rgba(17,28,52,.72);border:1px solid rgba(80,120,180,.28);border-radius:16px;
+        padding:18px 18px 8px;box-shadow:0 18px 50px rgba(0,0,0,.45);backdrop-filter:blur(6px);}
+  svg{width:100%;height:auto;display:block;}
+  .legend{display:flex;flex-wrap:wrap;gap:16px;margin:14px 4px 6px;font-size:12.5px;color:#9db2cd;}
+  .legend span{display:inline-flex;align-items:center;gap:7px;}
+  .dot{width:11px;height:11px;border-radius:3px;display:inline-block;}
+  text{font-family:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Snail IoT Platform · 部署拓扑图</h1>
+  <p class="sub">两层 Compose 编排 · 单一入口 80 · 共享外部网络 devprojects_default</p>
+
+  <div class="card">
+  <svg viewBox="0 0 1240 700" role="img" aria-label="部署拓扑图">
+    <defs>
+      <marker id="a2" markerWidth="10" markerHeight="10" refX="5" refY="3" orient="auto">
+        <path d="M0,0 L6,3 L0,6 z" fill="#5b7aa6"/>
+      </marker>
+    </defs>
+
+    <!-- 浏览器 -->
+    <rect x="460" y="30" width="320" height="56" rx="12" fill="#0e1a30" stroke="#3568c4" stroke-opacity=".7"/>
+    <text x="620" y="55" fill="#dce9ff" font-size="14" font-weight="600" text-anchor="middle">用户浏览器</text>
+    <text x="620" y="74" fill="#9fb6d6" font-size="11.5" text-anchor="middle">http://localhost:80</text>
+
+    <line x1="620" y1="86" x2="620" y2="126" stroke="#5b7aa6" stroke-width="2" marker-end="url(#a2)"/>
+
+    <!-- 业务编排大框 -->
+    <rect x="30" y="112" width="1180" height="372" rx="16" fill="#0e1830" stroke="#22b8d6" stroke-opacity=".45"/>
+    <text x="52" y="136" fill="#9fe3f2" font-size="13" font-weight="700">业务编排 · iot-platform/script/docker/docker-compose.yml</text>
+
+    <!-- 入口 iot-web -->
+    <rect x="310" y="150" width="620" height="56" rx="11" fill="#062d24" stroke="#10b981" stroke-opacity=".75"/>
+    <text x="620" y="174" fill="#c9f9e6" font-size="14" font-weight="700" text-anchor="middle">iot-web · Nginx 统一入口 :80</text>
+    <text x="620" y="193" fill="#7fd8b8" font-size="11" text-anchor="middle">/prod-api→8080  ·  /admin→9090  ·  /snail-job→8800  ·  /snail-ai→8900</text>
+
+    <!-- bus to services -->
+    <line x1="620" y1="206" x2="620" y2="228" stroke="#5b7aa6" stroke-width="2"/>
+    <line x1="185" y1="228" x2="1055" y2="228" stroke="#5b7aa6" stroke-width="2"/>
+    <g stroke="#5b7aa6" stroke-width="2" marker-end="url(#a2)">
+      <line x1="185" y1="228" x2="185" y2="256"/>
+      <line x1="475" y1="228" x2="475" y2="256"/>
+      <line x1="765" y1="228" x2="765" y2="256"/>
+      <line x1="1055" y1="228" x2="1055" y2="256"/>
+    </g>
+
+    <!-- 服务四件套 -->
+    <g text-anchor="middle">
+      <rect x="50" y="256" width="270" height="66" rx="11" fill="#160f2c" stroke="#8b5cf6" stroke-opacity=".65"/>
+      <text x="185" y="282" fill="#e8dcff" font-size="13.5" font-weight="700">iot-server</text>
+      <text x="185" y="302" fill="#b8a6dd" font-size="11">后端 Spring Boot :8080</text>
+
+      <rect x="340" y="256" width="270" height="66" rx="11" fill="#160f2c" stroke="#8b5cf6" stroke-opacity=".65"/>
+      <text x="475" y="282" fill="#e8dcff" font-size="13.5" font-weight="700">iot-sba</text>
+      <text x="475" y="302" fill="#b8a6dd" font-size="11">Spring Boot Admin :9090</text>
+
+      <rect x="630" y="256" width="270" height="66" rx="11" fill="#160f2c" stroke="#8b5cf6" stroke-opacity=".65"/>
+      <text x="765" y="282" fill="#e8dcff" font-size="13.5" font-weight="700">iot-snailjob</text>
+      <text x="765" y="302" fill="#b8a6dd" font-size="11">任务调度 :8800 / :17888</text>
+
+      <rect x="920" y="256" width="270" height="66" rx="11" fill="#160f2c" stroke="#8b5cf6" stroke-opacity=".65"/>
+      <text x="1055" y="282" fill="#e8dcff" font-size="13.5" font-weight="700">iot-snailai</text>
+      <text x="1055" y="302" fill="#b8a6dd" font-size="11">AI 控制台 :8900 / :18888</text>
+    </g>
+
+    <!-- bus to middleware -->
+    <line x1="620" y1="322" x2="620" y2="344" stroke="#5b7aa6" stroke-width="2"/>
+    <line x1="160" y1="344" x2="1080" y2="344" stroke="#5b7aa6" stroke-width="2"/>
+    <g stroke="#5b7aa6" stroke-width="2" marker-end="url(#a2)">
+      <line x1="160" y1="344" x2="160" y2="372"/>
+      <line x1="390" y1="344" x2="390" y2="372"/>
+      <line x1="620" y1="344" x2="620" y2="372"/>
+      <line x1="850" y1="344" x2="850" y2="372"/>
+      <line x1="1080" y1="344" x2="1080" y2="372"/>
+    </g>
+
+    <!-- 中间件五件套 -->
+    <g text-anchor="middle">
+      <rect x="53" y="372" width="214" height="70" rx="11" fill="#0b2430" stroke="#22b8d6" stroke-opacity=".7"/>
+      <text x="160" y="400" fill="#dff6fb" font-size="13" font-weight="700">iot-nacos</text>
+      <text x="160" y="420" fill="#8fc4d4" font-size="10.5">注册/配置 :8848 / :9848</text>
+
+      <rect x="283" y="372" width="214" height="70" rx="11" fill="#0b2430" stroke="#22b8d6" stroke-opacity=".7"/>
+      <text x="390" y="400" fill="#dff6fb" font-size="13" font-weight="700">iot-elasticsearch</text>
+      <text x="390" y="420" fill="#8fc4d4" font-size="10.5">时序检索 :9200</text>
+
+      <rect x="513" y="372" width="214" height="70" rx="11" fill="#0b2430" stroke="#22b8d6" stroke-opacity=".7"/>
+      <text x="620" y="400" fill="#dff6fb" font-size="13" font-weight="700">iot-kafka</text>
+      <text x="620" y="420" fill="#8fc4d4" font-size="10.5">KRaft :9094</text>
+
+      <rect x="743" y="372" width="214" height="70" rx="11" fill="#0b2430" stroke="#22b8d6" stroke-opacity=".7"/>
+      <text x="850" y="400" fill="#dff6fb" font-size="13" font-weight="700">iot-emqx</text>
+      <text x="850" y="420" fill="#8fc4d4" font-size="10.5">MQTT :1883 / :18083</text>
+
+      <rect x="973" y="372" width="214" height="70" rx="11" fill="#0b2430" stroke="#22b8d6" stroke-opacity=".7"/>
+      <text x="1080" y="400" fill="#dff6fb" font-size="13" font-weight="700">iot-minio</text>
+      <text x="1080" y="420" fill="#8fc4d4" font-size="10.5">对象存储 :9000 / :9001</text>
+    </g>
+
+    <!-- 网络说明 -->
+    <text x="52" y="470" fill="#7f97b8" font-size="11">所有业务容器加入外部网络 devprojects_default，以服务名互访</text>
+
+    <!-- 数据层 -->
+    <rect x="30" y="498" width="1180" height="122" rx="16" fill="#1b1408" stroke="#f59e0b" stroke-opacity=".5"/>
+    <text x="52" y="522" fill="#ffd79a" font-size="13" font-weight="700">根编排 · d:/DevProjects/snail/docker-compose.yml（基础设施，创建 devprojects_default）</text>
+
+    <line x1="620" y1="492" x2="620" y2="496" stroke="#5b7aa6" stroke-width="2"/>
+
+    <g text-anchor="middle">
+      <rect x="140" y="536" width="460" height="66" rx="11" fill="#2a1c07" stroke="#f59e0b" stroke-opacity=".65"/>
+      <text x="370" y="562" fill="#ffe6bf" font-size="13.5" font-weight="700">ruoyi-postgres</text>
+      <text x="370" y="582" fill="#c9a978" font-size="11">pgvector/pgvector:pg16 · :5432 · 库 ruoyi</text>
+
+      <rect x="640" y="536" width="460" height="66" rx="11" fill="#2a1c07" stroke="#f59e0b" stroke-opacity=".65"/>
+      <text x="870" y="562" fill="#ffe6bf" font-size="13.5" font-weight="700">ruoyi-redis</text>
+      <text x="870" y="582" fill="#c9a978" font-size="11">redis:7-alpine · :6379 · requirepass 123456</text>
+    </g>
+
+    <!-- start order note -->
+    <text x="52" y="648" fill="#7f97b8" font-size="11">启动顺序：postgres/redis → (ES/Kafka healthy) → iot-server → iot-sba → snailjob/snailai → iot-web</text>
+  </svg>
+
+  <div class="legend">
+    <span><i class="dot" style="background:#3568c4"></i>客户端</span>
+    <span><i class="dot" style="background:#10b981"></i>统一入口</span>
+    <span><i class="dot" style="background:#8b5cf6"></i>后端服务</span>
+    <span><i class="dot" style="background:#22b8d6"></i>中间件</span>
+    <span><i class="dot" style="background:#f59e0b"></i>基础设施（根编排）</span>
+  </div>
+  </div>
+</div>
+</body>
+</html>
