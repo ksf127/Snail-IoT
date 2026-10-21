@@ -158,23 +158,51 @@
     </table>
 
     <h2 id="console">运维控制台</h2>
+    <div class="callout warn">
+      <strong>地址能打开的前提是对应容器已启动。</strong>这些地址不是文档自带的页面，而是本机运行的服务。
+      注意控制台都有各自的子路径：SBA 是 <code>/admin/</code>、SnailJob 是 <code>/snail-job/</code>、SnailAI 是 <code>/snail-ai/</code>，
+      只访问 <code>http://localhost:9090</code> 根路径会返回 401 或 404，属于正常现象。
+    </div>
     <table>
       <thead>
-        <tr><th>控制台</th><th>直连地址（宿主）</th><th>统一入口（Nginx）</th><th>账号</th><th>密码</th></tr>
+        <tr><th>控制台</th><th>直连地址（宿主，含子路径）</th><th>容器 / 端口</th><th>账号</th><th>密码</th></tr>
       </thead>
       <tbody>
-        <tr><td>Spring Boot Admin</td><td><code>http://localhost:9090</code></td><td><code>/admin/</code></td><td><code>admin</code></td><td><code>admin123</code></td></tr>
-        <tr><td>SnailJob 调度中心</td><td><code>http://localhost:8800</code></td><td><code>/snail-job/</code></td><td><code>admin</code></td><td><code>admin123</code></td></tr>
-        <tr><td>SnailAI 控制台</td><td><code>http://localhost:8900</code></td><td><code>/snail-ai/</code></td><td><code>admin</code></td><td><code>admin123</code></td></tr>
-        <tr><td>Jenkins</td><td><code>http://localhost:8090</code></td><td><code>/jenkins-api/</code>（Basic Auth）</td><td><code>admin</code></td><td><code>admin123</code></td></tr>
-        <tr><td>EMQX Dashboard</td><td><code>http://localhost:18083</code></td><td>—</td><td><code>admin</code></td><td><code>public</code></td></tr>
-        <tr><td>MinIO Console</td><td><code>http://localhost:9001</code></td><td>—</td><td><code>ruoyi</code></td><td><code>ruoyi123</code></td></tr>
-        <tr><td>Nacos Console</td><td><code>http://localhost:8848/nacos</code></td><td>—</td><td><code>nacos</code></td><td><code>123456</code></td></tr>
-        <tr><td>Snail-IoT 前端</td><td><code>http://localhost</code></td><td>—</td><td><code>admin</code></td><td><code>admin123</code></td></tr>
+        <tr><td>Spring Boot Admin</td><td><a href="http://localhost:9090/admin/login" target="_blank">http://localhost:9090/admin/login</a></td><td><code>iot-sba</code> / 9090</td><td><code>admin</code></td><td><code>admin123</code></td></tr>
+        <tr><td>SnailJob 调度中心</td><td><a href="http://localhost:8800/snail-job/" target="_blank">http://localhost:8800/snail-job/</a></td><td><code>iot-snailjob</code> / 8800、17888</td><td><code>admin</code></td><td><code>admin123</code></td></tr>
+        <tr><td>SnailAI 控制台</td><td><a href="http://localhost:8900/snail-ai/" target="_blank">http://localhost:8900/snail-ai/</a></td><td><code>iot-snailai</code> / 8900、18888</td><td><code>admin</code></td><td><code>admin123</code></td></tr>
+        <tr><td>Jenkins</td><td><a href="http://localhost:8090" target="_blank">http://localhost:8090</a></td><td><code>iot-jenkins</code> / 8090</td><td><code>admin</code></td><td><code>admin123</code></td></tr>
+        <tr><td>EMQX Dashboard</td><td><a href="http://localhost:18083" target="_blank">http://localhost:18083</a></td><td><code>iot-emqx</code> / 18083</td><td><code>admin</code></td><td><code>public</code></td></tr>
+        <tr><td>MinIO Console</td><td><a href="http://localhost:9001" target="_blank">http://localhost:9001</a></td><td><code>iot-minio</code> / 9001</td><td><code>ruoyi</code></td><td><code>ruoyi123</code></td></tr>
+        <tr><td>Nacos Console</td><td><a href="http://localhost:8848/nacos/" target="_blank">http://localhost:8848/nacos/</a></td><td><code>iot-nacos</code> / 8848</td><td><code>nacos</code></td><td><code>123456</code></td></tr>
+        <tr><td>Snail-IoT 前端</td><td><a href="http://localhost:30080" target="_blank">http://localhost:30080</a>（K8s dev）<br><a href="http://localhost" target="_blank">http://localhost</a>（Vite 开发服务占用 80 时）</td><td><code>iot-web</code> / 80 或 K8s NodePort 30080</td><td><code>admin</code></td><td><code>admin123</code></td></tr>
       </tbody>
     </table>
     <div class="callout">
-      Jenkins 反向代理使用 Nginx Basic Auth，凭据为 Base64 <code>YWRtaW46YWRtaW4xMjM=</code>（即 <code>admin:admin123</code>），与 Jenkins 自身账号一致。
+      Jenkins 反向代理使用 Nginx Basic Auth，凭据为 Base64 <code>YWRtaW46YWRtaW4xMjM=</code>（即 <code>admin:admin123</code>），与 Jenkins 自身账号一致。直连 8090 返回 <strong>403</strong> 是正常的，浏览器输入账号密码即可。
+    </div>
+    <div class="callout warn">
+      <strong>关于 Nginx 统一入口</strong>（<code>http://localhost/admin/</code> 等）：只有 <code>iot-web</code> 容器监听 80 端口时才可用。
+      若 80 被本地 <code>pnpm dev</code> 开发服务占用，请直接使用上表的「直连地址」。
+    </div>
+    <pre><code># 启动本机缺失的控制台（幂等，已在运行的会跳过）
+cd d:/DevProjects/snail
+docker compose -p devprojects up -d
+docker compose -p devprojects -f iot-platform/script/docker/docker-compose.yml up -d \
+  nacos emqx minio iot-sba iot-snailjob iot-snailai
+
+# 查看实际在跑什么、端口有没有映射
+docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+
+# SBA 的镜像必须与当前源码一起构建，否则账号可能还是旧的 ruoyi/123456
+docker compose -p devprojects -f iot-platform/script/docker/docker-compose.yml \
+  build iot-sba && docker compose -p devprojects -f iot-platform/script/docker/docker-compose.yml up -d iot-sba</code></pre>
+    <div class="callout">
+      <strong>SnailJob 登录失败时</strong>：<code>sj_system_user</code> 里存的是 <code>SHA256(明文)</code> 的十六进制。
+      若该库由旧版本初始化（哈希不是 <code>240be518…</code>），执行下面 SQL 对齐后即可用 <code>admin / admin123</code> 登录：
+      <pre><code>UPDATE sj_system_user
+SET password = '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9'
+WHERE username = 'admin';</code></pre>
     </div>
 
     <h2 id="tokens">服务令牌与密钥</h2>

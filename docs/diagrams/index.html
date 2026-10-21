@@ -176,15 +176,20 @@
     <table>
       <thead><tr><th>入口</th><th>地址</th><th>账号 / 密码</th></tr></thead>
       <tbody>
-        <tr><td>IoT 平台</td><td><code>http://localhost</code></td><td><code>admin / admin123</code>（另有 <code>test / 666666</code>、<code>test1 / 666666</code>）</td></tr>
-        <tr><td>Spring Boot Admin</td><td><code>http://localhost/admin</code></td><td><code>admin / admin123</code></td></tr>
-        <tr><td>SnailJob</td><td><code>http://localhost/snail-job</code></td><td><code>admin / admin123</code></td></tr>
-        <tr><td>SnailAI</td><td><code>http://localhost/snail-ai</code></td><td><code>admin / admin123</code></td></tr>
-        <tr><td>EMQX Dashboard</td><td><code>http://localhost:18083</code></td><td><code>admin / public</code></td></tr>
-        <tr><td>MinIO 控制台</td><td><code>http://localhost:9001</code></td><td><code>ruoyi / ruoyi123</code></td></tr>
-        <tr><td>Nacos</td><td><code>http://localhost:8848/nacos</code></td><td><code>nacos / 123456</code></td></tr>
+        <tr><td>IoT 平台</td><td><a href="http://localhost:30080" target="_blank">http://localhost:30080</a> / <a href="http://localhost" target="_blank">http://localhost</a></td><td><code>admin / admin123</code>（另有 <code>test / 666666</code>、<code>test1 / 666666</code>）</td></tr>
+        <tr><td>Spring Boot Admin</td><td><a href="http://localhost:9090/admin/login" target="_blank">http://localhost:9090/admin/login</a></td><td><code>admin / admin123</code></td></tr>
+        <tr><td>SnailJob</td><td><a href="http://localhost:8800/snail-job/" target="_blank">http://localhost:8800/snail-job/</a></td><td><code>admin / admin123</code></td></tr>
+        <tr><td>SnailAI</td><td><a href="http://localhost:8900/snail-ai/" target="_blank">http://localhost:8900/snail-ai/</a></td><td><code>admin / admin123</code></td></tr>
+        <tr><td>EMQX Dashboard</td><td><a href="http://localhost:18083" target="_blank">http://localhost:18083</a></td><td><code>admin / public</code></td></tr>
+        <tr><td>MinIO 控制台</td><td><a href="http://localhost:9001" target="_blank">http://localhost:9001</a></td><td><code>ruoyi / ruoyi123</code></td></tr>
+        <tr><td>Nacos</td><td><a href="http://localhost:8848/nacos/" target="_blank">http://localhost:8848/nacos/</a></td><td><code>nacos / 123456</code></td></tr>
       </tbody>
     </table>
+    <div class="callout warn">
+      这些是<strong>本机服务地址</strong>，不是文档页面：只有对应容器启动后才能打开，且必须带子路径
+      （SBA <code>/admin/login</code>、SnailJob <code>/snail-job/</code>、SnailAI <code>/snail-ai/</code>、Nacos <code>/nacos/</code>）。
+      当前直连端口可用的前提是已启动 <code>iot-sba</code>、<code>iot-snailjob</code>、<code>iot-snailai</code>、<code>iot-emqx</code>、<code>iot-minio</code>、<code>iot-nacos</code>。
+    </div>
     <p>完整清单（含数据库、Redis、服务令牌、K8s Secret、改密命令）见 <a href="04-账号密码清单.html">04 · 账号密码清单</a>。</p>
 
     <h2 id="markdown">Markdown 源文档</h2>
