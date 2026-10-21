@@ -27,10 +27,10 @@
 <body>
 <div class="wrap">
   <h1>Snail-IoT · 部署拓扑图</h1>
-  <p class="sub">两层 Compose 编排 · 单一入口 80 · 共享外部网络 devprojects_default</p>
+  <p class="sub">两层 Compose 编排 · 单一入口 80 · 外部网络 devprojects_default（根编排未声明 networks，需 -p devprojects）</p>
 
   <div class="card">
-  <svg viewBox="0 0 1240 700" role="img" aria-label="部署拓扑图">
+  <svg viewBox="0 0 1240 730" role="img" aria-label="部署拓扑图">
     <defs>
       <marker id="a2" markerWidth="10" markerHeight="10" refX="5" refY="3" orient="auto">
         <path d="M0,0 L6,3 L0,6 z" fill="#5b7aa6"/>
@@ -117,11 +117,11 @@
     </g>
 
     <!-- 网络说明 -->
-    <text x="52" y="470" fill="#7f97b8" font-size="11">所有业务容器加入外部网络 devprojects_default，以服务名互访</text>
+    <text x="52" y="470" fill="#7f97b8" font-size="11">业务容器加入外部网络 devprojects_default（由根编排以 -p devprojects 创建），以服务名互访；默认 -p snail 会生成 snail_default 导致找不到网络</text>
 
     <!-- 数据层 -->
     <rect x="30" y="498" width="1180" height="122" rx="16" fill="#1b1408" stroke="#f59e0b" stroke-opacity=".5"/>
-    <text x="52" y="522" fill="#ffd79a" font-size="13" font-weight="700">根编排 · d:/DevProjects/snail/docker-compose.yml（基础设施，创建 devprojects_default）</text>
+    <text x="52" y="522" fill="#ffd79a" font-size="13" font-weight="700">根编排 · docker-compose.yml（仅 postgres + redis，未声明 networks，需 -p devprojects）</text>
 
     <line x1="620" y1="492" x2="620" y2="496" stroke="#5b7aa6" stroke-width="2"/>
 
@@ -137,6 +137,8 @@
 
     <!-- start order note -->
     <text x="52" y="648" fill="#7f97b8" font-size="11">启动顺序：postgres/redis → (ES/Kafka healthy) → iot-server → iot-sba → snailjob/snailai → iot-web</text>
+    <text x="52" y="672" fill="#7f97b8" font-size="11">Kubernetes：dev = iot-platform-dev（NodePort 30080，精简栈）/ prod = iot-platform-prod（NodePort 30081，全量栈）</text>
+    <text x="52" y="696" fill="#7f97b8" font-size="11">镜像构建后由 GitHub Actions（self-hosted runner · snail-iot）部署；前端镜像内置 nginx.conf，80 端口为唯一对外入口</text>
   </svg>
 
   <div class="legend">

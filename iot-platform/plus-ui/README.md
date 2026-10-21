@@ -38,11 +38,13 @@ plus-ui/
 │   │   ├── tool/       #   代码生成
 │   │   ├── ai/         #   AI 智能体
 │   │   └── *.js        #   平台业务：product/device/app/dataset/group/
-│   │                   #             archive/report/deploy/pay/monitor
+│   │                   #             archive/report/deploy/pay/monitor/ticket/cloud/job
 │   ├── views/          # 页面（目录与 api 对应）
 │   │   ├── product/ device/ app/ dataset/ group/     # 核心业务
-│   │   ├── archive/ report/ deploy/ pay/             # 档案/报表/部署/支付
+│   │   ├── archive/ report/ deploy/ pay/             # 档案/报表/部署(4 Tab)/支付
+│   │   ├── ticket/ cloud/ job/                       # 工单/云平台/任务调度
 │   │   ├── monitor/    # 服务/设备监控 + admin/snailjob/snailai 嵌入
+│   │   ├── iot/        # oauth2Client / ssoSession
 │   │   ├── system/     # 系统管理
 │   │   ├── workflow/   # 工作流
 │   │   ├── tool/gen/   # 代码生成
@@ -71,8 +73,11 @@ plus-ui/
 | --- | --- | --- | --- |
 | `.env.development` | `VITE_APP_BASE_API` | `/dev-api` | 开发代理前缀 |
 | `.env.production` | `VITE_APP_BASE_API` | `/prod-api` | 生产由 Nginx 反代 |
-| 两者 | `VITE_APP_ENCRYPT` | `true` | 请求报文加密开关 |
-| 两者 | `VITE_APP_CLIENT_ID` | `e5cd7e4891bf95d1d19206ce24a7b32e` | OAuth2 客户端标识 |
+| 两者 | `VITE_APP_ENCRYPT` | `true` | 请求报文加密开关（配合 `encrypt-key` 头） |
+| 两者 | `VITE_APP_CLIENT_ID` | `e5cd7e4891bf95d1d19206ce24a7b32e` | OAuth2 客户端标识，同时作为请求头 `clientid` |
+| 两者 | `VITE_APP_MESSAGE_TRANSPORT` | `sse` | 消息推送方式（WebSocket 未启用） |
+| 两者 | `VITE_APP_MESSAGE_PATH` | `/resource/message` | SSE 订阅路径 |
+| 两者 | `VITE_APP_PORT` | `80` | 开发服务器端口 |
 
 ---
 
@@ -96,16 +101,17 @@ pnpm lint
 pnpm fmt
 ```
 
-> 开发前请先启动后端服务；代理目标在 `vite.config.ts` 中配置，默认转发到后端网关地址。
+> 开发前请先启动后端服务；`vite.config.ts` 中 `/dev-api` 默认代理到 `http://localhost:8080`（`rewrite` 去掉前缀）。
 
 ---
 
 ## 五、部署
 
-生产环境构建产物 `dist/` 由 [script/docker](../script/docker) 编排中的 `iot-web`（Nginx）容器托管，对外暴露 80 端口。Nginx 负责：
+生产环境构建产物 `dist/` 由 [script/docker](../script/docker) 编排中的 `iot-web`（Nginx）容器托管，随 `iot-platform/plus-ui:1.0.0` 镜像发布，对外暴露 80 端口。Nginx 配置见 [nginx.conf](file:///d:/DevProjects/snail/iot-platform/plus-ui/nginx.conf)，负责：
 
 - 托管前端静态资源（SPA history 路由回退至 `index.html`）
-- 反向代理 `/prod-api` 至后端服务
+- 反向代理 `/prod-api/`（去前缀 → `iot-server:8080`，关闭 `proxy_buffering` 以支持 SSE）
+- 反向代理 `/admin/`（SBA）、`/snail-job/`（SnailJob）、`/snail-ai/`（SnailAI）、`/jenkins-api/`（Jenkins）
 
 ---
 

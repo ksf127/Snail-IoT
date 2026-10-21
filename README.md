@@ -24,7 +24,7 @@ snail/
 ├── iot-platform/               # ① 自研 IoT 业务产品（Spring Boot 4 + Vue3）
 │   ├── pom.xml                 # 产品聚合 POM（继承 iot-vue-plus 框架父 POM）
 │   ├── iot-platform-common/    # 通用常量与枚举
-│   ├── iot-platform-modules/   # 业务模块聚合（device/permission/collect/...）
+│   ├── iot-platform-modules/   # 业务模块聚合（12 个：device/permission/collect/monitor/sso/archive/report/deploy/pay/ticket/cloud/job）
 │   ├── iot-platform-admin/     # 启动入口（Spring Boot 主类 + 配置 + 安全）
 │   ├── plus-ui/                # 前端工程（Vue3 + TS + Element Plus + Vite）
 │   └── script/                 # 部署编排与 SQL
@@ -61,15 +61,16 @@ snail/
 ### 3.2 三步启动（Docker 统一编排）
 
 ```bash
-# 1) 启动基础设施（PostgreSQL + Redis），创建 devprojects_default 网络
-docker compose -f docker-compose.yml up -d
+# 1) 启动基础设施（PostgreSQL + Redis）
+#    根编排未声明 networks，业务编排引用外部网络 devprojects_default，必须用 -p devprojects 对齐项目名
+docker compose -p devprojects -f docker-compose.yml up -d
 
 # 2) 构建框架底座并安装到本地仓库（产品依赖它）
 cd thirdparty/iot-vue-plus && mvn -DskipTests clean install
 
 # 3) 构建产品后端 + 启动全部业务容器
 cd ../../iot-platform && mvn -Pprod -DskipTests clean package
-docker compose -f script/docker/docker-compose.yml up -d --build
+docker compose -p devprojects -f script/docker/docker-compose.yml up -d --build
 ```
 
 启动完成后访问 **http://localhost**，使用 `admin / admin123` 登录。
@@ -109,16 +110,17 @@ docker compose -f script/docker/docker-compose.yml up -d --build
 
 ## 五、平台能力总览
 
-- **设备接入与采集**：MQTT（EMQX）设备上行 → Kafka 缓冲 → 落库 PostgreSQL / 写入 Elasticsearch 供时序检索
+- **设备接入与采集**：MQTT（EMQX，topic `iot/device/{deviceCode}/#`）或 HTTP 上行 → Kafka `iot-device-data` → Elasticsearch 时序检索 + Redis 心跳（5 分钟 TTL）+ 首次心跳回写设备在线状态
 - **产品与设备管理**：产品、设备、物模型、分组；设备在线状态与监控
 - **三线权限模型**：分组（数据线）、数据集（数据线）、应用（服务线）交汇授权
-- **统一认证（SSO）**：CAS / OAuth2 / OIDC 一体化，支持第三方客户端接入
-- **档案 / 报表 / 自动化部署**：业务档案、报表导出、部署流水
+- **统一认证（SSO）**：自研 Sa-Token OAuth2 Server + OIDC 元数据 + CAS Server/Client，支持第三方客户端接入
+- **档案 / 报表 / 自动化部署**：业务档案、报表导出、K8s 部署流水与 GitHub 项目同步（公开仓库免 Token，私有仓库需 `GITHUB_TOKEN`）
 - **聚合支付**：统一下单、回调、退款，渠道工厂可插拔（Mock / 微信 / 支付宝），内置虚拟商品货架
 - **工单管理**：普通工单 + LiteFlow 规则引擎 + Warm-Flow 流程引擎
 - **云平台纳管**：Provider 可插拔，内置阿里云 ECS 与 Flink 作业纳管
 - **任务调度**：本地 Cron/固定频率调度器 + 执行器 SPI，并可对接 SnailJob 分布式调度
-- **AI 智能体**：集成 SnailAI，提供对话、RAG 知识库、MCP 工具调用
+- **消息推送**：SSE（`/resource/message`），WebSocket 未启用
+- **AI 智能体**：集成 SnailAI，提供对话、RAG 知识库、MCP 工具调用（`/mcp`）
 - **监控**：Spring Boot Admin 应用监控中心
 
 ---

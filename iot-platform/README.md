@@ -1,6 +1,6 @@
 # Snail-IoT · iot-platform
 
-> 自研 IoT 业务产品：设备接入与采集、产品/设备管理、三线权限、统一认证、档案/报表/部署、聚合支付。
+> 自研 IoT 业务产品：设备接入与采集、产品/设备管理、三线权限、统一认证、档案/报表/部署、聚合支付、工单、云平台纳管、任务调度。
 > 基于 `org.dromara:iot-vue-plus:6.0.0` 框架底座构建。
 
 ---
@@ -29,20 +29,24 @@
 iot-platform/
 ├── pom.xml                     # 聚合 POM（继承 iot-vue-plus 6.0.0）
 ├── iot-platform-common/        # 常量与枚举
-├── iot-platform-modules/       # 业务模块聚合
+├── iot-platform-modules/       # 业务模块聚合（12 个）
 │   ├── iot-platform-device/       # 产品 / 设备
 │   ├── iot-platform-permission/   # 分组 / 数据集 / 应用（三线权限）
-│   ├── iot-platform-collect/      # MQTT / Kafka / ES 采集链路
+│   ├── iot-platform-collect/      # MQTT / HTTP / Kafka / ES 采集链路
 │   ├── iot-platform-monitor/      # 设备监控 / 服务器监控
-│   ├── iot-platform-sso/          # CAS / OAuth2 / OIDC
+│   ├── iot-platform-sso/          # OAuth2 Server / OIDC / CAS
 │   ├── iot-platform-archive/      # 档案管理
 │   ├── iot-platform-report/       # 报表
-│   ├── iot-platform-deploy/       # 自动化部署
-│   └── iot-platform-pay/          # 聚合支付
+│   ├── iot-platform-deploy/       # 自动化部署 / GitHub 项目同步
+│   ├── iot-platform-pay/          # 聚合支付
+│   ├── iot-platform-ticket/       # 工单（LiteFlow / Warm-Flow）
+│   ├── iot-platform-cloud/        # 云平台纳管
+│   └── iot-platform-job/          # 任务调度
 ├── iot-platform-admin/         # 启动入口（IotApplication）与配置
 ├── plus-ui/                    # 前端工程（Vue3 + Vite）
 └── script/
     ├── docker/docker-compose.yml  # 统一容器编排
+    ├── k8s/                       # Kubernetes 清单与 db-init
     └── sql/postgres/              # 业务建表脚本
 ```
 
@@ -86,14 +90,15 @@ pnpm build:prod   # 生产构建
 
 ```bash
 # 先启动根基础设施（PostgreSQL + Redis）
-cd .. && docker compose -f docker-compose.yml up -d
+# 根编排未声明 networks，必须用 -p devprojects 生成业务编排引用的 devprojects_default
+cd .. && docker compose -p devprojects -f docker-compose.yml up -d
 
 # 构建并启动全部业务容器
 cd iot-platform
-docker compose -f script/docker/docker-compose.yml up -d --build
+docker compose -p devprojects -f script/docker/docker-compose.yml up -d --build
 ```
 
-启动后访问 http://localhost ，使用 `admin / admin123` 登录。
+启动后访问 http://localhost ，使用 `admin / admin123` 登录。`iot-web`（Nginx，80）是唯一对外入口，`/prod-api`、`/admin`、`/snail-job`、`/snail-ai` 均由其反向代理。
 
 ---
 
@@ -119,10 +124,12 @@ docker compose -f script/docker/docker-compose.yml up -d --build
 主配置：[iot-platform-admin/src/main/resources/application.yml](file:///d:/DevProjects/snail/iot-platform/iot-platform-admin/src/main/resources/application.yml)
 
 - `spring.application.name: iot-platform`，端口 `8080`
-- Sa-Token `token-name: Authorization`；免鉴权路径含 `/iot/pay/notify/**`
+- Sa-Token `token-name: Authorization`；后续请求需带 `clientid` 头且与 Token extra 一致；免鉴权路径含 `/iot/pay/notify/**`
 - `iot.sso`：`server-url`、`default-client-id`、`ticket-timeout`、`oidc.id-token-timeout`
-- SpringDoc 9 个分组：`web/system/device/collect/monitor/sso/archive/report/deploy`
-- 组件开关：`warm-flow`、`liteflow`、`mqtt.client`、`easy-es`、`spring.ai.mcp`、Kafka、Nacos（默认 `NACOS_ENABLED:false`）
+- `iot.github`：`owner=ksf127`、`token=${GITHUB_TOKEN:}`（私有仓库同步用）
+- SpringDoc 13 个分组：`通用/系统/设备/采集/监控/单点登录/档案/报表/部署/支付/工单/云平台/任务调度`
+- 消息推送：`message.transport: sse`、`message.path: /resource/message`（WebSocket 未启用）
+- 组件开关：`warm-flow`、`liteflow`、`mqtt.client`、`easy-es`、`spring.ai.mcp`（`/mcp`）、Kafka、Nacos（默认 `NACOS_ENABLED:false`）
 - `api-decrypt.enabled: true`（接口加解密，RSA 密钥与前端的 `VITE_APP_RSA_*` 成对）
 
 生产配置：[application-prod.yml](file:///d:/DevProjects/snail/iot-platform/iot-platform-admin/src/main/resources/application-prod.yml)（连接串全部由环境变量注入）。

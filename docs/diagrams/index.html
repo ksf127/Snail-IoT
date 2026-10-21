@@ -27,15 +27,15 @@
 
   <a class="card" href="01-系统架构图.html">
     <h2>01 · 系统架构图</h2>
-    <span>分层架构：接入层 → 应用层 → 业务模块层 → 通用能力层 → 框架底座 → 基础设施</span>
+    <span>分层架构：接入层 → 应用层（SSE / MCP）→ 12 个业务模块 → 通用能力层 → 框架底座 → 基础设施</span>
   </a>
   <a class="card" href="02-部署拓扑图.html">
     <h2>02 · 部署拓扑图</h2>
-    <span>两层 Compose 编排、容器与端口、网络 devprojects_default、启动顺序</span>
+    <span>两层 Compose 编排、容器与端口、网络 devprojects_default（需 -p devprojects）、启动顺序</span>
   </a>
   <a class="card" href="03-数据采集流程.html">
     <h2>03 · 数据采集流程</h2>
-    <span>MQTT 上行 → EMQX → Kafka → Elasticsearch / PostgreSQL 双写</span>
+    <span>MQTT / HTTP 上行 → EMQX → Kafka iot-device-data → ES 时序 + Redis 心跳 + 首次心跳回写 PostgreSQL</span>
   </a>
 </div>
 </body>
