@@ -6,149 +6,367 @@
 <title>Snail-IoT · 部署拓扑图</title>
 <style>
   *{box-sizing:border-box;}
-  body{
-    margin:0;padding:32px 16px 56px;
+  html{scroll-behavior:smooth;}
+  body{margin:0;padding:24px 20px 64px;
     background:radial-gradient(1200px 600px at 50% -10%, #1e293b 0%, #0b1220 60%, #070b14 100%);
+    background-attachment:fixed;
     font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
-    color:#e6edf7;
-  }
-  .wrap{max-width:1280px;margin:0 auto;}
-  h1{font-size:24px;margin:0 0 6px;font-weight:700;letter-spacing:.5px;}
-  .sub{color:#8fa3bf;font-size:13px;margin:0 0 22px;}
+    color:#e6edf7;font-size:14.5px;line-height:1.75;}
+  a{color:#8bc0ff;}
+  code{font-family:"Cascadia Code","Consolas",monospace;font-size:.88em;background:rgba(96,165,250,.13);
+    color:#a8ccff;padding:1px 5px;border-radius:4px;}
+  pre{background:#080e1a;border:1px solid rgba(80,120,180,.25);border-radius:10px;padding:14px 16px;overflow:auto;}
+  pre code{background:none;padding:0;color:#c8d8ee;font-size:12.6px;line-height:1.65;}
+  .layout{display:flex;gap:26px;max-width:1340px;margin:0 auto;align-items:flex-start;}
+  .sidebar{flex:0 0 248px;width:248px;position:sticky;top:24px;max-height:calc(100vh - 48px);overflow:auto;
+    background:rgba(13,22,42,.9);border:1px solid rgba(80,120,180,.25);border-radius:14px;padding:14px 12px;
+    box-shadow:0 14px 40px rgba(0,0,0,.35);}
+  .sidebar::-webkit-scrollbar{width:6px;}
+  .sidebar::-webkit-scrollbar-thumb{background:rgba(96,165,250,.3);border-radius:3px;}
+  .nav-title{font-size:11px;letter-spacing:1.2px;color:#6f89ab;margin:6px 8px 8px;}
+  .nav a{display:block;padding:7px 10px;border-radius:8px;color:#a9c0dc;text-decoration:none;
+    font-size:13px;border-left:2px solid transparent;transition:.15s;}
+  .nav a:hover{background:rgba(96,165,250,.1);color:#dcecff;}
+  .nav a.active{background:rgba(96,165,250,.16);color:#e9f3ff;border-left-color:#60a5fa;font-weight:600;}
+  .nav-sep{height:1px;background:rgba(80,120,180,.2);margin:10px 8px;}
+  .main{flex:1;min-width:0;}
+  h1{font-size:27px;margin:0 0 8px;letter-spacing:.5px;}
+  h2{font-size:19px;margin:34px 0 12px;padding-bottom:8px;border-bottom:1px solid rgba(80,120,180,.22);color:#dbe9fb;}
+  h3{font-size:15.5px;margin:22px 0 8px;color:#c9dcf3;}
+  p{color:#b8cbe2;}
+  .sub{color:#8fa3bf;font-size:13.5px;margin:0 0 24px;}
   .card{background:rgba(17,28,52,.72);border:1px solid rgba(80,120,180,.28);border-radius:16px;
-        padding:18px 18px 8px;box-shadow:0 18px 50px rgba(0,0,0,.45);backdrop-filter:blur(6px);}
+    padding:18px 20px 10px;box-shadow:0 18px 50px rgba(0,0,0,.45);}
   svg{width:100%;height:auto;display:block;}
   .legend{display:flex;flex-wrap:wrap;gap:16px;margin:14px 4px 6px;font-size:12.5px;color:#9db2cd;}
   .legend span{display:inline-flex;align-items:center;gap:7px;}
   .dot{width:11px;height:11px;border-radius:3px;display:inline-block;}
   text{font-family:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;}
+  table{width:100%;border-collapse:collapse;margin:12px 0 18px;font-size:13.4px;display:block;overflow-x:auto;}
+  th,td{border:1px solid rgba(80,120,180,.22);padding:8px 10px;text-align:left;vertical-align:top;}
+  th{background:rgba(30,52,90,.6);color:#cfe0f7;font-weight:600;white-space:nowrap;}
+  tbody tr:nth-child(even){background:rgba(255,255,255,.015);}
+  .callout{border-left:3px solid #60a5fa;background:rgba(30,64,120,.25);border-radius:0 10px 10px 0;
+    padding:10px 14px;margin:14px 0;font-size:13.3px;color:#b8cbe2;}
+  .callout.warn{border-left-color:#f59e0b;background:rgba(120,80,20,.22);color:#e7d3ad;}
+  .callout.ok{border-left-color:#10b981;background:rgba(16,120,90,.18);color:#b9e9d7;}
+  @media(max-width:920px){
+    body{padding:16px 12px 48px;}
+    .layout{display:block;}
+    .sidebar{position:static;width:auto;max-height:none;margin-bottom:18px;}
+    .nav{display:flex;flex-wrap:wrap;gap:5px;}
+    .nav a{border-left:none;border:1px solid rgba(80,120,180,.2);padding:5px 9px;font-size:12.5px;}
+    .nav-sep{display:none;}
+    .nav-title{margin:8px 4px 4px;}
+  }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <h1>Snail-IoT · 部署拓扑图</h1>
-  <p class="sub">两层 Compose 编排 · 单一入口 80 · 外部网络 devprojects_default（根编排未声明 networks，需 -p devprojects）</p>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="nav-title">图表与手册</div>
+    <nav class="nav">
+      <a href="index.html">文档中心</a>
+      <a href="01-系统架构图.html">01 · 系统架构图</a>
+      <a class="active" href="02-部署拓扑图.html">02 · 部署拓扑图</a>
+      <a href="03-数据采集流程.html">03 · 数据采集流程</a>
+      <a href="04-账号密码清单.html">04 · 账号密码清单</a>
+      <a href="05-从零搭建与验证.html">05 · 从零搭建与验证</a>
+    </nav>
+    <div class="nav-sep"></div>
+    <div class="nav-title">本页目录</div>
+    <nav class="nav">
+      <a href="#topology">整体拓扑</a>
+      <a href="#containers">容器与镜像</a>
+      <a href="#network">网络模型</a>
+      <a href="#ports">端口清单</a>
+      <a href="#nginx">Nginx 路由</a>
+      <a href="#startup">启动顺序</a>
+      <a href="#k8s">Kubernetes</a>
+      <a href="#cicd">CI / CD</a>
+    </nav>
+  </aside>
 
-  <div class="card">
-  <svg viewBox="0 0 1240 730" role="img" aria-label="部署拓扑图">
-    <defs>
-      <marker id="a2" markerWidth="10" markerHeight="10" refX="5" refY="3" orient="auto">
-        <path d="M0,0 L6,3 L0,6 z" fill="#5b7aa6"/>
-      </marker>
-    </defs>
+  <main class="main">
+    <h1>Snail-IoT · 部署拓扑图</h1>
+    <p class="sub">两层 Compose 编排 · 单一入口 80 · 外部网络 devprojects_default（根编排未声明 networks，需 -p devprojects）</p>
 
-    <!-- 浏览器 -->
-    <rect x="460" y="30" width="320" height="56" rx="12" fill="#0e1a30" stroke="#3568c4" stroke-opacity=".7"/>
-    <text x="620" y="55" fill="#dce9ff" font-size="14" font-weight="600" text-anchor="middle">用户浏览器</text>
-    <text x="620" y="74" fill="#9fb6d6" font-size="11.5" text-anchor="middle">http://localhost:80</text>
+    <h2 id="topology">整体拓扑</h2>
+    <div class="card">
+    <svg viewBox="0 0 1240 730" role="img" aria-label="部署拓扑图">
+      <defs>
+        <marker id="a2" markerWidth="10" markerHeight="10" refX="5" refY="3" orient="auto">
+          <path d="M0,0 L6,3 L0,6 z" fill="#5b7aa6"/>
+        </marker>
+      </defs>
 
-    <line x1="620" y1="86" x2="620" y2="126" stroke="#5b7aa6" stroke-width="2" marker-end="url(#a2)"/>
+      <!-- 浏览器 -->
+      <rect x="460" y="30" width="320" height="56" rx="12" fill="#0e1a30" stroke="#3568c4" stroke-opacity=".7"/>
+      <text x="620" y="55" fill="#dce9ff" font-size="14" font-weight="600" text-anchor="middle">用户浏览器</text>
+      <text x="620" y="74" fill="#9fb6d6" font-size="11.5" text-anchor="middle">http://localhost:80</text>
 
-    <!-- 业务编排大框 -->
-    <rect x="30" y="112" width="1180" height="372" rx="16" fill="#0e1830" stroke="#22b8d6" stroke-opacity=".45"/>
-    <text x="52" y="136" fill="#9fe3f2" font-size="13" font-weight="700">业务编排 · iot-platform/script/docker/docker-compose.yml</text>
+      <line x1="620" y1="86" x2="620" y2="126" stroke="#5b7aa6" stroke-width="2" marker-end="url(#a2)"/>
 
-    <!-- 入口 iot-web -->
-    <rect x="310" y="150" width="620" height="56" rx="11" fill="#062d24" stroke="#10b981" stroke-opacity=".75"/>
-    <text x="620" y="174" fill="#c9f9e6" font-size="14" font-weight="700" text-anchor="middle">iot-web · Nginx 统一入口 :80</text>
-    <text x="620" y="193" fill="#7fd8b8" font-size="11" text-anchor="middle">/prod-api→8080  ·  /admin→9090  ·  /snail-job→8800  ·  /snail-ai→8900</text>
+      <!-- 业务编排大框 -->
+      <rect x="30" y="112" width="1180" height="372" rx="16" fill="#0e1830" stroke="#22b8d6" stroke-opacity=".45"/>
+      <text x="52" y="136" fill="#9fe3f2" font-size="13" font-weight="700">业务编排 · iot-platform/script/docker/docker-compose.yml</text>
 
-    <!-- bus to services -->
-    <line x1="620" y1="206" x2="620" y2="228" stroke="#5b7aa6" stroke-width="2"/>
-    <line x1="185" y1="228" x2="1055" y2="228" stroke="#5b7aa6" stroke-width="2"/>
-    <g stroke="#5b7aa6" stroke-width="2" marker-end="url(#a2)">
-      <line x1="185" y1="228" x2="185" y2="256"/>
-      <line x1="475" y1="228" x2="475" y2="256"/>
-      <line x1="765" y1="228" x2="765" y2="256"/>
-      <line x1="1055" y1="228" x2="1055" y2="256"/>
-    </g>
+      <!-- 入口 iot-web -->
+      <rect x="310" y="150" width="620" height="56" rx="11" fill="#062d24" stroke="#10b981" stroke-opacity=".75"/>
+      <text x="620" y="174" fill="#c9f9e6" font-size="14" font-weight="700" text-anchor="middle">iot-web · Nginx 统一入口 :80</text>
+      <text x="620" y="193" fill="#7fd8b8" font-size="11" text-anchor="middle">/prod-api→8080  ·  /admin→9090  ·  /snail-job→8800  ·  /snail-ai→8900</text>
 
-    <!-- 服务四件套 -->
-    <g text-anchor="middle">
-      <rect x="50" y="256" width="270" height="66" rx="11" fill="#160f2c" stroke="#8b5cf6" stroke-opacity=".65"/>
-      <text x="185" y="282" fill="#e8dcff" font-size="13.5" font-weight="700">iot-server</text>
-      <text x="185" y="302" fill="#b8a6dd" font-size="11">后端 Spring Boot :8080</text>
+      <!-- bus to services -->
+      <line x1="620" y1="206" x2="620" y2="228" stroke="#5b7aa6" stroke-width="2"/>
+      <line x1="185" y1="228" x2="1055" y2="228" stroke="#5b7aa6" stroke-width="2"/>
+      <g stroke="#5b7aa6" stroke-width="2" marker-end="url(#a2)">
+        <line x1="185" y1="228" x2="185" y2="256"/>
+        <line x1="475" y1="228" x2="475" y2="256"/>
+        <line x1="765" y1="228" x2="765" y2="256"/>
+        <line x1="1055" y1="228" x2="1055" y2="256"/>
+      </g>
 
-      <rect x="340" y="256" width="270" height="66" rx="11" fill="#160f2c" stroke="#8b5cf6" stroke-opacity=".65"/>
-      <text x="475" y="282" fill="#e8dcff" font-size="13.5" font-weight="700">iot-sba</text>
-      <text x="475" y="302" fill="#b8a6dd" font-size="11">Spring Boot Admin :9090</text>
+      <!-- 服务四件套 -->
+      <g text-anchor="middle">
+        <rect x="50" y="256" width="270" height="66" rx="11" fill="#160f2c" stroke="#8b5cf6" stroke-opacity=".65"/>
+        <text x="185" y="282" fill="#e8dcff" font-size="13.5" font-weight="700">iot-server</text>
+        <text x="185" y="302" fill="#b8a6dd" font-size="11">后端 Spring Boot :8080</text>
 
-      <rect x="630" y="256" width="270" height="66" rx="11" fill="#160f2c" stroke="#8b5cf6" stroke-opacity=".65"/>
-      <text x="765" y="282" fill="#e8dcff" font-size="13.5" font-weight="700">iot-snailjob</text>
-      <text x="765" y="302" fill="#b8a6dd" font-size="11">任务调度 :8800 / :17888</text>
+        <rect x="340" y="256" width="270" height="66" rx="11" fill="#160f2c" stroke="#8b5cf6" stroke-opacity=".65"/>
+        <text x="475" y="282" fill="#e8dcff" font-size="13.5" font-weight="700">iot-sba</text>
+        <text x="475" y="302" fill="#b8a6dd" font-size="11">Spring Boot Admin :9090</text>
 
-      <rect x="920" y="256" width="270" height="66" rx="11" fill="#160f2c" stroke="#8b5cf6" stroke-opacity=".65"/>
-      <text x="1055" y="282" fill="#e8dcff" font-size="13.5" font-weight="700">iot-snailai</text>
-      <text x="1055" y="302" fill="#b8a6dd" font-size="11">AI 控制台 :8900 / :18888</text>
-    </g>
+        <rect x="630" y="256" width="270" height="66" rx="11" fill="#160f2c" stroke="#8b5cf6" stroke-opacity=".65"/>
+        <text x="765" y="282" fill="#e8dcff" font-size="13.5" font-weight="700">iot-snailjob</text>
+        <text x="765" y="302" fill="#b8a6dd" font-size="11">任务调度 :8800 / 客户端 :17888</text>
 
-    <!-- bus to middleware -->
-    <line x1="620" y1="322" x2="620" y2="344" stroke="#5b7aa6" stroke-width="2"/>
-    <line x1="160" y1="344" x2="1080" y2="344" stroke="#5b7aa6" stroke-width="2"/>
-    <g stroke="#5b7aa6" stroke-width="2" marker-end="url(#a2)">
-      <line x1="160" y1="344" x2="160" y2="372"/>
-      <line x1="390" y1="344" x2="390" y2="372"/>
-      <line x1="620" y1="344" x2="620" y2="372"/>
-      <line x1="850" y1="344" x2="850" y2="372"/>
-      <line x1="1080" y1="344" x2="1080" y2="372"/>
-    </g>
+        <rect x="920" y="256" width="270" height="66" rx="11" fill="#160f2c" stroke="#8b5cf6" stroke-opacity=".65"/>
+        <text x="1055" y="282" fill="#e8dcff" font-size="13.5" font-weight="700">iot-snailai</text>
+        <text x="1055" y="302" fill="#b8a6dd" font-size="11">AI 控制台 :8900 / gRPC :18888</text>
+      </g>
 
-    <!-- 中间件五件套 -->
-    <g text-anchor="middle">
-      <rect x="53" y="372" width="214" height="70" rx="11" fill="#0b2430" stroke="#22b8d6" stroke-opacity=".7"/>
-      <text x="160" y="400" fill="#dff6fb" font-size="13" font-weight="700">iot-nacos</text>
-      <text x="160" y="420" fill="#8fc4d4" font-size="10.5">注册/配置 :8848 / :9848</text>
+      <!-- bus to middleware -->
+      <line x1="620" y1="322" x2="620" y2="344" stroke="#5b7aa6" stroke-width="2"/>
+      <line x1="160" y1="344" x2="1080" y2="344" stroke="#5b7aa6" stroke-width="2"/>
+      <g stroke="#5b7aa6" stroke-width="2" marker-end="url(#a2)">
+        <line x1="160" y1="344" x2="160" y2="372"/>
+        <line x1="390" y1="344" x2="390" y2="372"/>
+        <line x1="620" y1="344" x2="620" y2="372"/>
+        <line x1="850" y1="344" x2="850" y2="372"/>
+        <line x1="1080" y1="344" x2="1080" y2="372"/>
+      </g>
 
-      <rect x="283" y="372" width="214" height="70" rx="11" fill="#0b2430" stroke="#22b8d6" stroke-opacity=".7"/>
-      <text x="390" y="400" fill="#dff6fb" font-size="13" font-weight="700">iot-elasticsearch</text>
-      <text x="390" y="420" fill="#8fc4d4" font-size="10.5">时序检索 :9200</text>
+      <!-- 中间件五件套 -->
+      <g text-anchor="middle">
+        <rect x="53" y="372" width="214" height="70" rx="11" fill="#0b2430" stroke="#22b8d6" stroke-opacity=".7"/>
+        <text x="160" y="400" fill="#dff6fb" font-size="13" font-weight="700">iot-nacos</text>
+        <text x="160" y="420" fill="#8fc4d4" font-size="10.5">注册/配置 :8848 / :9848</text>
 
-      <rect x="513" y="372" width="214" height="70" rx="11" fill="#0b2430" stroke="#22b8d6" stroke-opacity=".7"/>
-      <text x="620" y="400" fill="#dff6fb" font-size="13" font-weight="700">iot-kafka</text>
-      <text x="620" y="420" fill="#8fc4d4" font-size="10.5">KRaft :9094</text>
+        <rect x="283" y="372" width="214" height="70" rx="11" fill="#0b2430" stroke="#22b8d6" stroke-opacity=".7"/>
+        <text x="390" y="400" fill="#dff6fb" font-size="13" font-weight="700">iot-elasticsearch</text>
+        <text x="390" y="420" fill="#8fc4d4" font-size="10.5">时序检索 :9200</text>
 
-      <rect x="743" y="372" width="214" height="70" rx="11" fill="#0b2430" stroke="#22b8d6" stroke-opacity=".7"/>
-      <text x="850" y="400" fill="#dff6fb" font-size="13" font-weight="700">iot-emqx</text>
-      <text x="850" y="420" fill="#8fc4d4" font-size="10.5">MQTT :1883 / :18083</text>
+        <rect x="513" y="372" width="214" height="70" rx="11" fill="#0b2430" stroke="#22b8d6" stroke-opacity=".7"/>
+        <text x="620" y="400" fill="#dff6fb" font-size="13" font-weight="700">iot-kafka</text>
+        <text x="620" y="420" fill="#8fc4d4" font-size="10.5">KRaft :9092（容器）/ :9094（宿主）</text>
 
-      <rect x="973" y="372" width="214" height="70" rx="11" fill="#0b2430" stroke="#22b8d6" stroke-opacity=".7"/>
-      <text x="1080" y="400" fill="#dff6fb" font-size="13" font-weight="700">iot-minio</text>
-      <text x="1080" y="420" fill="#8fc4d4" font-size="10.5">对象存储 :9000 / :9001</text>
-    </g>
+        <rect x="743" y="372" width="214" height="70" rx="11" fill="#0b2430" stroke="#22b8d6" stroke-opacity=".7"/>
+        <text x="850" y="400" fill="#dff6fb" font-size="13" font-weight="700">iot-emqx</text>
+        <text x="850" y="420" fill="#8fc4d4" font-size="10.5">MQTT :1883 / :8083 / :18083</text>
 
-    <!-- 网络说明 -->
-    <text x="52" y="470" fill="#7f97b8" font-size="11">业务容器加入外部网络 devprojects_default（由根编排以 -p devprojects 创建），以服务名互访；默认 -p snail 会生成 snail_default 导致找不到网络</text>
+        <rect x="973" y="372" width="214" height="70" rx="11" fill="#0b2430" stroke="#22b8d6" stroke-opacity=".7"/>
+        <text x="1080" y="400" fill="#dff6fb" font-size="13" font-weight="700">iot-minio</text>
+        <text x="1080" y="420" fill="#8fc4d4" font-size="10.5">S3 :9000 / 控制台 :9001</text>
+      </g>
 
-    <!-- 数据层 -->
-    <rect x="30" y="498" width="1180" height="122" rx="16" fill="#1b1408" stroke="#f59e0b" stroke-opacity=".5"/>
-    <text x="52" y="522" fill="#ffd79a" font-size="13" font-weight="700">根编排 · docker-compose.yml（仅 postgres + redis，未声明 networks，需 -p devprojects）</text>
+      <!-- 网络说明 -->
+      <text x="52" y="470" fill="#7f97b8" font-size="11">业务容器加入外部网络 devprojects_default（由根编排以 -p devprojects 创建），以服务名互访；默认 -p snail 会生成 snail_default 导致找不到网络</text>
 
-    <line x1="620" y1="492" x2="620" y2="496" stroke="#5b7aa6" stroke-width="2"/>
+      <!-- 数据层 -->
+      <rect x="30" y="498" width="1180" height="122" rx="16" fill="#1b1408" stroke="#f59e0b" stroke-opacity=".5"/>
+      <text x="52" y="522" fill="#ffd79a" font-size="13" font-weight="700">根编排 · docker-compose.yml（仅 postgres + redis，未声明 networks，需 -p devprojects）</text>
 
-    <g text-anchor="middle">
-      <rect x="140" y="536" width="460" height="66" rx="11" fill="#2a1c07" stroke="#f59e0b" stroke-opacity=".65"/>
-      <text x="370" y="562" fill="#ffe6bf" font-size="13.5" font-weight="700">ruoyi-postgres</text>
-      <text x="370" y="582" fill="#c9a978" font-size="11">pgvector/pgvector:pg16 · :5432 · 库 ruoyi</text>
+      <line x1="620" y1="492" x2="620" y2="496" stroke="#5b7aa6" stroke-width="2"/>
 
-      <rect x="640" y="536" width="460" height="66" rx="11" fill="#2a1c07" stroke="#f59e0b" stroke-opacity=".65"/>
-      <text x="870" y="562" fill="#ffe6bf" font-size="13.5" font-weight="700">ruoyi-redis</text>
-      <text x="870" y="582" fill="#c9a978" font-size="11">redis:7-alpine · :6379 · requirepass 123456</text>
-    </g>
+      <g text-anchor="middle">
+        <rect x="140" y="536" width="460" height="66" rx="11" fill="#2a1c07" stroke="#f59e0b" stroke-opacity=".65"/>
+        <text x="370" y="562" fill="#ffe6bf" font-size="13.5" font-weight="700">ruoyi-postgres</text>
+        <text x="370" y="582" fill="#c9a978" font-size="11">pgvector/pgvector:pg16 · :5432 · 库 ruoyi</text>
 
-    <!-- start order note -->
-    <text x="52" y="648" fill="#7f97b8" font-size="11">启动顺序：postgres/redis → (ES/Kafka healthy) → iot-server → iot-sba → snailjob/snailai → iot-web</text>
-    <text x="52" y="672" fill="#7f97b8" font-size="11">Kubernetes：dev = iot-platform-dev（NodePort 30080，精简栈）/ prod = iot-platform-prod（NodePort 30081，全量栈）</text>
-    <text x="52" y="696" fill="#7f97b8" font-size="11">镜像构建后由 GitHub Actions（self-hosted runner · snail-iot）部署；前端镜像内置 nginx.conf，80 端口为唯一对外入口</text>
-  </svg>
+        <rect x="640" y="536" width="460" height="66" rx="11" fill="#2a1c07" stroke="#f59e0b" stroke-opacity=".65"/>
+        <text x="870" y="562" fill="#ffe6bf" font-size="13.5" font-weight="700">ruoyi-redis</text>
+        <text x="870" y="582" fill="#c9a978" font-size="11">redis:7-alpine · :6379 · requirepass 123456</text>
+      </g>
 
-  <div class="legend">
-    <span><i class="dot" style="background:#3568c4"></i>客户端</span>
-    <span><i class="dot" style="background:#10b981"></i>统一入口</span>
-    <span><i class="dot" style="background:#8b5cf6"></i>后端服务</span>
-    <span><i class="dot" style="background:#22b8d6"></i>中间件</span>
-    <span><i class="dot" style="background:#f59e0b"></i>基础设施（根编排）</span>
-  </div>
-  </div>
+      <!-- start order note -->
+      <text x="52" y="648" fill="#7f97b8" font-size="11">启动顺序：postgres/redis → (ES/Kafka healthy) → iot-server → iot-sba → snailjob/snailai → iot-web</text>
+      <text x="52" y="672" fill="#7f97b8" font-size="11">Kubernetes：dev = iot-platform-dev（NodePort 30080，精简栈）/ prod = iot-platform-prod（NodePort 30081，全量栈）</text>
+      <text x="52" y="696" fill="#7f97b8" font-size="11">镜像构建后由 GitHub Actions（self-hosted runner · snail-iot）部署；前端镜像内置 nginx.conf，80 端口为唯一对外入口</text>
+    </svg>
+
+    <div class="legend">
+      <span><i class="dot" style="background:#3568c4"></i>客户端</span>
+      <span><i class="dot" style="background:#10b981"></i>统一入口</span>
+      <span><i class="dot" style="background:#8b5cf6"></i>后端服务</span>
+      <span><i class="dot" style="background:#22b8d6"></i>中间件</span>
+      <span><i class="dot" style="background:#f59e0b"></i>基础设施（根编排）</span>
+    </div>
+    </div>
+
+    <h2 id="containers">容器与镜像</h2>
+    <table>
+      <thead><tr><th>容器名</th><th>镜像</th><th>构建上下文</th><th>职责</th></tr></thead>
+      <tbody>
+        <tr><td><code>iot-web</code></td><td><code>iot-platform/plus-ui:1.0.0</code></td><td><code>iot-platform/plus-ui</code></td><td>前端静态资源 + Nginx 统一入口（80）</td></tr>
+        <tr><td><code>iot-server</code></td><td><code>iot-platform/iot-platform-admin:1.0.0</code></td><td><code>iot-platform/iot-platform-admin</code></td><td>Spring Boot 后端（8080），prod profile</td></tr>
+        <tr><td><code>iot-sba</code></td><td><code>iot-platform/monitor-admin:6.0.0</code></td><td><code>thirdparty/iot-vue-plus/iot-extend/iot-monitor-admin</code></td><td>Spring Boot Admin 监控中心（9090）</td></tr>
+        <tr><td><code>iot-snailjob</code></td><td><code>iot-platform/snailjob-server:2.0.2</code></td><td><code>thirdparty/iot-vue-plus/iot-extend/iot-snailjob-server</code></td><td>任务调度服务端（8800 / 17888）</td></tr>
+        <tr><td><code>iot-snailai</code></td><td><code>iot-platform/snailai-server:1.1.1</code></td><td><code>thirdparty/iot-vue-plus/iot-extend/iot-snailai-server</code></td><td>AI 控制台（8900 / gRPC 18888）</td></tr>
+        <tr><td><code>iot-nacos</code></td><td><code>nacos/nacos-server:v2.4.3</code></td><td>官方镜像</td><td>注册 / 配置中心（8848 / 9848），后端默认不接入</td></tr>
+        <tr><td><code>iot-elasticsearch</code></td><td><code>elasticsearch:8.15.3</code></td><td>官方镜像</td><td>设备时序索引 <code>iot_device_data</code>（9200）</td></tr>
+        <tr><td><code>iot-kafka</code></td><td><code>apache/kafka:3.9.0</code></td><td>官方镜像</td><td>KRaft 单节点，topic <code>iot-device-data</code></td></tr>
+        <tr><td><code>iot-emqx</code></td><td><code>emqx/emqx:5.8.4</code></td><td>官方镜像</td><td>MQTT Broker（1883 / 8083 / 18083）</td></tr>
+        <tr><td><code>iot-minio</code></td><td><code>minio/minio:latest</code></td><td>官方镜像</td><td>S3 对象存储（9000 / 9001）</td></tr>
+        <tr><td><code>iot-minio-init</code></td><td><code>minio/mc:latest</code></td><td>官方镜像</td><td>一次性 Job：创建桶 <code>ruoyi</code> 并设为公共读</td></tr>
+        <tr><td><code>ruoyi-postgres</code></td><td><code>pgvector/pgvector:pg16</code></td><td>根编排</td><td>业务主库（5432），首次启动执行 <code>init-vector.sql</code></td></tr>
+        <tr><td><code>ruoyi-redis</code></td><td><code>redis:7-alpine</code></td><td>根编排</td><td>缓存 / 会话 / 限流（6379，<code>requirepass 123456</code>）</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="network">网络模型</h2>
+    <p>编排分两层：根目录 <code>docker-compose.yml</code> 只启动 PostgreSQL 与 Redis；业务编排 <code>iot-platform/script/docker/docker-compose.yml</code> 通过外部网络复用它们。</p>
+    <table>
+      <thead><tr><th>层</th><th>文件</th><th>网络声明</th><th>启动命令</th></tr></thead>
+      <tbody>
+        <tr><td>基础设施层</td><td>根目录 <code>docker-compose.yml</code></td><td>未声明 <code>networks</code>，使用默认网络</td><td><code>docker compose -p devprojects -f docker-compose.yml up -d</code></td></tr>
+        <tr><td>业务层</td><td><code>iot-platform/script/docker/docker-compose.yml</code></td><td><code>external: true, name: devprojects_default</code></td><td><code>docker compose -p devprojects -f script/docker/docker-compose.yml up -d --build</code></td></tr>
+      </tbody>
+    </table>
+    <div class="callout warn">
+      项目名必须是 <code>devprojects</code>：Compose 默认用目录名作为项目名生成网络（如 <code>snail_default</code>），与外部网络名 <code>devprojects_default</code> 不一致会直接报 <code>network devprojects_default declared as external, but could not be found</code>。
+    </div>
+    <pre><code># 1) 先起基础设施（会自动创建 devprojects_default）
+docker compose -p devprojects -f docker-compose.yml up -d
+
+# 2) 确认网络已存在
+docker network ls | findstr devprojects_default
+
+# 3) 再起业务编排
+docker compose -p devprojects -f iot-platform/script/docker/docker-compose.yml up -d --build
+
+# 4) 统一查看状态
+docker compose -p devprojects -f iot-platform/script/docker/docker-compose.yml ps</code></pre>
+    <p>同网络内以<strong>服务名</strong>互访：<code>ruoyi-postgres</code>、<code>ruoyi-redis</code>、<code>iot-kafka:9092</code>、<code>iot-emqx:1883</code>、<code>iot-sba:9090</code>。宿主调试时才用 <code>localhost:映射端口</code>。</p>
+
+    <h2 id="ports">端口清单</h2>
+    <table>
+      <thead><tr><th>服务</th><th>容器内</th><th>宿主机</th><th>用途</th></tr></thead>
+      <tbody>
+        <tr><td><code>iot-web</code></td><td>80</td><td><strong>80</strong></td><td>唯一对外入口（前端 + 全部反代）</td></tr>
+        <tr><td><code>iot-server</code></td><td>8080</td><td>8080</td><td>后端 API，经 <code>/prod-api/</code> 访问</td></tr>
+        <tr><td><code>iot-server</code>（SnailJob 客户端）</td><td>28080</td><td>—</td><td><code>2${server.port}</code>，容器间通信</td></tr>
+        <tr><td><code>iot-server</code>（SnailAI 客户端）</td><td>38080</td><td>—</td><td><code>3${server.port}</code>，容器间通信</td></tr>
+        <tr><td><code>iot-sba</code></td><td>9090</td><td>9090</td><td>Spring Boot Admin，经 <code>/admin</code> 访问</td></tr>
+        <tr><td><code>iot-snailjob</code></td><td>8800</td><td>8800</td><td>Dashboard / OpenAPI，经 <code>/snail-job</code> 访问</td></tr>
+        <tr><td><code>iot-snailjob</code></td><td>17888</td><td>17888</td><td>客户端通信端口（<code>snail-job.server.port</code>）</td></tr>
+        <tr><td><code>iot-snailai</code></td><td>8900</td><td>8900</td><td>Admin UI / OpenAPI，经 <code>/snail-ai</code> 访问</td></tr>
+        <tr><td><code>iot-snailai</code></td><td>18888</td><td>18888</td><td>gRPC 端口</td></tr>
+        <tr><td><code>iot-nacos</code></td><td>8848 / 9848</td><td>8848 / 9848</td><td>HTTP 控制台 / gRPC（2.x 客户端必开）</td></tr>
+        <tr><td><code>iot-elasticsearch</code></td><td>9200</td><td>9200</td><td>REST API（单节点、安全关闭）</td></tr>
+        <tr><td><code>iot-kafka</code></td><td>9092 / 9093 / 9094</td><td>9094</td><td>容器内 9092；宿主调试 9094；控制器 9093</td></tr>
+        <tr><td><code>iot-emqx</code></td><td>1883 / 8083 / 18083</td><td>1883 / 8083 / 18083</td><td>MQTT / MQTT over WS / Dashboard</td></tr>
+        <tr><td><code>iot-minio</code></td><td>9000 / 9001</td><td>9000 / 9001</td><td>S3 API / 控制台</td></tr>
+        <tr><td><code>ruoyi-postgres</code></td><td>5432</td><td>5432</td><td>PostgreSQL 16 + pgvector</td></tr>
+        <tr><td><code>ruoyi-redis</code></td><td>6379</td><td>6379</td><td>Redis 7，<code>requirepass 123456</code></td></tr>
+        <tr><td>Ollama（可选）</td><td>11434</td><td>11434</td><td>本地大模型，由 snail-ai 的 full 编排提供</td></tr>
+        <tr><td>Jenkins（可选）</td><td>8080 / 50000</td><td>8090</td><td>经 <code>/jenkins-api/</code> 反代</td></tr>
+        <tr><td>K8s dev / prod</td><td>80</td><td>30080 / 30081</td><td>NodePort 前端入口</td></tr>
+      </tbody>
+    </table>
+    <div class="callout">
+      后端内部端口约定：SnailJob 客户端 = <code>2${server.port}</code> = <strong>28080</strong>，SnailAI 客户端 = <code>3${server.port}</code> = <strong>38080</strong>。这两个端口只在容器网络内使用，无需映射到宿主机。
+    </div>
+
+    <h2 id="nginx">Nginx 路由</h2>
+    <p>唯一配置文件：<code>iot-platform/plus-ui/nginx.conf</code>，随前端镜像一起打包，容器启动即生效。</p>
+    <table>
+      <thead><tr><th>路径</th><th>upstream</th><th>转发目标</th><th>特性</th></tr></thead>
+      <tbody>
+        <tr><td><code>/prod-api/</code></td><td><code>iot-server:8080</code></td><td>去掉 <code>/prod-api</code> 前缀</td><td><code>proxy_buffering off</code>（SSE 必需）、读超时 86400s</td></tr>
+        <tr><td><code>/admin/</code></td><td><code>iot-sba:9090</code></td><td>保留 <code>/admin</code></td><td>Spring Boot Admin</td></tr>
+        <tr><td><code>/snail-job/</code></td><td><code>iot-snailjob:8800</code></td><td>保留前缀</td><td>任务调度控制台</td></tr>
+        <tr><td><code>/snail-ai/</code></td><td><code>iot-snailai:8900</code></td><td>保留前缀</td><td>AI 控制台</td></tr>
+        <tr><td><code>/jenkins-api/</code></td><td><code>host.docker.internal:8090</code></td><td>去掉前缀</td><td>Basic 认证 <code>admin:admin123</code>（硬编码，生产须改）</td></tr>
+        <tr><td><code>/</code></td><td>本地静态目录</td><td><code>index.html</code> 回退</td><td>Vue history 路由</td></tr>
+      </tbody>
+    </table>
+    <ul>
+      <li><code>client_max_body_size 100m</code>：报表 / 附件上传上限。</li>
+      <li>Actuator 端点（<code>/prod-api/actuator/**</code>）在 Nginx 层直接返回 403。</li>
+      <li><code>/jenkins-api/</code> 的 Basic 凭据为 <code>YWRtaW46YWRtaW4xMjM=</code>，即 <code>admin:admin123</code>。</li>
+    </ul>
+
+    <h2 id="startup">启动顺序</h2>
+    <table>
+      <thead><tr><th>阶段</th><th>动作</th><th>判定就绪</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>启动 <code>ruoyi-postgres</code> / <code>ruoyi-redis</code></td><td><code>pg_isready</code> 成功、<code>redis-cli -a 123456 ping</code> 返回 PONG</td></tr>
+        <tr><td>2</td><td>启动 <code>iot-elasticsearch</code> / <code>iot-kafka</code></td><td>ES 9200 可连；Kafka <code>--list</code> 成功（healthcheck 通过）</td></tr>
+        <tr><td>3</td><td>启动 <code>iot-server</code></td><td><code>curl http://localhost:8080/actuator/health</code> 或容器日志出现 Started</td></tr>
+        <tr><td>4</td><td>启动 <code>iot-sba</code></td><td>9090 可访问</td></tr>
+        <tr><td>5</td><td>启动 <code>iot-snailjob</code> / <code>iot-snailai</code></td><td>8800 / 8900 可访问，客户端完成注册</td></tr>
+        <tr><td>6</td><td>启动 <code>iot-web</code></td><td><code>http://localhost</code> 返回登录页</td></tr>
+      </tbody>
+    </table>
+    <pre><code># 只重建后端（改了 Java 代码后）
+docker compose -p devprojects -f iot-platform/script/docker/docker-compose.yml up -d --build iot-server
+
+# 只重建前端（改了 plus-ui）
+docker compose -p devprojects -f iot-platform/script/docker/docker-compose.yml up -d --build iot-web
+
+# 查看某容器最近日志
+docker logs --tail 200 -f iot-server</code></pre>
+
+    <h2 id="k8s">Kubernetes</h2>
+    <p>部署脚本：<code>iot-platform/script/k8s/deploy.sh</code>，通过 <code>dev</code> / <code>prod</code> 两个环境参数隔离命名空间与端口。</p>
+    <table>
+      <thead><tr><th>项</th><th>dev</th><th>prod</th></tr></thead>
+      <tbody>
+        <tr><td>命名空间</td><td><code>iot-platform-dev</code></td><td><code>iot-platform-prod</code></td></tr>
+        <tr><td>前端 NodePort</td><td><strong>30080</strong></td><td><strong>30081</strong></td></tr>
+        <tr><td>组件范围</td><td>精简栈：postgres + redis + iot-server + iot-web</td><td>全量栈：另含 ES / Kafka / EMQX / MinIO / Nacos / SBA / SnailJob / SnailAI</td></tr>
+        <tr><td>镜像拉取</td><td><code>imagePullPolicy: IfNotPresent</code></td><td>同左</td></tr>
+        <tr><td>数据库初始化</td><td><code>db-init-job.yaml</code> + <code>iot_schema_history</code> 台账</td><td>同左</td></tr>
+      </tbody>
+    </table>
+    <pre><code># 部署
+bash iot-platform/script/k8s/deploy.sh dev
+bash iot-platform/script/k8s/deploy.sh prod
+
+# 访问
+http://127.0.0.1:30080/     # dev
+http://127.0.0.1:30081/     # prod
+
+# 常用排查
+kubectl -n iot-platform-dev get pod,svc
+kubectl -n iot-platform-dev logs deploy/iot-server --tail=100
+kubectl -n iot-platform-dev get job</code></pre>
+    <div class="callout warn">
+      dev 精简栈不部署 SBA / SnailJob / SnailAI 实例，但保留了同名 <strong>占位 ClusterIP Service</strong>，用于保证 Nginx upstream 的 DNS 可解析。此时 <code>/admin</code>、<code>/snail-job</code>、<code>/snail-ai</code> 返回 502 属预期行为。
+    </div>
+    <p>敏感配置集中在 Secret <code>iot-secret</code>（<code>POSTGRES_USERNAME</code>、<code>POSTGRES_PASSWORD</code>、<code>REDIS_PASSWORD</code>、<code>MINIO_ROOT_USER</code>、<code>MINIO_ROOT_PASSWORD</code>、<code>GITHUB_TOKEN</code>），默认值与本地一致，见 <a href="04-账号密码清单.html#k8s-secret">04 · K8s Secret</a>。</p>
+
+    <h2 id="cicd">CI / CD</h2>
+    <table>
+      <thead><tr><th>方式</th><th>触发</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td>GitHub Actions</td><td>push / 手动</td><td>self-hosted runner（标签 <code>snail-iot</code>）在本机构建并部署</td></tr>
+        <tr><td>Jenkins</td><td>手动 / Webhook</td><td>可选，容器监听 8090，经 <code>/jenkins-api/</code> 访问</td></tr>
+        <tr><td>平台内「自动化部署」</td><td>页面操作</td><td>deploy 模块：读取 GitHub 项目 → 授权 → 触发构建 / 部署任务</td></tr>
+      </tbody>
+    </table>
+    <p>构建顺序固定：先 <code>thirdparty/iot-vue-plus</code> 执行 <code>mvn -DskipTests clean install</code> 安装父 POM，再构建产品。完整步骤见 <a href="05-从零搭建与验证.html#build">05 · 构建</a>。</p>
+  </main>
 </div>
 </body>
 </html>

@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Snail-IoT · 从零搭建与验证</title>
+<style>
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;padding:24px 20px 64px;
+    background:radial-gradient(1200px 600px at 50% -10%, #1e293b 0%, #0b1220 60%, #070b14 100%);
+    background-attachment:fixed;
+    font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    color:#e6edf7;font-size:14.5px;line-height:1.75;}
+  a{color:#8bc0ff;}
+  code{font-family:"Cascadia Code","Consolas",monospace;font-size:.88em;background:rgba(96,165,250,.13);
+    color:#a8ccff;padding:1px 5px;border-radius:4px;}
+  pre{background:#080e1a;border:1px solid rgba(80,120,180,.25);border-radius:10px;padding:14px 16px;overflow:auto;}
+  pre code{background:none;padding:0;color:#c8d8ee;font-size:12.6px;line-height:1.65;}
+  .layout{display:flex;gap:26px;max-width:1340px;margin:0 auto;align-items:flex-start;}
+  .sidebar{flex:0 0 248px;width:248px;position:sticky;top:24px;max-height:calc(100vh - 48px);overflow:auto;
+    background:rgba(13,22,42,.9);border:1px solid rgba(80,120,180,.25);border-radius:14px;padding:14px 12px;
+    box-shadow:0 14px 40px rgba(0,0,0,.35);}
+  .sidebar::-webkit-scrollbar{width:6px;}
+  .sidebar::-webkit-scrollbar-thumb{background:rgba(96,165,250,.3);border-radius:3px;}
+  .nav-title{font-size:11px;letter-spacing:1.2px;color:#6f89ab;margin:6px 8px 8px;}
+  .nav a{display:block;padding:7px 10px;border-radius:8px;color:#a9c0dc;text-decoration:none;
+    font-size:13px;border-left:2px solid transparent;transition:.15s;}
+  .nav a:hover{background:rgba(96,165,250,.1);color:#dcecff;}
+  .nav a.active{background:rgba(96,165,250,.16);color:#e9f3ff;border-left-color:#60a5fa;font-weight:600;}
+  .nav-sep{height:1px;background:rgba(80,120,180,.2);margin:10px 8px;}
+  .main{flex:1;min-width:0;}
+  h1{font-size:27px;margin:0 0 8px;letter-spacing:.5px;}
+  h2{font-size:19px;margin:34px 0 12px;padding-bottom:8px;border-bottom:1px solid rgba(80,120,180,.22);color:#dbe9fb;}
+  h3{font-size:15.5px;margin:22px 0 8px;color:#c9dcf3;}
+  p{color:#b8cbe2;}
+  .sub{color:#8fa3bf;font-size:13.5px;margin:0 0 24px;}
+  .card{background:rgba(17,28,52,.72);border:1px solid rgba(80,120,180,.28);border-radius:16px;
+    padding:18px 20px 10px;box-shadow:0 18px 50px rgba(0,0,0,.45);}
+  table{width:100%;border-collapse:collapse;margin:12px 0 18px;font-size:13.4px;display:block;overflow-x:auto;}
+  th,td{border:1px solid rgba(80,120,180,.22);padding:8px 10px;text-align:left;vertical-align:top;}
+  th{background:rgba(30,52,90,.6);color:#cfe0f7;font-weight:600;white-space:nowrap;}
+  tbody tr:nth-child(even){background:rgba(255,255,255,.015);}
+  .callout{border-left:3px solid #60a5fa;background:rgba(30,64,120,.25);border-radius:0 10px 10px 0;
+    padding:10px 14px;margin:14px 0;font-size:13.3px;color:#b8cbe2;}
+  .callout.warn{border-left-color:#f59e0b;background:rgba(120,80,20,.22);color:#e7d3ad;}
+  .callout.ok{border-left-color:#10b981;background:rgba(16,120,90,.18);color:#b9e9d7;}
+  .step{display:flex;gap:12px;align-items:flex-start;margin:10px 0;}
+  .step .n{flex:0 0 26px;height:26px;border-radius:50%;background:rgba(96,165,250,.2);border:1px solid rgba(96,165,250,.5);
+    color:#bcd8ff;font-size:12.5px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:3px;}
+  .step .t{flex:1;min-width:0;}
+  .step .t b{color:#dbe9fb;}
+  ol.notes{padding-left:22px;color:#b8cbe2;font-size:13.5px;}
+  ol.notes li{margin:6px 0;}
+  .chk{list-style:none;padding-left:0;margin:10px 0;}
+  .chk li{padding:7px 10px;border:1px solid rgba(80,120,180,.2);border-radius:8px;margin:6px 0;
+    background:rgba(17,28,52,.5);font-size:13.4px;color:#b8cbe2;}
+  .chk li::before{content:"☐";margin-right:9px;color:#60a5fa;}
+  @media(max-width:920px){
+    body{padding:16px 12px 48px;}
+    .layout{display:block;}
+    .sidebar{position:static;width:auto;max-height:none;margin-bottom:18px;}
+    .nav{display:flex;flex-wrap:wrap;gap:5px;}
+    .nav a{border-left:none;border:1px solid rgba(80,120,180,.2);padding:5px 9px;font-size:12.5px;}
+    .nav-sep{display:none;}
+    .nav-title{margin:8px 4px 4px;}
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="nav-title">图表与手册</div>
+    <nav class="nav">
+      <a href="index.html">文档中心</a>
+      <a href="01-系统架构图.html">01 · 系统架构图</a>
+      <a href="02-部署拓扑图.html">02 · 部署拓扑图</a>
+      <a href="03-数据采集流程.html">03 · 数据采集流程</a>
+      <a href="04-账号密码清单.html">04 · 账号密码清单</a>
+      <a class="active" href="05-从零搭建与验证.html">05 · 从零搭建与验证</a>
+    </nav>
+    <div class="nav-sep"></div>
+    <div class="nav-title">本页目录</div>
+    <nav class="nav">
+      <a href="#prepare">0 · 环境准备</a>
+      <a href="#infra">1 · 启动中间件</a>
+      <a href="#database">2 · 初始化数据库</a>
+      <a href="#build">3 · 构建后端</a>
+      <a href="#run">4 · 启动后端</a>
+      <a href="#frontend">5 · 启动前端</a>
+      <a href="#verify">6 · 逐步验证</a>
+      <a href="#docker">7 · Docker 一键部署</a>
+      <a href="#k8s">8 · Kubernetes 部署</a>
+      <a href="#troubleshoot">9 · 排障</a>
+      <a href="#checklist">10 · 验收清单</a>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <h1>Snail-IoT · 从零搭建与验证</h1>
+    <p class="sub">从空机器到可登录、可采集、可观测的完整链路：环境 → 中间件 → 数据库 → 构建 → 启动 → 验证 → 排障</p>
+
+    <div class="callout ok">
+      全程按 0 → 10 顺序执行即可。只想跑通最小链路时，第 1 步只起 <code>postgres</code> + <code>redis</code>，第 7/8 步可跳过。
+    </div>
+
+    <h2 id="prepare">0 · 环境准备</h2>
+    <table>
+      <thead>
+        <tr><th>组件</th><th>版本要求</th><th>校验命令</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>JDK</td><td>21</td><td><code>java -version</code></td></tr>
+        <tr><td>Maven</td><td>3.9+</td><td><code>mvn -v</code></td></tr>
+        <tr><td>Node.js</td><td>≥ 20.19</td><td><code>node -v</code></td></tr>
+        <tr><td>pnpm</td><td>≥ 10</td><td><code>pnpm -v</code></td></tr>
+        <tr><td>Docker Desktop</td><td>含 Compose v2</td><td><code>docker compose version</code></td></tr>
+        <tr><td>kubectl</td><td>可选，K8s 部署需要</td><td><code>kubectl version --client</code></td></tr>
+      </tbody>
+    </table>
+    <div class="callout warn">
+      Docker Desktop 建议分配 <strong>≥ 8 GB 内存</strong>。全量栈（ES + Kafka + EMQX + 3 个 Server + 业务应用）在 4 GB 下会因内存不足互相饿死。
+    </div>
+    <pre><code># 获取代码
+git clone &lt;你的仓库地址&gt; snail
+cd snail
+
+# 目录结构确认
+# thirdparty/iot-vue-plus   框架底座（父 POM）
+# iot-platform              业务产品（13 个 Maven 模块）
+# docs                      文档与图表</code></pre>
+
+    <h2 id="infra">1 · 启动中间件</h2>
+    <h3>1.1 最小链路（PostgreSQL + Redis）</h3>
+    <pre><code>cd d:/DevProjects/snail
+docker compose -p devprojects up -d
+
+docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+# ruoyi-postgres   Up   0.0.0.0:5432->5432/tcp
+# ruoyi-redis      Up   0.0.0.0:6379->6379/tcp</code></pre>
+    <p>根编排只有 <code>postgres</code> 与 <code>redis</code>，其中 PostgreSQL 首次启动会自动执行 <code>init-vector.sql</code> 创建 <code>vector</code> 扩展。</p>
+
+    <h3>1.2 全量业务编排（采集 / 调度 / 监控 / 对象存储）</h3>
+    <pre><code># 必须先让 root 编排创建 devprojects_default 网络
+docker compose -p devprojects -f iot-platform/script/docker/docker-compose.yml up -d --build
+
+# 确认网络存在
+docker network ls | findstr devprojects_default</code></pre>
+    <table>
+      <thead>
+        <tr><th>容器</th><th>宿主端口</th><th>说明</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>ruoyi-nacos</code></td><td>8848 / 9848</td><td>注册与配置中心，鉴权开启</td></tr>
+        <tr><td><code>ruoyi-postgres</code></td><td>5432</td><td>业务库 <code>ruoyi</code></td></tr>
+        <tr><td><code>ruoyi-redis</code></td><td>6379</td><td>缓存 / 在线状态 / 限流</td></tr>
+        <tr><td><code>ruoyi-elasticsearch</code></td><td>9200</td><td>设备时序索引 <code>iot_device_data</code></td></tr>
+        <tr><td><code>iot-kafka</code></td><td>9092（容器）/ 9094（宿主）</td><td>KRaft 单节点</td></tr>
+        <tr><td><code>iot-emqx</code></td><td>1883 / 8083 / 18083</td><td>MQTT Broker</td></tr>
+        <tr><td><code>ruoyi-minio</code></td><td>9000 / 9001</td><td>对象存储，<code>minio-init</code> 建桶 <code>ruoyi</code></td></tr>
+        <tr><td><code>iot-server</code></td><td>8080</td><td>业务后端</td></tr>
+        <tr><td><code>iot-sba</code></td><td>9090</td><td>Spring Boot Admin</td></tr>
+        <tr><td><code>iot-snailjob</code></td><td>8800 / 17888</td><td>调度中心</td></tr>
+        <tr><td><code>iot-snailai</code></td><td>8900 / 18888</td><td>AI 服务</td></tr>
+        <tr><td><code>iot-web</code></td><td>80</td><td>前端 + Nginx 反向代理</td></tr>
+      </tbody>
+    </table>
+    <div class="callout">
+      业务编排声明了 <code>external: true, name: devprojects_default</code>。若跳过根编排，网络不存在会导致启动失败；也可用 <code>-p devprojects</code> 统一项目名让 Compose 自动生成同名网络。
+    </div>
+
+    <h2 id="database">2 · 初始化数据库</h2>
+    <p>按顺序导入 4 个框架脚本 + 9 个产品脚本，顺序不可颠倒（产品脚本依赖框架表结构）。</p>
+    <pre><code># 进入容器（Windows 下可用 PowerShell 逐条执行 docker exec）
+docker exec -it ruoyi-postgres bash
+
+# ① 框架底座
+psql -U postgres -d ruoyi -f /tmp/sql/postgres_iot_vue.sql
+psql -U postgres -d ruoyi -f /tmp/sql/postgres_iot_workflow.sql
+psql -U postgres -d ruoyi -f /tmp/sql/postgres_iot_job.sql
+psql -U postgres -d ruoyi -f /tmp/sql/postgres_iot_ai.sql
+
+# ② 产品业务（严格按序）
+psql -U postgres -d ruoyi -f /tmp/sql/iot_platform.sql
+psql -U postgres -d ruoyi -f /tmp/sql/iot_permission.sql
+psql -U postgres -d ruoyi -f /tmp/sql/iot_sso.sql
+psql -U postgres -d ruoyi -f /tmp/sql/iot_pay.sql
+psql -U postgres -d ruoyi -f /tmp/sql/iot_ticket.sql
+psql -U postgres -d ruoyi -f /tmp/sql/iot_archive.sql
+psql -U postgres -d ruoyi -f /tmp/sql/iot_deploy.sql
+psql -U postgres -d ruoyi -f /tmp/sql/iot_cloud.sql
+psql -U postgres -d ruoyi -f /tmp/sql/iot_job.sql</code></pre>
+    <div class="callout warn">
+      若容器内没有 <code>/tmp/sql</code>，可先 <code>docker cp</code> 脚本进去，或在宿主机用 <code>psql -h localhost -U postgres -d ruoyi -f &lt;文件路径&gt;</code> 逐条执行。
+    </div>
+    <pre><code># 校验基础数据
+docker exec -it ruoyi-postgres psql -U postgres -d ruoyi -c ^
+  "SELECT count(*) AS users FROM sys_user; SELECT count(*) AS devices FROM iot_device;"
+
+# 期望：users ≥ 3（admin / test / test1），devices = 3</code></pre>
+    <table>
+      <thead>
+        <tr><th>脚本目录</th><th>文件</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>thirdparty/iot-vue-plus/script/sql/postgres</code></td><td><code>postgres_iot_vue.sql</code>、<code>postgres_iot_workflow.sql</code>、<code>postgres_iot_job.sql</code>、<code>postgres_iot_ai.sql</code></td></tr>
+        <tr><td><code>iot-platform/script/sql/postgres</code></td><td><code>iot_platform.sql</code>、<code>iot_permission.sql</code>、<code>iot_sso.sql</code>、<code>iot_pay.sql</code>、<code>iot_ticket.sql</code>、<code>iot_archive.sql</code>、<code>iot_deploy.sql</code>、<code>iot_cloud.sql</code>、<code>iot_job.sql</code></td></tr>
+        <tr><td><code>thirdparty/snail-ai/script/sql</code></td><td><code>snail_ai_schema_pgsql.sql</code></td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="build">3 · 构建后端</h2>
+    <div class="callout warn">
+      产品 POM 的父 POM 是 <code>org.dromara:iot-vue-plus:6.0.0</code>，且 <code>relativePath</code> 为空。未先安装框架时会报 <code>Non-resolvable parent POM</code>。
+    </div>
+    <pre><code># ① 安装框架底座到本地仓库（首次必须）
+cd d:/DevProjects/snail/thirdparty/iot-vue-plus
+mvn -DskipTests clean install
+
+# ② 构建产品
+cd d:/DevProjects/snail/iot-platform
+mvn -Pprod -DskipTests clean package
+
+# 产物
+# iot-platform/iot-platform-admin/target/iot-platform-admin.jar</code></pre>
+    <p>Windows 沙箱下若 Maven 无法写入默认仓库/用户目录，追加：</p>
+    <pre><code>mvn -Pprod -DskipTests clean package ^
+  "-Dmaven.repo.local=C:\Users\ThinkPad\.m2\repository" ^
+  "-Duser.home=D:\DevProjects\snail\.mvn-home"</code></pre>
+
+    <h2 id="run">4 · 启动后端</h2>
+    <pre><code>cd d:/DevProjects/snail/iot-platform
+java -jar iot-platform-admin/target/iot-platform-admin.jar
+
+# 或指定 profile
+java -jar iot-platform-admin/target/iot-platform-admin.jar --spring.profiles.active=dev
+
+# 或 IDE 直接运行主类
+# org.dromara.IotApplication</code></pre>
+    <table>
+      <thead>
+        <tr><th>启动方式</th><th>Profile</th><th>PostgreSQL</th><th>Redis</th><th>ES / MQTT / Kafka</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>IDE / jar 本地</td><td><code>dev</code></td><td>localhost:5432，<code>postgres/postgres</code></td><td>localhost:6379，<strong>默认无密码</strong></td><td>默认关闭，按需开启</td></tr>
+        <tr><td>Docker 容器</td><td><code>prod</code></td><td>环境变量注入</td><td>环境变量注入，密码 <code>123456</code></td><td><code>EASY_ES_ENABLE=true</code>、<code>MQTT_CLIENT_ENABLED=true</code></td></tr>
+      </tbody>
+    </table>
+    <div class="callout warn">
+      dev profile 的 Redis 未配置密码，而根编排的 Redis 带 <code>--requirepass 123456</code>。本地启动前请在 <code>application-dev.yml</code> 补 <code>spring.data.redis.password: 123456</code>，否则报 <code>NOAUTH Authentication required</code>。
+    </div>
+    <pre><code># 启动成功标志
+# Tomcat/Jetty started on port 8080
+# 健康检查
+curl http://localhost:8080/actuator/health
+
+# OpenAPI 分组（13 组）
+# http://localhost:8080/v3/api-docs/swagger-config</code></pre>
+
+    <h2 id="frontend">5 · 启动前端</h2>
+    <pre><code>cd d:/DevProjects/snail/iot-platform/plus-ui
+pnpm install --registry=https://registry.npmmirror.com
+pnpm dev
+
+# 默认端口 80（VITE_APP_PORT），接口前缀 /dev-api 由 Vite 代理到 http://localhost:8080</code></pre>
+    <table>
+      <thead>
+        <tr><th>场景</th><th>命令</th><th>接口前缀</th><th>代理目标</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>本地开发</td><td><code>pnpm dev</code></td><td><code>/dev-api</code></td><td><code>http://localhost:8080</code></td></tr>
+        <tr><td>生产构建</td><td><code>pnpm build:prod</code></td><td><code>/prod-api</code></td><td>Nginx → <code>iot-server:8080</code></td></tr>
+      </tbody>
+    </table>
+    <div class="callout">
+      登录请求受 <code>CryptoFilter</code> 保护：前端用 RSA 公钥包裹 AES key 放入 <code>encrypt-key</code> 头。前后端 <code>VITE_APP_RSA_*</code> 与 <code>api-decrypt</code> 必须成对；<code>VITE_APP_ENCRYPT</code> 与后端开关也要一致。
+    </div>
+
+    <h2 id="verify">6 · 逐步验证</h2>
+
+    <h3>6.1 登录与鉴权</h3>
+    <div class="step"><div class="n">1</div><div class="t"><b>打开前端</b> <code>http://localhost</code>，用 <code>admin / admin123</code> 登录，能进入首页且左侧菜单完整。</div></div>
+    <div class="step"><div class="n">2</div><div class="t"><b>验证数据权限</b> 用 <code>test / 666666</code>（本部门及以下）与 <code>test1 / 666666</code>（仅本人）分别登录，菜单与数据范围应不同。</div></div>
+    <div class="step"><div class="n">3</div><div class="t"><b>验证 clientid</b> 浏览器 DevTools 中请求头应同时含 <code>Authorization: Bearer ...</code> 与 <code>clientid: e5cd7e4891bf95d1d19206ce24a7b32e</code>。</div></div>
+
+    <h3>6.2 业务模块</h3>
+    <div class="step"><div class="n">4</div><div class="t"><b>设备台账</b> 「设备管理 → 设备列表」应看到 3 台演示设备（<code>DEV-TEMP-0001/0002</code>、<code>DEV-PLC-0001</code>）。</div></div>
+    <div class="step"><div class="n">5</div><div class="t"><b>产品物模型</b> 「产品管理」应看到 <code>P-SENSOR-TEMP</code>、<code>P-GATEWAY-PLC</code>，可打开物模型定义。</div></div>
+    <div class="step"><div class="n">6</div><div class="t"><b>其余模块</b> 依次点开权限、档案、报表、部署、支付、工单、云平台、任务调度，页面无 500 / 空白。</div></div>
+
+    <h3>6.3 HTTP 采集链路</h3>
+    <pre><code>curl -X POST "http://localhost:8080/iot/collect/https/DEV-PLC-0001" ^
+  -H "Content-Type: application/json" ^
+  -H "deviceSecret: secret-plc-0001" ^
+  -d "{\"line\":\"A\",\"throughput\":120}"
+
+# 期望响应：{"code":200,"msg":"操作成功"}</code></pre>
+    <table>
+      <thead>
+        <tr><th>校验点</th><th>命令 / 位置</th><th>期望</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Kafka 有消息</td><td><code>docker exec -it iot-kafka kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic iot-device-data --from-beginning --max-messages 1</code></td><td>输出含 <code>deviceCode</code>、<code>source=HTTPS</code></td></tr>
+        <tr><td>ES 已落库</td><td><code>curl "http://localhost:9200/iot_device_data/_search?size=1&amp;pretty"</code></td><td><code>hits.total.value ≥ 1</code></td></tr>
+        <tr><td>Redis 在线状态</td><td><code>docker exec -it ruoyi-redis redis-cli -a 123456 --no-auth-warning KEYS "iot:device:online:*"</code></td><td>存在 <code>iot:device:online:DEV-PLC-0001</code></td></tr>
+        <tr><td>PostgreSQL 回写</td><td><code>SELECT device_code, online_status, last_online_time FROM iot_device WHERE device_code='DEV-PLC-0001';</code></td><td><code>online_status='1'</code>，时间已更新</td></tr>
+      </tbody>
+    </table>
+    <div class="callout">
+      回写只在 Redis 在线 Key 不存在时触发（首次心跳）。重复上报时 <code>last_online_time</code> 不会每次都变，这是设计行为。
+    </div>
+
+    <h3>6.4 MQTT 采集链路</h3>
+    <pre><code># 容器内发布（主题第三段即 deviceCode）
+docker exec -it iot-emqx emqx pub -t "iot/device/DEV-TEMP-0001/telemetry" -m "{\"temp\":26.5}" -q 1
+
+# 或宿主机安装 mosquitto 客户端
+mosquitto_pub -h localhost -p 1883 -t "iot/device/DEV-TEMP-0001/telemetry" -m "{\"temp\":26.5}" -q 1</code></pre>
+    <p>订阅器订阅 <code>iot/device/+/#</code>（QoS 1），解析第 3 段为 <code>deviceCode</code>；消息经 Kafka 进入同一消费链路，验证方式同 6.3。MQTT 订阅器未做应用层限流。</p>
+
+    <h3>6.5 平台能力</h3>
+    <div class="step"><div class="n">7</div><div class="t"><b>SSE 消息</b> 前端右上角消息能实时收到；<code>message.transport=sse</code>，路径 <code>/resource/message</code>。</div></div>
+    <div class="step"><div class="n">8</div><div class="t"><b>SnailJob</b> 打开 <code>http://localhost:8800</code>（<code>admin/admin123</code>），组 <code>ruoyi_group</code> 在线；「任务管理」可看到种子任务。</div></div>
+    <div class="step"><div class="n">9</div><div class="t"><b>Spring Boot Admin</b> 打开 <code>http://localhost:9090</code>（<code>admin/admin123</code>），<code>iot-platform</code> 实例已注册。</div></div>
+    <div class="step"><div class="n">10</div><div class="t"><b>MinIO</b> 打开 <code>http://localhost:9001</code>（<code>ruoyi/ruoyi123</code>），桶 <code>ruoyi</code> 存在且可匿名下载。</div></div>
+    <div class="step"><div class="n">11</div><div class="t"><b>SSO</b> 访问 <code>/oauth2/authorize</code> 或 <code>/cas/login</code>，能完成授权码 / 票据换取；默认 clientId <code>e5cd7e4891bf95d1d19206ce24a7b32e</code>。</div></div>
+    <div class="step"><div class="n">12</div><div class="t"><b>自动化部署</b> 「部署任务」页可读取 GitHub 项目列表；未配置 <code>GITHUB_TOKEN</code> 时只能看到 <code>ksf127</code> 的公开仓库。</div></div>
+
+    <h2 id="docker">7 · Docker 一键部署</h2>
+    <pre><code># 1) 基础设施（创建 devprojects_default）
+cd d:/DevProjects/snail
+docker compose -p devprojects up -d
+
+# 2) 一次性构建并启动全量业务
+docker compose -p devprojects -f iot-platform/script/docker/docker-compose.yml up -d --build
+
+# 3) 状态与日志
+docker compose -p devprojects -f iot-platform/script/docker/docker-compose.yml ps
+docker logs -f iot-server --tail 200</code></pre>
+    <table>
+      <thead>
+        <tr><th>访问入口</th><th>地址</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>前端（Nginx 统一入口）</td><td><code>http://localhost</code></td></tr>
+        <tr><td>后端接口</td><td><code>http://localhost/prod-api</code></td></tr>
+        <tr><td>Spring Boot Admin</td><td><code>http://localhost/admin/</code></td></tr>
+        <tr><td>SnailJob</td><td><code>http://localhost/snail-job/</code></td></tr>
+        <tr><td>SnailAI</td><td><code>http://localhost/snail-ai/</code></td></tr>
+      </tbody>
+    </table>
+    <p>Nginx 对 <code>/prod-api/</code> 去前缀转发并关闭缓冲（<code>proxy_buffering off</code>，超时 86400s），因此 SSE 可直接工作；<code>/actuator</code> 统一返回 403。</p>
+
+    <h2 id="k8s">8 · Kubernetes 部署</h2>
+    <pre><code>cd d:/DevProjects/snail/iot-platform
+
+# 确认镜像已存在本地（imagePullPolicy: IfNotPresent 直接复用）
+# iot-platform/iot-platform-admin:1.0.0
+# iot-platform/monitor-admin:6.0.0      （仅 prod）
+# iot-platform/snailjob-server:2.0.2    （仅 prod）
+# iot-platform/snailai-server:1.1.1     （仅 prod）
+# iot-platform/plus-ui:1.0.0
+
+bash script/k8s/deploy.sh dev     # 精简栈 → http://localhost:30080
+bash script/k8s/deploy.sh prod    # 全量栈 → http://localhost:30081</code></pre>
+    <table>
+      <thead>
+        <tr><th>项</th><th>dev</th><th>prod</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>命名空间</td><td><code>iot-platform-dev</code></td><td><code>iot-platform-prod</code></td></tr>
+        <tr><td>NodePort</td><td><code>30080</code></td><td><code>30081</code></td></tr>
+        <tr><td>中间件</td><td>postgres、redis</td><td>postgres、redis、elasticsearch、kafka、emqx、minio</td></tr>
+        <tr><td>应用</td><td>iot-server、iot-web</td><td>iot-server、iot-sba、iot-snailjob、iot-snailai、iot-web</td></tr>
+        <tr><td>ES / MQTT 开关</td><td><code>false</code>（精简栈关闭客户端）</td><td><code>true</code></td></tr>
+      </tbody>
+    </table>
+    <div class="callout">
+      dev 精简栈由脚本注入占位 ClusterIP Service（<code>iot-sba</code>、<code>iot-snailjob</code>、<code>iot-snailai</code>），保证 Nginx upstream 能解析，避免 <code>host not found in upstream</code> 启动失败。
+    </div>
+    <pre><code># 部署状态
+kubectl -n iot-platform-dev get pods,svc
+kubectl -n iot-platform-dev logs deploy/iot-server --tail 200
+
+# 数据库初始化由 Job 完成，台账表为 iot_schema_history
+kubectl -n iot-platform-dev get jobs
+kubectl -n iot-platform-dev exec deploy/postgres -- psql -U postgres -d ruoyi -c "SELECT * FROM iot_schema_history;"</code></pre>
+
+    <h2 id="troubleshoot">9 · 排障</h2>
+    <table>
+      <thead>
+        <tr><th>现象</th><th>原因</th><th>处理</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>Non-resolvable parent POM: org.dromara:iot-vue-plus:6.0.0</code></td><td>未安装框架</td><td>先在 <code>thirdparty/iot-vue-plus</code> 执行 <code>mvn clean install</code></td></tr>
+        <tr><td>Maven 写入 <code>D:\DevTools\maven</code> 失败</td><td>仓库 / 用户目录受限</td><td>追加 <code>-Dmaven.repo.local</code> 与 <code>-Duser.home</code></td></tr>
+        <tr><td>启动报 Redis <code>NOAUTH</code></td><td>dev 未配 Redis 密码</td><td>补 <code>spring.data.redis.password: 123456</code></td></tr>
+        <tr><td>启动连不上 PostgreSQL</td><td>dev 硬编码 localhost:5432</td><td><code>docker compose -p devprojects up -d postgres</code></td></tr>
+        <tr><td>业务编排报网络不存在</td><td><code>devprojects_default</code> 未创建</td><td>先跑根编排，或统一加 <code>-p devprojects</code></td></tr>
+        <tr><td>接口 401 /「客户端ID与Token不匹配」</td><td>缺 <code>clientid</code> 头或与 Token 不一致</td><td>确认前端 <code>VITE_APP_CLIENT_ID</code> 与登录 Token 一致</td></tr>
+        <tr><td>接口解密失败</td><td>RSA 公私钥不匹配</td><td>对齐 <code>.env</code> 与后端 <code>api-decrypt</code></td></tr>
+        <tr><td>验证码不显示</td><td>Redis 不通</td><td>检查 Redis 状态与密码</td></tr>
+        <tr><td>ES 无数据</td><td><code>easy-es.enable=false</code></td><td>置为 <code>true</code> 并重启（K8s dev 精简栈默认关闭）</td></tr>
+        <tr><td>MQTT 不触发消费</td><td><code>mqtt.client.enabled=false</code></td><td>置为 <code>true</code>，并确认主题第三段为 <code>deviceCode</code></td></tr>
+        <tr><td>Nacos 相关类找不到</td><td>未激活 nacos profile</td><td><code>mvn -Pnacos ...</code> 或 <code>--spring.profiles.active=dev,nacos</code></td></tr>
+        <tr><td>SSE 连不上</td><td>Nginx 缓冲未关闭</td><td>确认 <code>/prod-api/</code> 段配置 <code>proxy_buffering off</code></td></tr>
+        <tr><td>K8s 前端 502</td><td>后端未就绪或 upstream 解析失败</td><td>查 <code>iot-web</code> 的 wait-backends 与占位 Service</td></tr>
+        <tr><td><code>pnpm dev</code> 端口占用</td><td>默认 80</td><td>关闭占用进程或改 <code>VITE_APP_PORT</code></td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="checklist">10 · 验收清单</h2>
+    <ul class="chk">
+      <li>PostgreSQL / Redis 容器状态为 Up，5432 / 6379 可连通</li>
+      <li>14 个 SQL 脚本执行完毕，<code>sys_user</code> 有 admin / test / test1，<code>iot_device</code> 有 3 条演示数据</li>
+      <li>框架 <code>mvn install</code> 成功，产品 <code>mvn package</code> 产出可执行 jar</li>
+      <li>后端 8080 启动无异常，<code>/actuator/health</code> 返回 UP</li>
+      <li>前端可访问，<code>admin/admin123</code> 登录成功且菜单完整</li>
+      <li><code>test</code> 与 <code>test1</code> 数据范围分别符合「本部门及以下」「仅本人」</li>
+      <li>HTTP 采集接口返回 200，Kafka 有消息，ES 有文档</li>
+      <li>Redis 出现 <code>iot:device:online:&lt;deviceCode&gt;</code>，PostgreSQL 在线状态已回写</li>
+      <li>MQTT 发布后同样进入消费链路</li>
+      <li>SnailJob / Spring Boot Admin / MinIO / EMQX 控制台均可登录</li>
+      <li>SSE 消息通道可用，Nginx 反向代理四个入口均正常</li>
+      <li>Docker 全量栈或 K8s dev/prod 至少一套部署成功并可登录</li>
+      <li>所有默认口令已按 <a href="04-账号密码清单.html#security">04 · 安全建议</a> 完成替换或登记</li>
+    </ul>
+
+    <div class="callout ok">
+      全部勾选即表示从零搭建完成。后续迭代按 <a href="02-部署拓扑图.html">02 · 部署拓扑图</a> 的路由与端口约定维护，采集链路细节见 <a href="03-数据采集流程.html">03 · 数据采集流程</a>。
+    </div>
+
+    <p style="margin-top:36px;font-size:12.5px;color:#6f89ab;">
+      相关页面：<a href="01-系统架构图.html">01 · 系统架构图</a> ·
+      <a href="02-部署拓扑图.html">02 · 部署拓扑图</a> ·
+      <a href="03-数据采集流程.html">03 · 数据采集流程</a> ·
+      <a href="04-账号密码清单.html">04 · 账号密码清单</a>
+    </p>
+  </main>
+</div>
+</body>
+</html>

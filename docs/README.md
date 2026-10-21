@@ -25,10 +25,14 @@
 
 | 图表 | 说明 |
 | --- | --- |
-| [图表索引](file:///d:/DevProjects/snail/docs/diagrams/index.html) | 三张图表的导航入口 |
-| [01-系统架构图](file:///d:/DevProjects/snail/docs/diagrams/01-系统架构图.html) | 六层架构与 12 个业务模块分布 |
-| [02-部署拓扑图](file:///d:/DevProjects/snail/docs/diagrams/02-部署拓扑图.html) | 浏览器 → Nginx → 服务 → 中间件 → 数据层 |
-| [03-数据采集流程](file:///d:/DevProjects/snail/docs/diagrams/03-数据采集流程.html) | 设备上行 → EMQX → Kafka → ES / Redis 心跳 / 在线状态回写 |
+| [图表索引](file:///d:/DevProjects/snail/docs/diagrams/index.html) | 五个页面的导航入口，含端口速览、12 模块目录、账号速查 |
+| [01-系统架构图](file:///d:/DevProjects/snail/docs/diagrams/01-系统架构图.html) | 六层架构、接入/应用层说明、12 个业务模块详解与依赖构建 |
+| [02-部署拓扑图](file:///d:/DevProjects/snail/docs/diagrams/02-部署拓扑图.html) | 浏览器 → Nginx → 服务 → 中间件 → 数据层，含完整端口、启动顺序与 K8s 双环境 |
+| [03-数据采集流程](file:///d:/DevProjects/snail/docs/diagrams/03-数据采集流程.html) | 设备上行 → EMQX → Kafka → ES / Redis 心跳 / 在线状态回写，附逐步验证命令 |
+| [04-账号密码清单](file:///d:/DevProjects/snail/docs/diagrams/04-账号密码清单.html) | 平台、基础设施、控制台、服务令牌、K8s Secret、演示设备密钥与改密加固建议 |
+| [05-从零搭建与验证](file:///d:/DevProjects/snail/docs/diagrams/05-从零搭建与验证.html) | 环境准备 → 中间件 → 数据库 → 构建 → 启动 → 逐项验证 → Docker/K8s → 排障 → 验收清单 |
+
+> 每个页面左侧均带固定目录：上半部分用于跨页面跳转，下半部分为本页章节锚点；窄屏自动折叠为顶部横向导航。
 
 ---
 
@@ -58,6 +62,6 @@
 
 ## 五、推荐阅读顺序
 
-1. **新手入门**：[工作区总览](../README.md) → [系统架构设计](01-系统架构设计.md) → [账号与初始化说明](04-账号与初始化说明.md)
+1. **新手入门**：[工作区总览](../README.md) → [系统架构设计](01-系统架构设计.md) → [从零搭建与验证](diagrams/05-从零搭建与验证.html) → [账号密码清单](diagrams/04-账号密码清单.html)
 2. **动手部署**：[部署指南](02-部署指南.md) → [部署拓扑图](diagrams/02-部署拓扑图.html)
 3. **参与开发**：[构建与开发指南](03-构建与开发指南.md) → [模块功能说明](05-模块功能说明.md) → [数据采集流程](diagrams/03-数据采集流程.html)

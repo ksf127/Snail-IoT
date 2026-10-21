@@ -3,40 +3,203 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Snail-IoT · 图表索引</title>
+<title>Snail-IoT · 文档中心</title>
 <style>
   *{box-sizing:border-box;}
-  body{margin:0;padding:56px 16px;
-    background:radial-gradient(1000px 500px at 50% -10%, #1e293b 0%, #0b1220 60%, #070b14 100%);
-    font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;color:#e6edf7;}
-  .wrap{max-width:900px;margin:0 auto;}
-  h1{font-size:26px;margin:0 0 8px;}
-  p.sub{color:#8fa3bf;font-size:14px;margin:0 0 28px;}
-  a.card{display:block;text-decoration:none;color:inherit;background:rgba(17,28,52,.75);
-    border:1px solid rgba(80,120,180,.28);border-radius:14px;padding:18px 20px;margin-bottom:16px;
+  html{scroll-behavior:smooth;}
+  body{margin:0;padding:24px 20px 64px;
+    background:radial-gradient(1200px 600px at 50% -10%, #1e293b 0%, #0b1220 60%, #070b14 100%);
+    background-attachment:fixed;
+    font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    color:#e6edf7;font-size:14.5px;line-height:1.75;}
+  a{color:#8bc0ff;}
+  code{font-family:"Cascadia Code","Consolas",monospace;font-size:.88em;background:rgba(96,165,250,.13);
+    color:#a8ccff;padding:1px 5px;border-radius:4px;}
+  pre{background:#080e1a;border:1px solid rgba(80,120,180,.25);border-radius:10px;padding:14px 16px;overflow:auto;}
+  pre code{background:none;padding:0;color:#c8d8ee;font-size:12.6px;line-height:1.65;}
+  .layout{display:flex;gap:26px;max-width:1340px;margin:0 auto;align-items:flex-start;}
+  .sidebar{flex:0 0 248px;width:248px;position:sticky;top:24px;max-height:calc(100vh - 48px);overflow:auto;
+    background:rgba(13,22,42,.9);border:1px solid rgba(80,120,180,.25);border-radius:14px;padding:14px 12px;
+    box-shadow:0 14px 40px rgba(0,0,0,.35);}
+  .sidebar::-webkit-scrollbar{width:6px;}
+  .sidebar::-webkit-scrollbar-thumb{background:rgba(96,165,250,.3);border-radius:3px;}
+  .nav-title{font-size:11px;letter-spacing:1.2px;color:#6f89ab;margin:6px 8px 8px;}
+  .nav a{display:block;padding:7px 10px;border-radius:8px;color:#a9c0dc;text-decoration:none;
+    font-size:13px;border-left:2px solid transparent;transition:.15s;}
+  .nav a:hover{background:rgba(96,165,250,.1);color:#dcecff;}
+  .nav a.active{background:rgba(96,165,250,.16);color:#e9f3ff;border-left-color:#60a5fa;font-weight:600;}
+  .nav-sep{height:1px;background:rgba(80,120,180,.2);margin:10px 8px;}
+  .main{flex:1;min-width:0;}
+  h1{font-size:27px;margin:0 0 8px;letter-spacing:.5px;}
+  h2{font-size:19px;margin:34px 0 12px;padding-bottom:8px;border-bottom:1px solid rgba(80,120,180,.22);color:#dbe9fb;}
+  h3{font-size:15.5px;margin:22px 0 8px;color:#c9dcf3;}
+  p{color:#b8cbe2;}
+  .sub{color:#8fa3bf;font-size:13.5px;margin:0 0 24px;}
+  .card{background:rgba(17,28,52,.72);border:1px solid rgba(80,120,180,.28);border-radius:16px;
+    padding:18px 20px;box-shadow:0 18px 50px rgba(0,0,0,.45);}
+  .page-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;}
+  a.page{display:block;text-decoration:none;color:inherit;background:rgba(17,28,52,.75);
+    border:1px solid rgba(80,120,180,.28);border-radius:14px;padding:16px 18px;
     transition:.18s;box-shadow:0 12px 34px rgba(0,0,0,.35);}
-  a.card:hover{border-color:rgba(96,165,250,.7);transform:translateY(-2px);}
-  a.card h2{margin:0 0 6px;font-size:17px;color:#cfe0f7;}
-  a.card span{font-size:13px;color:#93a9c6;}
+  a.page:hover{border-color:rgba(96,165,250,.7);transform:translateY(-2px);background:rgba(22,37,68,.85);}
+  a.page .no{font-size:11.5px;letter-spacing:1px;color:#60a5fa;font-weight:700;}
+  a.page h3{margin:3px 0 6px;font-size:16px;color:#cfe0f7;}
+  a.page span{font-size:12.8px;color:#93a9c6;line-height:1.65;display:block;}
+  table{width:100%;border-collapse:collapse;margin:12px 0 18px;font-size:13.4px;display:block;overflow-x:auto;}
+  th,td{border:1px solid rgba(80,120,180,.22);padding:8px 10px;text-align:left;vertical-align:top;}
+  th{background:rgba(30,52,90,.6);color:#cfe0f7;font-weight:600;white-space:nowrap;}
+  tbody tr:nth-child(even){background:rgba(255,255,255,.015);}
+  .mod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;}
+  a.mod{display:block;text-decoration:none;color:#d6e6fa;background:rgba(9,36,48,.6);
+    border:1px solid rgba(42,165,196,.35);border-radius:10px;padding:10px 12px;transition:.15s;}
+  a.mod:hover{border-color:#22b8d6;background:rgba(11,48,64,.8);}
+  a.mod b{display:block;font-size:13.5px;color:#dff6fb;}
+  a.mod em{font-style:normal;font-size:11.5px;color:#8fc4d4;}
+  .callout{border-left:3px solid #60a5fa;background:rgba(30,64,120,.25);border-radius:0 10px 10px 0;
+    padding:10px 14px;margin:14px 0;font-size:13.3px;color:#b8cbe2;}
+  .callout.warn{border-left-color:#f59e0b;background:rgba(120,80,20,.22);color:#e7d3ad;}
+  .callout.ok{border-left-color:#10b981;background:rgba(16,120,90,.18);color:#b9e9d7;}
+  .doc-list{list-style:none;padding:0;margin:8px 0;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px;}
+  .doc-list a{display:block;text-decoration:none;color:#b9cfe8;background:rgba(17,28,52,.6);
+    border:1px solid rgba(80,120,180,.2);border-radius:9px;padding:8px 12px;font-size:13px;}
+  .doc-list a:hover{border-color:rgba(96,165,250,.6);color:#e2efff;}
+  @media(max-width:920px){
+    body{padding:16px 12px 48px;}
+    .layout{display:block;}
+    .sidebar{position:static;width:auto;max-height:none;margin-bottom:18px;}
+    .nav{display:flex;flex-wrap:wrap;gap:5px;}
+    .nav a{border-left:none;border:1px solid rgba(80,120,180,.2);padding:5px 9px;font-size:12.5px;}
+    .nav-sep{display:none;}
+    .nav-title{margin:8px 4px 4px;}
+  }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <h1>Snail-IoT · 图表索引</h1>
-  <p class="sub">以下为可离线打开的独立 HTML 图表（内嵌 SVG，无外部依赖）。</p>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="nav-title">图表与手册</div>
+    <nav class="nav">
+      <a class="active" href="index.html">文档中心</a>
+      <a href="01-系统架构图.html">01 · 系统架构图</a>
+      <a href="02-部署拓扑图.html">02 · 部署拓扑图</a>
+      <a href="03-数据采集流程.html">03 · 数据采集流程</a>
+      <a href="04-账号密码清单.html">04 · 账号密码清单</a>
+      <a href="05-从零搭建与验证.html">05 · 从零搭建与验证</a>
+    </nav>
+    <div class="nav-sep"></div>
+    <div class="nav-title">本页目录</div>
+    <nav class="nav">
+      <a href="#pages">页面导航</a>
+      <a href="#ports">端口与服务速览</a>
+      <a href="#modules">业务模块目录</a>
+      <a href="#accounts">账号入口速查</a>
+      <a href="#markdown">Markdown 源文档</a>
+    </nav>
+  </aside>
 
-  <a class="card" href="01-系统架构图.html">
-    <h2>01 · 系统架构图</h2>
-    <span>分层架构：接入层 → 应用层（SSE / MCP）→ 12 个业务模块 → 通用能力层 → 框架底座 → 基础设施</span>
-  </a>
-  <a class="card" href="02-部署拓扑图.html">
-    <h2>02 · 部署拓扑图</h2>
-    <span>两层 Compose 编排、容器与端口、网络 devprojects_default（需 -p devprojects）、启动顺序</span>
-  </a>
-  <a class="card" href="03-数据采集流程.html">
-    <h2>03 · 数据采集流程</h2>
-    <span>MQTT / HTTP 上行 → EMQX → Kafka iot-device-data → ES 时序 + Redis 心跳 + 首次心跳回写 PostgreSQL</span>
-  </a>
+  <main class="main">
+    <h1>Snail-IoT · 文档中心</h1>
+    <p class="sub">离线可打开的可视化图表与操作手册（内嵌 SVG / CSS，无外部依赖）。左侧目录可直达任意页面与章节。</p>
+
+    <h2 id="pages">页面导航</h2>
+    <div class="page-grid">
+      <a class="page" href="01-系统架构图.html">
+        <div class="no">01</div>
+        <h3>系统架构图</h3>
+        <span>接入层 → 应用层 → 12 个业务模块 → 通用能力 → 框架底座 → 基础设施，附每个模块的职责与接口前缀。</span>
+      </a>
+      <a class="page" href="02-部署拓扑图.html">
+        <div class="no">02</div>
+        <h3>部署拓扑图</h3>
+        <span>两层 Compose 编排、网络 devprojects_default、端口清单、启动顺序、Nginx 路由与 K8s 双环境。</span>
+      </a>
+      <a class="page" href="03-数据采集流程.html">
+        <div class="no">03</div>
+        <h3>数据采集流程</h3>
+        <span>MQTT / HTTP 上行 → EMQX → Kafka → ES 时序 + Redis 心跳 + PostgreSQL 回写，附逐段验证命令。</span>
+      </a>
+      <a class="page" href="04-账号密码清单.html">
+        <div class="no">04</div>
+        <h3>账号密码清单</h3>
+        <span>平台、数据库、中间件、控制台、服务令牌与 K8s Secret 的全部默认凭据，以及改密与加固建议。</span>
+      </a>
+      <a class="page" href="05-从零搭建与验证.html">
+        <div class="no">05</div>
+        <h3>从零搭建与验证</h3>
+        <span>从空机器到可登录：环境准备、基础设施、导入 SQL、构建、启动、逐项验证、排障与验收清单。</span>
+      </a>
+    </div>
+
+    <h2 id="ports">端口与服务速览</h2>
+    <table>
+      <thead><tr><th>服务</th><th>容器名</th><th>端口</th><th>访问方式 / 说明</th></tr></thead>
+      <tbody>
+        <tr><td>前端（Nginx 统一入口）</td><td><code>iot-web</code></td><td><strong>80</strong></td><td><code>http://localhost</code> — 唯一对外入口</td></tr>
+        <tr><td>后端</td><td><code>iot-server</code></td><td>8080</td><td><code>/prod-api/</code> 反代至此后端（去掉前缀）</td></tr>
+        <tr><td>Spring Boot Admin</td><td><code>iot-sba</code></td><td>9090</td><td>统一入口 <code>/admin</code></td></tr>
+        <tr><td>SnailJob</td><td><code>iot-snailjob</code></td><td>8800 / 17888</td><td>控制台 <code>/snail-job</code> / 客户端通信</td></tr>
+        <tr><td>SnailAI</td><td><code>iot-snailai</code></td><td>8900 / 18888</td><td>控制台 <code>/snail-ai</code> / gRPC</td></tr>
+        <tr><td>PostgreSQL（pgvector）</td><td><code>ruoyi-postgres</code></td><td>5432</td><td>库 <code>ruoyi</code>，根编排启动</td></tr>
+        <tr><td>Redis</td><td><code>ruoyi-redis</code></td><td>6379</td><td><code>requirepass 123456</code></td></tr>
+        <tr><td>Nacos</td><td><code>iot-nacos</code></td><td>8848 / 9848</td><td>控制台 / gRPC；后端默认不接入</td></tr>
+        <tr><td>Elasticsearch</td><td><code>iot-elasticsearch</code></td><td>9200</td><td>设备时序索引 <code>iot_device_data</code></td></tr>
+        <tr><td>Kafka（KRaft）</td><td><code>iot-kafka</code></td><td>9094（宿主）/ 9092（容器）</td><td>topic <code>iot-device-data</code></td></tr>
+        <tr><td>EMQX</td><td><code>iot-emqx</code></td><td>1883 / 8083 / 18083</td><td>MQTT / WebSocket / Dashboard</td></tr>
+        <tr><td>MinIO</td><td><code>iot-minio</code></td><td>9000 / 9001</td><td>S3 API / 控制台，桶 <code>ruoyi</code></td></tr>
+        <tr><td>Jenkins（可选）</td><td><code>iot-jenkins</code></td><td>8090</td><td>统一入口 <code>/jenkins-api/</code></td></tr>
+        <tr><td>K8s dev / prod</td><td>NodePort</td><td>30080 / 30081</td><td><code>http://127.0.0.1:30080/</code></td></tr>
+      </tbody>
+    </table>
+    <div class="callout">
+      业务编排的容器都加入<strong>外部网络</strong> <code>devprojects_default</code>。根编排没有声明 <code>networks</code>，必须用
+      <code>docker compose -p devprojects -f docker-compose.yml up -d</code> 启动，否则会报 network could not be found。
+    </div>
+
+    <h2 id="modules">业务模块目录</h2>
+    <p>共 13 个 Maven 模块：<code>common</code> + 12 个业务模块 + <code>admin</code> 启动入口。点击模块可跳到架构图中的模块详解。</p>
+    <div class="mod-grid">
+      <a class="mod" href="01-系统架构图.html#m-device"><b>device</b><em>产品 / 设备 · /iot/product、/iot/device</em></a>
+      <a class="mod" href="01-系统架构图.html#m-permission"><b>permission</b><em>分组 / 数据集 / 应用 · /iot/group、/iot/dataset、/iot/app</em></a>
+      <a class="mod" href="01-系统架构图.html#m-collect"><b>collect</b><em>数据采集 · /iot/collect/https</em></a>
+      <a class="mod" href="01-系统架构图.html#m-monitor"><b>monitor</b><em>运行监控 · /iot/monitor/device、/iot/monitor/server</em></a>
+      <a class="mod" href="01-系统架构图.html#m-sso"><b>sso</b><em>统一认证 · /iot/sso、/iot/oauth2-client</em></a>
+      <a class="mod" href="01-系统架构图.html#m-archive"><b>archive</b><em>档案管理 · /iot/archive</em></a>
+      <a class="mod" href="01-系统架构图.html#m-report"><b>report</b><em>报表 / 文件 · /iot/report</em></a>
+      <a class="mod" href="01-系统架构图.html#m-deploy"><b>deploy</b><em>自动化部署 · /iot/deploy、/iot/deploy/github</em></a>
+      <a class="mod" href="01-系统架构图.html#m-pay"><b>pay</b><em>聚合支付 · /iot/pay、/iot/pay/product</em></a>
+      <a class="mod" href="01-系统架构图.html#m-ticket"><b>ticket</b><em>工单 / 流程 · /iot/ticket、/iot/ticket/rule</em></a>
+      <a class="mod" href="01-系统架构图.html#m-cloud"><b>cloud</b><em>云平台纳管 · /iot/cloud/flink、/resource、/account</em></a>
+      <a class="mod" href="01-系统架构图.html#m-job"><b>job</b><em>任务调度 · /iot/job/log、/iot/job/info</em></a>
+    </div>
+
+    <h2 id="accounts">账号入口速查</h2>
+    <table>
+      <thead><tr><th>入口</th><th>地址</th><th>账号 / 密码</th></tr></thead>
+      <tbody>
+        <tr><td>IoT 平台</td><td><code>http://localhost</code></td><td><code>admin / admin123</code>（另有 <code>test / 666666</code>、<code>test1 / 666666</code>）</td></tr>
+        <tr><td>Spring Boot Admin</td><td><code>http://localhost/admin</code></td><td><code>admin / admin123</code></td></tr>
+        <tr><td>SnailJob</td><td><code>http://localhost/snail-job</code></td><td><code>admin / admin123</code></td></tr>
+        <tr><td>SnailAI</td><td><code>http://localhost/snail-ai</code></td><td><code>admin / admin123</code></td></tr>
+        <tr><td>EMQX Dashboard</td><td><code>http://localhost:18083</code></td><td><code>admin / public</code></td></tr>
+        <tr><td>MinIO 控制台</td><td><code>http://localhost:9001</code></td><td><code>ruoyi / ruoyi123</code></td></tr>
+        <tr><td>Nacos</td><td><code>http://localhost:8848/nacos</code></td><td><code>nacos / 123456</code></td></tr>
+      </tbody>
+    </table>
+    <p>完整清单（含数据库、Redis、服务令牌、K8s Secret、改密命令）见 <a href="04-账号密码清单.html">04 · 账号密码清单</a>。</p>
+
+    <h2 id="markdown">Markdown 源文档</h2>
+    <ul class="doc-list">
+      <li><a href="../README.md">docs/README.md · 文档索引</a></li>
+      <li><a href="../01-系统架构设计.md">01 · 系统架构设计</a></li>
+      <li><a href="../02-部署指南.md">02 · 部署指南</a></li>
+      <li><a href="../03-构建与开发指南.md">03 · 构建与开发指南</a></li>
+      <li><a href="../04-账号与初始化说明.md">04 · 账号与初始化说明</a></li>
+      <li><a href="../05-模块功能说明.md">05 · 模块功能说明</a></li>
+    </ul>
+    <div class="callout ok">
+      建议阅读顺序：先看 05 从零搭建跑通环境，再用 01/03 理解设计与采集链路，部署阶段查 02，账号问题查 04。
+    </div>
+  </main>
 </div>
 </body>
 </html>

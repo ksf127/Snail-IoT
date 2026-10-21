@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Snail-IoT · 账号密码清单</title>
+<style>
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;padding:24px 20px 64px;
+    background:radial-gradient(1200px 600px at 50% -10%, #1e293b 0%, #0b1220 60%, #070b14 100%);
+    background-attachment:fixed;
+    font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    color:#e6edf7;font-size:14.5px;line-height:1.75;}
+  a{color:#8bc0ff;}
+  code{font-family:"Cascadia Code","Consolas",monospace;font-size:.88em;background:rgba(96,165,250,.13);
+    color:#a8ccff;padding:1px 5px;border-radius:4px;}
+  pre{background:#080e1a;border:1px solid rgba(80,120,180,.25);border-radius:10px;padding:14px 16px;overflow:auto;}
+  pre code{background:none;padding:0;color:#c8d8ee;font-size:12.6px;line-height:1.65;}
+  .layout{display:flex;gap:26px;max-width:1340px;margin:0 auto;align-items:flex-start;}
+  .sidebar{flex:0 0 248px;width:248px;position:sticky;top:24px;max-height:calc(100vh - 48px);overflow:auto;
+    background:rgba(13,22,42,.9);border:1px solid rgba(80,120,180,.25);border-radius:14px;padding:14px 12px;
+    box-shadow:0 14px 40px rgba(0,0,0,.35);}
+  .sidebar::-webkit-scrollbar{width:6px;}
+  .sidebar::-webkit-scrollbar-thumb{background:rgba(96,165,250,.3);border-radius:3px;}
+  .nav-title{font-size:11px;letter-spacing:1.2px;color:#6f89ab;margin:6px 8px 8px;}
+  .nav a{display:block;padding:7px 10px;border-radius:8px;color:#a9c0dc;text-decoration:none;
+    font-size:13px;border-left:2px solid transparent;transition:.15s;}
+  .nav a:hover{background:rgba(96,165,250,.1);color:#dcecff;}
+  .nav a.active{background:rgba(96,165,250,.16);color:#e9f3ff;border-left-color:#60a5fa;font-weight:600;}
+  .nav-sep{height:1px;background:rgba(80,120,180,.2);margin:10px 8px;}
+  .main{flex:1;min-width:0;}
+  h1{font-size:27px;margin:0 0 8px;letter-spacing:.5px;}
+  h2{font-size:19px;margin:34px 0 12px;padding-bottom:8px;border-bottom:1px solid rgba(80,120,180,.22);color:#dbe9fb;}
+  h3{font-size:15.5px;margin:22px 0 8px;color:#c9dcf3;}
+  p{color:#b8cbe2;}
+  .sub{color:#8fa3bf;font-size:13.5px;margin:0 0 24px;}
+  .card{background:rgba(17,28,52,.72);border:1px solid rgba(80,120,180,.28);border-radius:16px;
+    padding:18px 20px 10px;box-shadow:0 18px 50px rgba(0,0,0,.45);}
+  table{width:100%;border-collapse:collapse;margin:12px 0 18px;font-size:13.4px;display:block;overflow-x:auto;}
+  th,td{border:1px solid rgba(80,120,180,.22);padding:8px 10px;text-align:left;vertical-align:top;}
+  th{background:rgba(30,52,90,.6);color:#cfe0f7;font-weight:600;white-space:nowrap;}
+  tbody tr:nth-child(even){background:rgba(255,255,255,.015);}
+  .callout{border-left:3px solid #60a5fa;background:rgba(30,64,120,.25);border-radius:0 10px 10px 0;
+    padding:10px 14px;margin:14px 0;font-size:13.3px;color:#b8cbe2;}
+  .callout.warn{border-left-color:#f59e0b;background:rgba(120,80,20,.22);color:#e7d3ad;}
+  .callout.ok{border-left-color:#10b981;background:rgba(16,120,90,.18);color:#b9e9d7;}
+  .callout.danger{border-left-color:#ef4444;background:rgba(120,30,30,.22);color:#f0c4c4;}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:14px;margin:14px 0 18px;}
+  .box{background:rgba(17,28,52,.72);border:1px solid rgba(80,120,180,.28);border-radius:12px;padding:14px 16px;}
+  .box h4{margin:0 0 8px;font-size:14px;color:#cfe0f7;}
+  .box p{margin:4px 0;font-size:13px;}
+  ol.notes{padding-left:22px;color:#b8cbe2;font-size:13.5px;}
+  ol.notes li{margin:6px 0;}
+  .tag{display:inline-block;font-size:11px;padding:1px 7px;border-radius:999px;
+    background:rgba(96,165,250,.16);color:#9fc8ff;margin-left:6px;vertical-align:1px;}
+  .tag.red{background:rgba(239,68,68,.18);color:#f3a6a6;}
+  .tag.green{background:rgba(16,185,129,.18);color:#8fe0c4;}
+  @media(max-width:920px){
+    body{padding:16px 12px 48px;}
+    .layout{display:block;}
+    .sidebar{position:static;width:auto;max-height:none;margin-bottom:18px;}
+    .nav{display:flex;flex-wrap:wrap;gap:5px;}
+    .nav a{border-left:none;border:1px solid rgba(80,120,180,.2);padding:5px 9px;font-size:12.5px;}
+    .nav-sep{display:none;}
+    .nav-title{margin:8px 4px 4px;}
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="nav-title">图表与手册</div>
+    <nav class="nav">
+      <a href="index.html">文档中心</a>
+      <a href="01-系统架构图.html">01 · 系统架构图</a>
+      <a href="02-部署拓扑图.html">02 · 部署拓扑图</a>
+      <a href="03-数据采集流程.html">03 · 数据采集流程</a>
+      <a class="active" href="04-账号密码清单.html">04 · 账号密码清单</a>
+      <a href="05-从零搭建与验证.html">05 · 从零搭建与验证</a>
+    </nav>
+    <div class="nav-sep"></div>
+    <div class="nav-title">本页目录</div>
+    <nav class="nav">
+      <a href="#platform">平台业务账号</a>
+      <a href="#infra">基础设施账号</a>
+      <a href="#console">运维控制台</a>
+      <a href="#tokens">服务令牌与密钥</a>
+      <a href="#k8s-secret">K8s Secret</a>
+      <a href="#device">演示设备密钥</a>
+      <a href="#security">安全建议与改密</a>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <h1>Snail-IoT · 账号密码清单</h1>
+    <p class="sub">平台账号 · 基础设施 · 运维控制台 · 服务令牌 · K8s Secret · 演示设备密钥，全部来源于仓库内的配置文件与 SQL 种子数据</p>
+
+    <div class="callout danger">
+      <strong>默认口令仅用于本地 / 演示环境。</strong>上生产前必须按 <a href="#security">安全建议与改密</a> 全部替换；本文档本身包含明文口令，切勿提交到公开仓库或对外分发。
+    </div>
+
+    <h2 id="platform">平台业务账号</h2>
+    <p>登录入口为前端 <code>/login</code>，走 <code>POST /auth/login</code> → <code>IAuthStrategy</code> → Sa-Token JWT。账号来自 <code>postgres_iot_vue.sql</code> 的 <code>sys_user</code> 种子数据。</p>
+    <table>
+      <thead>
+        <tr><th>账号</th><th>密码</th><th>昵称</th><th>数据范围</th><th>说明</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>admin</code></td><td><code>admin123</code></td><td>超级管理员</td><td>全部数据</td><td>内置超级管理员，拥有全部菜单与接口权限</td></tr>
+        <tr><td><code>test</code></td><td><code>666666</code></td><td>本部门及以下 密码666666</td><td>本部门及以下</td><td>演示用普通角色，验证部门级数据权限</td></tr>
+        <tr><td><code>test1</code></td><td><code>666666</code></td><td>仅本人 密码666666</td><td>仅本人</td><td>演示用普通角色，验证仅本人数据权限</td></tr>
+      </tbody>
+    </table>
+    <div class="callout">
+      登录成功后 Token 中写入 <code>clientId</code>；后续每个请求必须同时携带 <code>Authorization: Bearer &lt;token&gt;</code> 与 <code>clientid</code> 头，且两者一致，否则返回「客户端ID与Token不匹配」。
+    </div>
+    <table>
+      <thead>
+        <tr><th>认证参数</th><th>值</th><th>位置</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>默认客户端 ID</td><td><code>e5cd7e4891bf95d1d19206ce24a7b32e</code></td><td><code>sys_client.client_id</code> / <code>iot.sso.default-client-id</code> / <code>VITE_APP_CLIENT_ID</code></td></tr>
+        <tr><td>默认客户端密钥</td><td><code>pc123</code></td><td><code>sys_client.client_secret</code></td></tr>
+        <tr><td>客户端授权类型</td><td><code>password,social</code></td><td><code>sys_client.grant_type</code></td></tr>
+        <tr><td>Token 名称</td><td><code>Authorization</code></td><td><code>sa-token.token-name</code></td></tr>
+        <tr><td>JWT 签名密钥</td><td><code>abcdefghijklmnopqrstuvwxyz</code></td><td><code>sa-token.jwt-secret-key</code></td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="infra">基础设施账号</h2>
+    <table>
+      <thead>
+        <tr><th>系统</th><th>端口（宿主）</th><th>账号</th><th>密码</th><th>说明</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>PostgreSQL 16</td><td>5432</td><td><code>postgres</code></td><td><code>postgres</code></td><td>数据库 <code>ruoyi</code>；含 pgvector 扩展，由 <code>init-vector.sql</code> 初始化</td></tr>
+        <tr><td>Redis</td><td>6379</td><td>—</td><td><code>123456</code></td><td><code>--requirepass 123456</code>；dev profile 默认不配密码，需手工补</td></tr>
+        <tr><td>MinIO</td><td>9000（S3）/ 9001（控制台）</td><td><code>ruoyi</code></td><td><code>ruoyi123</code></td><td>根用户；<code>minio-init</code> 自动创建桶 <code>ruoyi</code> 并设为匿名可下载</td></tr>
+        <tr><td>EMQX 5.8.4</td><td>1883（MQTT）/ 8083（WS）/ 18083（控制台）</td><td><code>admin</code></td><td><code>public</code></td><td><code>EMQX_DASHBOARD__DEFAULT_PASSWORD=public</code>；允许匿名连接（<code>EMQX_ALLOW_ANONYMOUS=true</code>）</td></tr>
+        <tr><td>Nacos 2.4.3</td><td>8848（HTTP）/ 9848（gRPC）</td><td><code>nacos</code></td><td><code>123456</code></td><td>鉴权开启；Token 见下表；identity key/value = <code>serverIdentity</code> / <code>security</code></td></tr>
+        <tr><td>Elasticsearch 8.15.3</td><td>9200</td><td>—</td><td>—</td><td><code>xpack.security.enabled=false</code>，无认证；仅内网暴露</td></tr>
+        <tr><td>Kafka 3.9.0（KRaft）</td><td>9092（容器）/ 9093（控制器）/ 9094（宿主）</td><td>—</td><td>—</td><td>无认证；<code>CLUSTER_ID=iot-platform-kraft-cluster</code></td></tr>
+        <tr><td>Ollama</td><td>11434</td><td>—</td><td>—</td><td>由 <code>thirdparty/snail-ai</code> 编排提供，默认模型 <code>qwen3:8b</code> / <code>nomic-embed-text</code></td></tr>
+      </tbody>
+    </table>
+    <h3>Nacos 鉴权参数</h3>
+    <table>
+      <thead>
+        <tr><th>参数</th><th>值</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>NACOS_AUTH_ENABLE</code></td><td><code>true</code></td></tr>
+        <tr><td><code>NACOS_AUTH_TOKEN</code></td><td><code>aW90LXBsYXRmb3JtLW5hY29zLWF1dGgtdG9rZW4tMjAyNi1wbGVhc2UtY2hhbmdlLWluLXByb2Q=</code></td></tr>
+        <tr><td><code>NACOS_AUTH_IDENTITY_KEY</code></td><td><code>serverIdentity</code></td></tr>
+        <tr><td><code>NACOS_AUTH_IDENTITY_VALUE</code></td><td><code>security</code></td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="console">运维控制台</h2>
+    <table>
+      <thead>
+        <tr><th>控制台</th><th>直连地址（宿主）</th><th>统一入口（Nginx）</th><th>账号</th><th>密码</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Spring Boot Admin</td><td><code>http://localhost:9090</code></td><td><code>/admin/</code></td><td><code>admin</code></td><td><code>admin123</code></td></tr>
+        <tr><td>SnailJob 调度中心</td><td><code>http://localhost:8800</code></td><td><code>/snail-job/</code></td><td><code>admin</code></td><td><code>admin123</code></td></tr>
+        <tr><td>SnailAI 控制台</td><td><code>http://localhost:8900</code></td><td><code>/snail-ai/</code></td><td><code>admin</code></td><td><code>admin123</code></td></tr>
+        <tr><td>Jenkins</td><td><code>http://localhost:8090</code></td><td><code>/jenkins-api/</code>（Basic Auth）</td><td><code>admin</code></td><td><code>admin123</code></td></tr>
+        <tr><td>EMQX Dashboard</td><td><code>http://localhost:18083</code></td><td>—</td><td><code>admin</code></td><td><code>public</code></td></tr>
+        <tr><td>MinIO Console</td><td><code>http://localhost:9001</code></td><td>—</td><td><code>ruoyi</code></td><td><code>ruoyi123</code></td></tr>
+        <tr><td>Nacos Console</td><td><code>http://localhost:8848/nacos</code></td><td>—</td><td><code>nacos</code></td><td><code>123456</code></td></tr>
+        <tr><td>Snail-IoT 前端</td><td><code>http://localhost</code></td><td>—</td><td><code>admin</code></td><td><code>admin123</code></td></tr>
+      </tbody>
+    </table>
+    <div class="callout">
+      Jenkins 反向代理使用 Nginx Basic Auth，凭据为 Base64 <code>YWRtaW46YWRtaW4xMjM=</code>（即 <code>admin:admin123</code>），与 Jenkins 自身账号一致。
+    </div>
+
+    <h2 id="tokens">服务令牌与密钥</h2>
+    <table>
+      <thead>
+        <tr><th>类别</th><th>参数</th><th>值</th><th>配置位置</th></tr>
+      </thead>
+      <tbody>
+        <tr><td rowspan="4">SnailJob</td><td>group</td><td><code>ruoyi_group</code></td><td><code>snail-job.group</code></td></tr>
+        <tr><td>接入令牌</td><td><code>SJ_cKqBTPzCsWA3VyuCfFoccmuIEGXjr5KT</code></td><td><code>snail-job.token</code> / <code>sj_group_config</code></td></tr>
+        <tr><td>服务端端口</td><td><code>17888</code></td><td><code>snail-job.server.port</code></td></tr>
+        <tr><td>客户端端口</td><td><code>2${server.port}</code> → <strong>28080</strong></td><td><code>snail-job.port</code></td></tr>
+        <tr><td rowspan="4">SnailAI（prod）</td><td>app-id</td><td><code>1</code></td><td><code>snail-ai.app-id</code></td></tr>
+        <tr><td>token</td><td><code>SAI_566a6bfbc26e4998b4841cc927d50c5d</code></td><td><code>snail-ai.token</code></td></tr>
+        <tr><td>gRPC 端口</td><td><code>18888</code></td><td><code>snail-ai.server.port</code></td></tr>
+        <tr><td>客户端端口</td><td><code>3${server.port}</code> → <strong>38080</strong></td><td><code>snail-ai.port</code></td></tr>
+        <tr><td rowspan="2">SnailAI（dev）</td><td>app-id</td><td><code>iot-vue-plus-001</code></td><td><code>application-dev.yml</code></td></tr>
+        <tr><td>token</td><td><code>SAI_0d0f844da152475999ab1db2f8131210</code></td><td><code>application-dev.yml</code></td></tr>
+        <tr><td rowspan="2">GitHub 同步</td><td>owner</td><td><code>ksf127</code></td><td><code>iot.github.owner</code></td></tr>
+        <tr><td>Personal Access Token</td><td><code>${GITHUB_TOKEN:}</code>（默认空）</td><td>环境变量 / K8s Secret</td></tr>
+        <tr><td rowspan="2">SSO / OAuth2</td><td>默认 client-id</td><td><code>e5cd7e4891bf95d1d19206ce24a7b32e</code></td><td><code>iot.sso.default-client-id</code></td></tr>
+        <tr><td>票据有效期</td><td><code>300</code> 秒 / id_token <code>3600</code> 秒</td><td><code>iot.sso.ticket-timeout</code> / <code>oidc.id-token-timeout</code></td></tr>
+        <tr><td>Sa-Token</td><td>JWT 密钥</td><td><code>abcdefghijklmnopqrstuvwxyz</code></td><td><code>sa-token.jwt-secret-key</code></td></tr>
+        <tr><td>接口加解密</td><td>RSA 公私钥</td><td>前后端成对配置</td><td><code>.env</code> 的 <code>VITE_APP_RSA_*</code> 与后端 <code>api-decrypt</code></td></tr>
+      </tbody>
+    </table>
+    <div class="callout warn">
+      SnailAI 的 <code>app-id</code> 与 <code>token</code> 是在 Server「应用管理」页面创建应用时生成的，需与 prod / dev 环境分别对应；直接复用会导致客户端注册失败。
+    </div>
+
+    <h2 id="k8s-secret">K8s Secret（iot-secret）</h2>
+    <p>文件位置 <code>iot-platform/script/k8s/secret.yaml</code>，dev / prod 两个命名空间共用同一份模板。</p>
+    <table>
+      <thead>
+        <tr><th>Key</th><th>默认值</th><th>用途</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>POSTGRES_USERNAME</code></td><td><code>postgres</code></td><td>数据库用户</td></tr>
+        <tr><td><code>POSTGRES_PASSWORD</code></td><td><code>postgres</code></td><td>数据库口令</td></tr>
+        <tr><td><code>REDIS_PASSWORD</code></td><td><code>123456</code></td><td>Redis 口令</td></tr>
+        <tr><td><code>MINIO_ROOT_USER</code></td><td><code>ruoyi</code></td><td>MinIO 根用户</td></tr>
+        <tr><td><code>MINIO_ROOT_PASSWORD</code></td><td><code>ruoyi123</code></td><td>MinIO 根口令</td></tr>
+        <tr><td><code>GITHUB_TOKEN</code></td><td><code>""</code>（空）</td><td>私有仓库同步；为空时仅能读取公开仓库</td></tr>
+      </tbody>
+    </table>
+    <pre><code># 查看 / 更新 Secret
+kubectl -n iot-platform-dev get secret iot-secret -o yaml
+kubectl -n iot-platform-dev create secret generic iot-secret ^
+  --from-literal=POSTGRES_USERNAME=postgres ^
+  --from-literal=POSTGRES_PASSWORD=postgres ^
+  --from-literal=REDIS_PASSWORD=123456 ^
+  --from-literal=MINIO_ROOT_USER=ruoyi ^
+  --from-literal=MINIO_ROOT_PASSWORD=ruoyi123 ^
+  --from-literal=GITHUB_TOKEN=ghp_xxx ^
+  --dry-run=client -o yaml | kubectl apply -f -</code></pre>
+
+    <h2 id="device">演示设备密钥</h2>
+    <p>来自 <code>iot-platform/script/sql/postgres/iot_platform.sql</code>，用于验证 HTTP 采集入口的 <code>deviceSecret</code> 请求头。</p>
+    <table>
+      <thead>
+        <tr><th>deviceCode</th><th>deviceSecret</th><th>所属产品</th><th>初始状态</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>DEV-TEMP-0001</code></td><td><code>secret-temp-0001</code></td><td><code>P-SENSOR-TEMP</code></td><td>在线</td></tr>
+        <tr><td><code>DEV-TEMP-0002</code></td><td><code>secret-temp-0002</code></td><td><code>P-SENSOR-TEMP</code></td><td>离线</td></tr>
+        <tr><td><code>DEV-PLC-0001</code></td><td><code>secret-plc-0001</code></td><td><code>P-GATEWAY-PLC</code></td><td>在线</td></tr>
+      </tbody>
+    </table>
+    <pre><code>curl -X POST "http://localhost/prod-api/iot/collect/https/DEV-PLC-0001" ^
+  -H "Content-Type: application/json" ^
+  -H "deviceSecret: secret-plc-0001" ^
+  -d "{\"line\":\"A\",\"throughput\":120}"</code></pre>
+
+    <h2 id="security">安全建议与改密</h2>
+    <div class="grid">
+      <div class="box">
+        <h4>上线前必改 <span class="tag red">高优先级</span></h4>
+        <p>数据库、Redis、MinIO、EMQX、Nacos 全部默认口令</p>
+        <p><code>sa-token.jwt-secret-key</code> 与 SSO client secret</p>
+        <p>SnailJob / SnailAI 接入令牌</p>
+      </div>
+      <div class="box">
+        <h4>网络暴露面 <span class="tag">中优先级</span></h4>
+        <p>仅暴露 80 / 443；5432 / 6379 / 9200 / 9092 / 18083 / 9001 / 8848 不对公网开放</p>
+        <p>K8s 使用 NodePort 30080 / 30081 时配合安全组白名单</p>
+      </div>
+      <div class="box">
+        <h4>凭据管理 <span class="tag">中优先级</span></h4>
+        <p>生产改用 K8s Secret / 外部密钥管理，不写入 yml</p>
+        <p><code>admin</code>、<code>test</code>、<code>test1</code> 首次登录后立即改密</p>
+        <p><code>GITHUB_TOKEN</code> 使用 fine-grained token，仅授 Contents:Read</p>
+      </div>
+      <div class="box">
+        <h4>审计 <span class="tag green">持续</span></h4>
+        <p>开启登录日志与操作日志</p>
+        <p>定期轮换 JWT 密钥（会使存量 Token 失效）</p>
+        <p>SSO 票据 TTL 保持 300 秒，不宜放大</p>
+      </div>
+    </div>
+    <h3>常用改密命令</h3>
+    <pre><code># PostgreSQL
+docker exec -it ruoyi-postgres psql -U postgres -c "ALTER USER postgres WITH PASSWORD '新密码';"
+
+# Redis（临时生效，需同步修改 compose 的 --requirepass 与各服务配置）
+docker exec -it ruoyi-redis redis-cli -a 123456 --no-auth-warning CONFIG SET requirepass "新密码"
+
+# MinIO（控制台 9001 → Identity → Users 修改，或 mc admin user add）
+docker exec -it ruoyi-minio mc admin user add local ruoyi 新密码
+
+# Nacos（控制台 8848/nacos → 权限控制 → 用户 → 修改 nacos 密码）
+# 同步更新所有服务的 spring.cloud.nacos.username / password
+
+# 平台账号（前端「系统管理 → 用户管理」重置，或直接改库）
+docker exec -it ruoyi-postgres psql -U postgres -d ruoyi -c ^
+  "UPDATE sys_user SET password = '<BCrypt 哈希>' WHERE user_name = 'admin';"</code></pre>
+    <div class="callout ok">
+      改密后请同步更新本文档、<code>docs/04-账号与初始化说明.md</code>、<code>docker-compose.yml</code>、<code>script/k8s/secret.yaml</code>，避免配置与文档漂移。
+    </div>
+
+    <p style="margin-top:36px;font-size:12.5px;color:#6f89ab;">
+      相关页面：<a href="02-部署拓扑图.html">02 · 部署拓扑图</a> ·
+      <a href="03-数据采集流程.html">03 · 数据采集流程</a> ·
+      <a href="05-从零搭建与验证.html">05 · 从零搭建与验证</a>
+    </p>
+  </main>
+</div>
+</body>
+</html>

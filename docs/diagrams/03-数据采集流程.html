@@ -3,145 +3,361 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Snail-IoT · 设备数据采集流程</title>
+<title>Snail-IoT · 数据采集流程</title>
 <style>
   *{box-sizing:border-box;}
-  body{
-    margin:0;padding:32px 16px 56px;
+  html{scroll-behavior:smooth;}
+  body{margin:0;padding:24px 20px 64px;
     background:radial-gradient(1200px 600px at 50% -10%, #1e293b 0%, #0b1220 60%, #070b14 100%);
+    background-attachment:fixed;
     font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
-    color:#e6edf7;
-  }
-  .wrap{max-width:1280px;margin:0 auto;}
-  h1{font-size:24px;margin:0 0 6px;font-weight:700;letter-spacing:.5px;}
-  .sub{color:#8fa3bf;font-size:13px;margin:0 0 22px;}
+    color:#e6edf7;font-size:14.5px;line-height:1.75;}
+  a{color:#8bc0ff;}
+  code{font-family:"Cascadia Code","Consolas",monospace;font-size:.88em;background:rgba(96,165,250,.13);
+    color:#a8ccff;padding:1px 5px;border-radius:4px;}
+  pre{background:#080e1a;border:1px solid rgba(80,120,180,.25);border-radius:10px;padding:14px 16px;overflow:auto;}
+  pre code{background:none;padding:0;color:#c8d8ee;font-size:12.6px;line-height:1.65;}
+  .layout{display:flex;gap:26px;max-width:1340px;margin:0 auto;align-items:flex-start;}
+  .sidebar{flex:0 0 248px;width:248px;position:sticky;top:24px;max-height:calc(100vh - 48px);overflow:auto;
+    background:rgba(13,22,42,.9);border:1px solid rgba(80,120,180,.25);border-radius:14px;padding:14px 12px;
+    box-shadow:0 14px 40px rgba(0,0,0,.35);}
+  .sidebar::-webkit-scrollbar{width:6px;}
+  .sidebar::-webkit-scrollbar-thumb{background:rgba(96,165,250,.3);border-radius:3px;}
+  .nav-title{font-size:11px;letter-spacing:1.2px;color:#6f89ab;margin:6px 8px 8px;}
+  .nav a{display:block;padding:7px 10px;border-radius:8px;color:#a9c0dc;text-decoration:none;
+    font-size:13px;border-left:2px solid transparent;transition:.15s;}
+  .nav a:hover{background:rgba(96,165,250,.1);color:#dcecff;}
+  .nav a.active{background:rgba(96,165,250,.16);color:#e9f3ff;border-left-color:#60a5fa;font-weight:600;}
+  .nav-sep{height:1px;background:rgba(80,120,180,.2);margin:10px 8px;}
+  .main{flex:1;min-width:0;}
+  h1{font-size:27px;margin:0 0 8px;letter-spacing:.5px;}
+  h2{font-size:19px;margin:34px 0 12px;padding-bottom:8px;border-bottom:1px solid rgba(80,120,180,.22);color:#dbe9fb;}
+  h3{font-size:15.5px;margin:22px 0 8px;color:#c9dcf3;}
+  p{color:#b8cbe2;}
+  .sub{color:#8fa3bf;font-size:13.5px;margin:0 0 24px;}
   .card{background:rgba(17,28,52,.72);border:1px solid rgba(80,120,180,.28);border-radius:16px;
-        padding:18px 18px 8px;box-shadow:0 18px 50px rgba(0,0,0,.45);backdrop-filter:blur(6px);}
+    padding:18px 20px 10px;box-shadow:0 18px 50px rgba(0,0,0,.45);}
   svg{width:100%;height:auto;display:block;}
-  .notes{margin:6px 4px 10px;padding:0 0 0 20px;color:#a9bdd6;font-size:13px;line-height:1.9;}
-  .notes b{color:#dbe7f7;}
-  .legend{display:flex;flex-wrap:wrap;gap:16px;margin:8px 4px 6px;font-size:12.5px;color:#9db2cd;}
+  .legend{display:flex;flex-wrap:wrap;gap:16px;margin:14px 4px 6px;font-size:12.5px;color:#9db2cd;}
   .legend span{display:inline-flex;align-items:center;gap:7px;}
   .dot{width:11px;height:11px;border-radius:3px;display:inline-block;}
   text{font-family:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;}
+  table{width:100%;border-collapse:collapse;margin:12px 0 18px;font-size:13.4px;display:block;overflow-x:auto;}
+  th,td{border:1px solid rgba(80,120,180,.22);padding:8px 10px;text-align:left;vertical-align:top;}
+  th{background:rgba(30,52,90,.6);color:#cfe0f7;font-weight:600;white-space:nowrap;}
+  tbody tr:nth-child(even){background:rgba(255,255,255,.015);}
+  .callout{border-left:3px solid #60a5fa;background:rgba(30,64,120,.25);border-radius:0 10px 10px 0;
+    padding:10px 14px;margin:14px 0;font-size:13.3px;color:#b8cbe2;}
+  .callout.warn{border-left-color:#f59e0b;background:rgba(120,80,20,.22);color:#e7d3ad;}
+  .callout.ok{border-left-color:#10b981;background:rgba(16,120,90,.18);color:#b9e9d7;}
+  ol.notes{padding-left:22px;color:#b8cbe2;font-size:13.5px;}
+  ol.notes li{margin:6px 0;}
+  @media(max-width:920px){
+    body{padding:16px 12px 48px;}
+    .layout{display:block;}
+    .sidebar{position:static;width:auto;max-height:none;margin-bottom:18px;}
+    .nav{display:flex;flex-wrap:wrap;gap:5px;}
+    .nav a{border-left:none;border:1px solid rgba(80,120,180,.2);padding:5px 9px;font-size:12.5px;}
+    .nav-sep{display:none;}
+    .nav-title{margin:8px 4px 4px;}
+  }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <h1>Snail-IoT · 设备数据采集流程</h1>
-  <p class="sub">MQTT / HTTP 上行 → EMQX → Kafka iot-device-data → ES 时序 + Redis 心跳 + 首次心跳回写 PostgreSQL</p>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="nav-title">图表与手册</div>
+    <nav class="nav">
+      <a href="index.html">文档中心</a>
+      <a href="01-系统架构图.html">01 · 系统架构图</a>
+      <a href="02-部署拓扑图.html">02 · 部署拓扑图</a>
+      <a class="active" href="03-数据采集流程.html">03 · 数据采集流程</a>
+      <a href="04-账号密码清单.html">04 · 账号密码清单</a>
+      <a href="05-从零搭建与验证.html">05 · 从零搭建与验证</a>
+    </nav>
+    <div class="nav-sep"></div>
+    <div class="nav-title">本页目录</div>
+    <nav class="nav">
+      <a href="#flow">链路总览</a>
+      <a href="#mqtt">MQTT 接入</a>
+      <a href="#http">HTTP 接入</a>
+      <a href="#kafka">Kafka 缓冲</a>
+      <a href="#storage">存储落点</a>
+      <a href="#limit">限流与鉴权</a>
+      <a href="#verify">逐步验证</a>
+      <a href="#faq">常见问题</a>
+    </nav>
+  </aside>
 
-  <div class="card">
-  <svg viewBox="0 0 1240 760" role="img" aria-label="设备数据采集流程图">
-    <defs>
-      <marker id="a3" markerWidth="10" markerHeight="10" refX="5" refY="3" orient="auto">
-        <path d="M0,0 L6,3 L0,6 z" fill="#5b7aa6"/>
-      </marker>
-    </defs>
+  <main class="main">
+    <h1>Snail-IoT · 设备数据采集流程</h1>
+    <p class="sub">MQTT / HTTP 上行 → EMQX → Kafka iot-device-data → ES 时序 + Redis 心跳 + 首次心跳回写 PostgreSQL</p>
 
-    <!-- 1 设备端 -->
-    <rect x="470" y="30" width="300" height="56" rx="12" fill="#0e1a30" stroke="#3568c4" stroke-opacity=".7"/>
-    <circle cx="500" cy="58" r="13" fill="#1d4ed8" fill-opacity=".35" stroke="#4f83e0"/>
-    <text x="500" y="62" fill="#bcd4ff" font-size="12" font-weight="700" text-anchor="middle">1</text>
-    <text x="620" y="54" fill="#dce9ff" font-size="14" font-weight="600" text-anchor="middle">设备端</text>
-    <text x="620" y="73" fill="#9fb6d6" font-size="11" text-anchor="middle">publish（MQTT / HTTP）</text>
+    <h2 id="flow">链路总览</h2>
+    <div class="card">
+    <svg viewBox="0 0 1240 760" role="img" aria-label="设备数据采集流程图">
+      <defs>
+        <marker id="a3" markerWidth="10" markerHeight="10" refX="5" refY="3" orient="auto">
+          <path d="M0,0 L6,3 L0,6 z" fill="#5b7aa6"/>
+        </marker>
+      </defs>
 
-    <line x1="620" y1="86" x2="620" y2="124" stroke="#5b7aa6" stroke-width="2" marker-end="url(#a3)"/>
+      <!-- 1 设备端 -->
+      <rect x="470" y="30" width="300" height="56" rx="12" fill="#0e1a30" stroke="#3568c4" stroke-opacity=".7"/>
+      <circle cx="500" cy="58" r="13" fill="#1d4ed8" fill-opacity=".35" stroke="#4f83e0"/>
+      <text x="500" y="62" fill="#bcd4ff" font-size="12" font-weight="700" text-anchor="middle">1</text>
+      <text x="620" y="54" fill="#dce9ff" font-size="14" font-weight="600" text-anchor="middle">设备端</text>
+      <text x="620" y="73" fill="#9fb6d6" font-size="11" text-anchor="middle">publish（MQTT / HTTP）</text>
 
-    <!-- 2 EMQX -->
-    <rect x="420" y="126" width="400" height="64" rx="12" fill="#0b2430" stroke="#22b8d6" stroke-opacity=".7"/>
-    <circle cx="450" cy="158" r="13" fill="#0891b2" fill-opacity=".35" stroke="#22b8d6"/>
-    <text x="450" y="162" fill="#b6f0ff" font-size="12" font-weight="700" text-anchor="middle">2</text>
-    <text x="620" y="152" fill="#dff6fb" font-size="14" font-weight="600" text-anchor="middle">EMQX Broker（MQTT）:1883</text>
-    <text x="620" y="171" fill="#8fc4d4" font-size="11" text-anchor="middle">topic: iot/device/{deviceCode}/#</text>
+      <line x1="620" y1="86" x2="620" y2="124" stroke="#5b7aa6" stroke-width="2" marker-end="url(#a3)"/>
 
-    <line x1="620" y1="190" x2="620" y2="226" stroke="#5b7aa6" stroke-width="2" marker-end="url(#a3)"/>
+      <!-- 2 EMQX -->
+      <rect x="420" y="126" width="400" height="64" rx="12" fill="#0b2430" stroke="#22b8d6" stroke-opacity=".7"/>
+      <circle cx="450" cy="158" r="13" fill="#0891b2" fill-opacity=".35" stroke="#22b8d6"/>
+      <text x="450" y="162" fill="#b6f0ff" font-size="12" font-weight="700" text-anchor="middle">2</text>
+      <text x="620" y="152" fill="#dff6fb" font-size="14" font-weight="600" text-anchor="middle">EMQX Broker（MQTT）:1883</text>
+      <text x="620" y="171" fill="#8fc4d4" font-size="11" text-anchor="middle">topic: iot/device/{deviceCode}/#</text>
 
-    <!-- 3 订阅器 -->
-    <rect x="340" y="228" width="560" height="70" rx="12" fill="#160f2c" stroke="#8b5cf6" stroke-opacity=".65"/>
-    <circle cx="370" cy="263" r="13" fill="#7c3aed" fill-opacity=".35" stroke="#a78bfa"/>
-    <text x="370" y="267" fill="#e0d2ff" font-size="12" font-weight="700" text-anchor="middle">3</text>
-    <text x="620" y="255" fill="#e8dcff" font-size="14" font-weight="600" text-anchor="middle">MqttDeviceDataSubscriber（mica-mqtt）</text>
-    <text x="620" y="275" fill="#b8a6dd" font-size="11" text-anchor="middle">校验 → 组装 DeviceDataMessage</text>
+      <line x1="620" y1="190" x2="620" y2="226" stroke="#5b7aa6" stroke-width="2" marker-end="url(#a3)"/>
 
-    <line x1="620" y1="298" x2="620" y2="342" stroke="#5b7aa6" stroke-width="2" marker-end="url(#a3)"/>
+      <!-- 3 订阅器 -->
+      <rect x="340" y="228" width="560" height="70" rx="12" fill="#160f2c" stroke="#8b5cf6" stroke-opacity=".65"/>
+      <circle cx="370" cy="263" r="13" fill="#7c3aed" fill-opacity=".35" stroke="#a78bfa"/>
+      <text x="370" y="267" fill="#e0d2ff" font-size="12" font-weight="700" text-anchor="middle">3</text>
+      <text x="620" y="255" fill="#e8dcff" font-size="14" font-weight="600" text-anchor="middle">MqttDeviceDataSubscriber（mica-mqtt）</text>
+      <text x="620" y="275" fill="#b8a6dd" font-size="11" text-anchor="middle">订阅 iot/device/+/# · 解析第 3 段为 deviceCode</text>
 
-    <!-- 4 Producer -->
-    <rect x="420" y="346" width="400" height="64" rx="12" fill="#160f2c" stroke="#8b5cf6" stroke-opacity=".65"/>
-    <circle cx="450" cy="378" r="13" fill="#7c3aed" fill-opacity=".35" stroke="#a78bfa"/>
-    <text x="450" y="382" fill="#e0d2ff" font-size="12" font-weight="700" text-anchor="middle">4</text>
-    <text x="620" y="372" fill="#e8dcff" font-size="14" font-weight="600" text-anchor="middle">DeviceDataKafkaProducer</text>
-    <text x="620" y="391" fill="#b8a6dd" font-size="11" text-anchor="middle">topic: iot-device-data（削峰 / 解耦）</text>
+      <line x1="620" y1="298" x2="620" y2="342" stroke="#5b7aa6" stroke-width="2" marker-end="url(#a3)"/>
 
-    <!-- HTTP 接入支线 -->
-    <rect x="60" y="346" width="270" height="64" rx="12" fill="#0e1a30" stroke="#3568c4" stroke-opacity=".6"/>
-    <text x="195" y="372" fill="#dce9ff" font-size="13" font-weight="600" text-anchor="middle">HTTP 接入</text>
-    <text x="195" y="391" fill="#9fb6d6" font-size="10.5" text-anchor="middle">DeviceCollectController /iot/collect/https</text>
-    <line x1="330" y1="378" x2="416" y2="378" stroke="#5b7aa6" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a3)"/>
+      <!-- 4 Producer -->
+      <rect x="420" y="346" width="400" height="64" rx="12" fill="#160f2c" stroke="#8b5cf6" stroke-opacity=".65"/>
+      <circle cx="450" cy="378" r="13" fill="#7c3aed" fill-opacity=".35" stroke="#a78bfa"/>
+      <text x="450" y="382" fill="#e0d2ff" font-size="12" font-weight="700" text-anchor="middle">4</text>
+      <text x="620" y="372" fill="#e8dcff" font-size="14" font-weight="600" text-anchor="middle">DeviceDataKafkaProducer</text>
+      <text x="620" y="391" fill="#b8a6dd" font-size="11" text-anchor="middle">topic: iot-device-data（削峰 / 解耦）</text>
 
-    <line x1="620" y1="410" x2="620" y2="446" stroke="#5b7aa6" stroke-width="2" marker-end="url(#a3)"/>
+      <!-- HTTP 接入支线 -->
+      <rect x="60" y="346" width="270" height="64" rx="12" fill="#0e1a30" stroke="#3568c4" stroke-opacity=".6"/>
+      <text x="195" y="372" fill="#dce9ff" font-size="13" font-weight="600" text-anchor="middle">HTTP 接入</text>
+      <text x="195" y="391" fill="#9fb6d6" font-size="10.5" text-anchor="middle">DeviceCollectController /iot/collect/https</text>
+      <line x1="330" y1="378" x2="416" y2="378" stroke="#5b7aa6" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a3)"/>
 
-    <!-- 5 Consumer -->
-    <rect x="420" y="448" width="400" height="64" rx="12" fill="#160f2c" stroke="#8b5cf6" stroke-opacity=".65"/>
-    <circle cx="450" cy="480" r="13" fill="#7c3aed" fill-opacity=".35" stroke="#a78bfa"/>
-    <text x="450" y="484" fill="#e0d2ff" font-size="12" font-weight="700" text-anchor="middle">5</text>
-    <text x="620" y="474" fill="#e8dcff" font-size="14" font-weight="600" text-anchor="middle">DeviceDataKafkaConsumer</text>
-    <text x="620" y="493" fill="#b8a6dd" font-size="11" text-anchor="middle">groupId iot-platform · 手动 ack · 解析 / 分发</text>
+      <line x1="620" y1="410" x2="620" y2="446" stroke="#5b7aa6" stroke-width="2" marker-end="url(#a3)"/>
 
-    <!-- split -->
-    <line x1="620" y1="512" x2="620" y2="546" stroke="#5b7aa6" stroke-width="2"/>
-    <line x1="240" y1="546" x2="1000" y2="546" stroke="#5b7aa6" stroke-width="2"/>
-    <g stroke="#5b7aa6" stroke-width="2" marker-end="url(#a3)">
-      <line x1="240" y1="546" x2="240" y2="574"/>
-      <line x1="620" y1="546" x2="620" y2="574"/>
-      <line x1="1000" y1="546" x2="1000" y2="574"/>
-    </g>
+      <!-- 5 Consumer -->
+      <rect x="420" y="448" width="400" height="64" rx="12" fill="#160f2c" stroke="#8b5cf6" stroke-opacity=".65"/>
+      <circle cx="450" cy="480" r="13" fill="#7c3aed" fill-opacity=".35" stroke="#a78bfa"/>
+      <text x="450" y="484" fill="#e0d2ff" font-size="12" font-weight="700" text-anchor="middle">5</text>
+      <text x="620" y="474" fill="#e8dcff" font-size="14" font-weight="600" text-anchor="middle">DeviceDataKafkaConsumer</text>
+      <text x="620" y="493" fill="#b8a6dd" font-size="11" text-anchor="middle">groupId iot-platform · 手动 ack · 解析 / 分发</text>
 
-    <!-- 6a ES -->
-    <rect x="60" y="576" width="360" height="104" rx="12" fill="#0b2430" stroke="#22b8d6" stroke-opacity=".75"/>
-    <circle cx="90" cy="614" r="13" fill="#0891b2" fill-opacity=".35" stroke="#22b8d6"/>
-    <text x="90" y="618" fill="#b6f0ff" font-size="12" font-weight="700" text-anchor="middle">6a</text>
-    <text x="240" y="606" fill="#dff6fb" font-size="14" font-weight="700" text-anchor="middle">Elasticsearch</text>
-    <text x="240" y="626" fill="#8fc4d4" font-size="11" text-anchor="middle">索引 iot_device_data · Easy-ES</text>
-    <text x="240" y="645" fill="#8fc4d4" font-size="11" text-anchor="middle">时序检索 / 图表 / 聚合分析</text>
-    <text x="240" y="664" fill="#6f93a8" font-size="10.5" text-anchor="middle">默认关闭时不落库</text>
+      <!-- split -->
+      <line x1="620" y1="512" x2="620" y2="546" stroke="#5b7aa6" stroke-width="2"/>
+      <line x1="240" y1="546" x2="1000" y2="546" stroke="#5b7aa6" stroke-width="2"/>
+      <g stroke="#5b7aa6" stroke-width="2" marker-end="url(#a3)">
+        <line x1="240" y1="546" x2="240" y2="574"/>
+        <line x1="620" y1="546" x2="620" y2="574"/>
+        <line x1="1000" y1="546" x2="1000" y2="574"/>
+      </g>
 
-    <!-- 6b Redis 心跳 -->
-    <rect x="440" y="576" width="360" height="104" rx="12" fill="#0b2430" stroke="#22b8d6" stroke-opacity=".75"/>
-    <circle cx="470" cy="614" r="13" fill="#0891b2" fill-opacity=".35" stroke="#22b8d6"/>
-    <text x="470" y="618" fill="#b6f0ff" font-size="12" font-weight="700" text-anchor="middle">6b</text>
-    <text x="620" y="606" fill="#dff6fb" font-size="14" font-weight="700" text-anchor="middle">Redis 在线心跳</text>
-    <text x="620" y="626" fill="#8fc4d4" font-size="11" text-anchor="middle">iot:device:online:{deviceCode}</text>
-    <text x="620" y="645" fill="#8fc4d4" font-size="11" text-anchor="middle">TTL 5 分钟，每次上报刷新</text>
-    <text x="620" y="664" fill="#6f93a8" font-size="10.5" text-anchor="middle">限流 iot:collect:limit: · 100 次 / 60 秒</text>
+      <!-- 6a ES -->
+      <rect x="60" y="576" width="360" height="104" rx="12" fill="#0b2430" stroke="#22b8d6" stroke-opacity=".75"/>
+      <circle cx="90" cy="614" r="13" fill="#0891b2" fill-opacity=".35" stroke="#22b8d6"/>
+      <text x="90" y="618" fill="#b6f0ff" font-size="12" font-weight="700" text-anchor="middle">6a</text>
+      <text x="240" y="606" fill="#dff6fb" font-size="14" font-weight="700" text-anchor="middle">Elasticsearch</text>
+      <text x="240" y="626" fill="#8fc4d4" font-size="11" text-anchor="middle">索引 iot_device_data · Easy-ES</text>
+      <text x="240" y="645" fill="#8fc4d4" font-size="11" text-anchor="middle">时序检索 / 图表 / 聚合分析</text>
+      <text x="240" y="664" fill="#6f93a8" font-size="10.5" text-anchor="middle">easy-es.enable=false 时不落库</text>
 
-    <!-- 6c PG -->
-    <rect x="820" y="576" width="360" height="104" rx="12" fill="#1b1408" stroke="#f59e0b" stroke-opacity=".7"/>
-    <circle cx="850" cy="614" r="13" fill="#b45309" fill-opacity=".4" stroke="#f59e0b"/>
-    <text x="850" y="618" fill="#ffd79a" font-size="12" font-weight="700" text-anchor="middle">6c</text>
-    <text x="1000" y="606" fill="#ffe6bf" font-size="14" font-weight="700" text-anchor="middle">PostgreSQL</text>
-    <text x="1000" y="626" fill="#c9a978" font-size="11" text-anchor="middle">MyBatis-Plus</text>
-    <text x="1000" y="645" fill="#c9a978" font-size="11" text-anchor="middle">设备在线状态回写</text>
-    <text x="1000" y="664" fill="#a8855a" font-size="10.5" text-anchor="middle">仅首次心跳（缓存不存在）时更新</text>
+      <!-- 6b Redis 心跳 -->
+      <rect x="440" y="576" width="360" height="104" rx="12" fill="#0b2430" stroke="#22b8d6" stroke-opacity=".75"/>
+      <circle cx="470" cy="614" r="13" fill="#0891b2" fill-opacity=".35" stroke="#22b8d6"/>
+      <text x="470" y="618" fill="#b6f0ff" font-size="12" font-weight="700" text-anchor="middle">6b</text>
+      <text x="620" y="606" fill="#dff6fb" font-size="14" font-weight="700" text-anchor="middle">Redis 在线心跳</text>
+      <text x="620" y="626" fill="#8fc4d4" font-size="11" text-anchor="middle">iot:device:online:{deviceCode}</text>
+      <text x="620" y="645" fill="#8fc4d4" font-size="11" text-anchor="middle">TTL 5 分钟，每次上报刷新</text>
+      <text x="620" y="664" fill="#6f93a8" font-size="10.5" text-anchor="middle">限流 iot:collect:limit: · 100 次 / 60 秒</text>
 
-    <!-- 右侧说明 -->
-    <text x="52" y="720" fill="#7f97b8" font-size="11.5">虚线为可选 HTTP 接入路径（/iot/collect/https/{deviceCode}）；MQTT 与 HTTP 均汇入 Kafka 统一消费。</text>
-  </svg>
+      <!-- 6c PG -->
+      <rect x="820" y="576" width="360" height="104" rx="12" fill="#1b1408" stroke="#f59e0b" stroke-opacity=".7"/>
+      <circle cx="850" cy="614" r="13" fill="#b45309" fill-opacity=".4" stroke="#f59e0b"/>
+      <text x="850" y="618" fill="#ffd79a" font-size="12" font-weight="700" text-anchor="middle">6c</text>
+      <text x="1000" y="606" fill="#ffe6bf" font-size="14" font-weight="700" text-anchor="middle">PostgreSQL</text>
+      <text x="1000" y="626" fill="#c9a978" font-size="11" text-anchor="middle">MyBatis-Plus</text>
+      <text x="1000" y="645" fill="#c9a978" font-size="11" text-anchor="middle">设备在线状态回写</text>
+      <text x="1000" y="664" fill="#a8855a" font-size="10.5" text-anchor="middle">仅首次心跳（缓存不存在）时更新</text>
 
-  <ol class="notes">
-    <li><b>解耦与削峰</b>：MQTT 订阅与下游处理之间用 Kafka（<code>iot-device-data</code>）缓冲，突发流量不会直接压垮数据库。</li>
-    <li><b>落点分工</b>：Elasticsearch 承担高频时序写入与多维检索；Redis 用 5 分钟 TTL 的心跳 Key 判断设备在线；PostgreSQL 只在首次心跳时回写设备在线状态，避免每次上报都写库。</li>
-    <li><b>多协议接入</b>：<code>MqttDeviceDataSubscriber</code> 处理 MQTT；<code>DeviceCollectController</code> 提供 HTTP 入口，二者统一汇入 Kafka。</li>
-    <li><b>可控与可扩展</b>：采集侧限流 100 次 / 60 秒；新增消费逻辑只需订阅同一 Kafka topic，不影响设备端与接入层。</li>
-  </ol>
+      <!-- 右侧说明 -->
+      <text x="52" y="720" fill="#7f97b8" font-size="11.5">虚线为可选 HTTP 接入路径（POST /iot/collect/https/{deviceCode}，需 deviceSecret 请求头）；MQTT 与 HTTP 均汇入 Kafka 统一消费。</text>
+    </svg>
 
-  <div class="legend">
-    <span><i class="dot" style="background:#3568c4"></i>设备 / 接入</span>
-    <span><i class="dot" style="background:#22b8d6"></i>中间件 / 检索 / 缓存</span>
-    <span><i class="dot" style="background:#8b5cf6"></i>应用处理</span>
-    <span><i class="dot" style="background:#f59e0b"></i>关系型存储</span>
-  </div>
-  </div>
+    <div class="legend">
+      <span><i class="dot" style="background:#3568c4"></i>设备 / 接入</span>
+      <span><i class="dot" style="background:#22b8d6"></i>中间件 / 检索 / 缓存</span>
+      <span><i class="dot" style="background:#8b5cf6"></i>应用处理</span>
+      <span><i class="dot" style="background:#f59e0b"></i>关系型存储</span>
+    </div>
+    </div>
+
+    <p>逐跳说明：</p>
+    <table>
+      <thead><tr><th>跳</th><th>组件</th><th>输入</th><th>输出 / 动作</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>设备端</td><td>传感器数据</td><td>MQTT publish 或 HTTPS POST</td></tr>
+        <tr><td>2</td><td><code>iot-emqx</code></td><td><code>iot/device/{deviceCode}/#</code></td><td>Broker 分发，允许匿名连接</td></tr>
+        <tr><td>3</td><td><code>MqttDeviceDataSubscriber</code></td><td>MQTT 消息</td><td>取主题第 3 段为 <code>deviceCode</code>，组装 <code>DeviceDataMessage</code></td></tr>
+        <tr><td>4</td><td><code>DeviceDataKafkaProducer</code></td><td><code>DeviceDataMessage</code></td><td>发送到 Kafka topic <code>iot-device-data</code></td></tr>
+        <tr><td>5</td><td><code>DeviceDataKafkaConsumer</code></td><td>Kafka 消息</td><td>解析后分发到 ES / Redis / PostgreSQL，最后手动 ack</td></tr>
+        <tr><td>6a</td><td>Elasticsearch</td><td>原始报文</td><td>写入索引 <code>iot_device_data</code>（Easy-ES）</td></tr>
+        <tr><td>6b</td><td>Redis</td><td><code>deviceCode</code></td><td><code>SET iot:device:online:{code}</code>，TTL 5 分钟</td></tr>
+        <tr><td>6c</td><td>PostgreSQL</td><td>首次心跳</td><td>更新 <code>iot_device.online_status / last_online_time</code></td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="mqtt">MQTT 接入</h2>
+    <table>
+      <thead><tr><th>项</th><th>值</th></tr></thead>
+      <tbody>
+        <tr><td>Broker</td><td><code>localhost:1883</code>（容器内 <code>iot-emqx:1883</code>）</td></tr>
+        <tr><td>WebSocket</td><td><code>localhost:8083</code></td></tr>
+        <tr><td>上行主题</td><td><code>iot/device/{deviceCode}/#</code></td></tr>
+        <tr><td>下行指令主题</td><td><code>iot/command/{deviceCode}/#</code>（常量已定义）</td></tr>
+        <tr><td>服务端订阅</td><td><code>iot/device/+/#</code>，QoS 1</td></tr>
+        <tr><td>客户端开关</td><td><code>mqtt.client.enabled=true</code>（compose 已设为 true）</td></tr>
+        <tr><td>客户端 ID</td><td><code>iot-platform-server</code></td></tr>
+        <tr><td>认证</td><td><code>EMQX_ALLOW_ANONYMOUS=true</code>，当前无需账号</td></tr>
+      </tbody>
+    </table>
+    <pre><code># 模拟设备上报（需本机有 mosquitto-clients；无则用 docker 镜像）
+mosquitto_pub -h localhost -p 1883 ^
+  -t "iot/device/DEV-TEMP-0001/telemetry" ^
+  -m "{\"temperature\":25.6,\"humidity\":61}" -q 1
+
+# Windows 下也可用 curl 走 WebSocket 之外的方式，或直接 POST HTTP 入口（见下节）</code></pre>
+    <div class="callout">
+      主题第 3 段必须存在且等于设备编码，否则订阅器记录 <code>非法设备上报主题</code> 并直接丢弃。例如 <code>iot/device/DEV-TEMP-0001/telemetry</code> 正确，<code>iot/device/telemetry</code> 会被丢弃。
+    </div>
+
+    <h2 id="http">HTTP 接入</h2>
+    <p>面向无 MQTT 能力的设备（摄像头、PLC 网关）。入口方法在 <code>DeviceCollectController</code>，路径 <code>POST /iot/collect/https/{deviceCode}</code>，且带 <code>@SaIgnore</code>，不需要登录 Token。</p>
+    <table>
+      <thead><tr><th>项</th><th>值</th></tr></thead>
+      <tbody>
+        <tr><td>URL（容器内）</td><td><code>http://iot-server:8080/iot/collect/https/{deviceCode}</code></td></tr>
+        <tr><td>URL（经统一入口）</td><td><code>http://localhost/prod-api/iot/collect/https/{deviceCode}</code></td></tr>
+        <tr><td>请求头</td><td><code>deviceSecret: {设备密钥}</code></td></tr>
+        <tr><td>请求体</td><td>原始 JSON 字符串（<code>@RequestBody String</code>）</td></tr>
+        <tr><td>校验</td><td>设备存在 → <code>status=0</code>（正常）→ 密钥匹配 → 限流</td></tr>
+        <tr><td>响应</td><td><code>R.ok()</code>；失败返回 <code>设备不存在 / 设备已停用 / 设备密钥校验失败 / 上报过于频繁</code></td></tr>
+      </tbody>
+    </table>
+    <pre><code>curl -X POST "http://localhost/prod-api/iot/collect/https/DEV-PLC-0001" ^
+  -H "Content-Type: application/json" ^
+  -H "deviceSecret: secret-plc-0001" ^
+  -d "{\"line\":\"A\",\"throughput\":120}"</code></pre>
+    <div class="callout warn">
+      <code>deviceSecret</code> 在 <code>iot_device.device_secret</code> 中维护，演示数据见 <code>iot-platform/script/sql/postgres/iot_platform.sql</code>：<code>DEV-TEMP-0001 / secret-temp-0001</code>、<code>DEV-TEMP-0002 / secret-temp-0002</code>、<code>DEV-PLC-0001 / secret-plc-0001</code>。生产环境应改为每设备独立密钥并轮换。
+    </div>
+
+    <h2 id="kafka">Kafka 缓冲</h2>
+    <table>
+      <thead><tr><th>项</th><th>值</th></tr></thead>
+      <tbody>
+        <tr><td>Topic</td><td><code>iot-device-data</code></td></tr>
+        <tr><td>保留常量</td><td><code>iot-device-event</code>（设备生命周期事件，预留）</td></tr>
+        <tr><td>消费组</td><td><code>iot-platform</code></td></tr>
+        <tr><td>Ack 模式</td><td>手动 <code>Acknowledgment.acknowledge()</code>，异常也会 ack 防止毒消息阻塞</td></tr>
+        <tr><td>容器内地址</td><td><code>iot-kafka:9092</code></td></tr>
+        <tr><td>宿主机调试</td><td><code>localhost:9094</code></td></tr>
+        <tr><td>模式</td><td>KRaft 单节点，无 ZooKeeper，自动建 topic</td></tr>
+      </tbody>
+    </table>
+    <pre><code># 查看 topic
+docker exec -it iot-kafka /opt/kafka/bin/kafka-topics.sh ^
+  --bootstrap-server localhost:9092 --list
+
+# 消费最近 5 条（宿主机调试监听器）
+docker exec -it iot-kafka /opt/kafka/bin/kafka-console-consumer.sh ^
+  --bootstrap-server localhost:9092 --topic iot-device-data ^
+  --from-beginning --max-messages 5
+
+# 查看消费组积压
+docker exec -it iot-kafka /opt/kafka/bin/kafka-consumer-groups.sh ^
+  --bootstrap-server localhost:9092 --describe --group iot-platform</code></pre>
+
+    <h2 id="storage">存储落点</h2>
+    <h3>Elasticsearch</h3>
+    <table>
+      <thead><tr><th>项</th><th>值</th></tr></thead>
+      <tbody>
+        <tr><td>索引</td><td><code>iot_device_data</code></td></tr>
+        <tr><td>文档字段</td><td><code>id</code>（UUID）、<code>deviceCode</code>、<code>productCode</code>、<code>source</code>、<code>payload</code>、<code>timestamp</code>、<code>traceId</code></td></tr>
+        <tr><td>开关</td><td><code>easy-es.enable</code>；compose 中 <code>EASY_ES_ENABLE=true</code>，本地 dev 默认 false</td></tr>
+        <tr><td>索引创建</td><td>首次消费时探测，不存在则自动创建，失败后下次重试</td></tr>
+      </tbody>
+    </table>
+    <pre><code>curl "http://localhost:9200/iot_device_data/_search?size=5&amp;pretty"</code></pre>
+
+    <h3>Redis</h3>
+    <table>
+      <thead><tr><th>Key</th><th>值</th><th>TTL</th></tr></thead>
+      <tbody>
+        <tr><td><code>iot:device:online:{deviceCode}</code></td><td>最后一次上报时间戳（毫秒）</td><td>5 分钟，每次上报刷新</td></tr>
+        <tr><td><code>iot:collect:limit:{deviceCode}</code></td><td>限流计数器（Redisson RateLimiter）</td><td>60 秒窗口</td></tr>
+      </tbody>
+    </table>
+    <pre><code>docker exec -it ruoyi-redis redis-cli -a 123456 --no-auth-warning ^
+  KEYS "iot:device:online:*"
+
+docker exec -it ruoyi-redis redis-cli -a 123456 --no-auth-warning ^
+  TTL "iot:device:online:DEV-TEMP-0001"</code></pre>
+
+    <h3>PostgreSQL</h3>
+    <p>只在 Redis 心跳 Key <strong>不存在</strong>（即设备刚上线）时回写一次，避免每条上报都更新数据库：</p>
+    <pre><code>docker exec -it ruoyi-postgres psql -U postgres -d ruoyi -c ^
+  "SELECT device_code, online_status, last_online_time FROM iot_device WHERE device_code = 'DEV-TEMP-0001';"</code></pre>
+    <p><code>online_status</code>：<code>0</code> 离线、<code>1</code> 在线、<code>2</code> 未知；<code>status</code> 为设备启停状态（<code>0</code> 正常）。</p>
+
+    <h2 id="limit">限流与鉴权</h2>
+    <table>
+      <thead><tr><th>入口</th><th>鉴权</th><th>限流</th></tr></thead>
+      <tbody>
+        <tr><td>MQTT</td><td>EMQX 允许匿名（可配置认证）</td><td>订阅器未做应用层限流，依赖 Broker 与 Kafka 削峰</td></tr>
+        <tr><td>HTTP</td><td><code>deviceSecret</code> 请求头 + 设备状态校验（<code>@SaIgnore</code> 免登录）</td><td>按设备维度 100 次 / 60 秒，超出返回「上报过于频繁」</td></tr>
+        <tr><td>前端 API</td><td><code>Authorization: Bearer</code> + <code>clientid</code> 头</td><td>—</td></tr>
+      </tbody>
+    </table>
+    <div class="callout ok">
+      解耦思路：接入层只负责「收」，Kafka 负责「缓冲」，消费者负责「落」。新增统计 / 告警逻辑时，只需再订阅 <code>iot-device-data</code>，不影响设备端与接入层。
+    </div>
+
+    <h2 id="verify">逐步验证</h2>
+    <ol class="notes">
+      <li><b>Broker 就绪</b>：<code>docker logs iot-emqx --tail 50</code> 出现 <code>EMQX is started!</code>。</li>
+      <li><b>服务端已订阅</b>：<code>docker logs iot-server | findstr "已订阅 MQTT"</code>。</li>
+      <li><b>发一条 MQTT</b>：用上面的 <code>mosquitto_pub</code> 命令，主题带 <code>DEV-TEMP-0001</code>。</li>
+      <li><b>Kafka 有消息</b>：<code>kafka-console-consumer</code> 能读到 JSON。</li>
+      <li><b>Redis 有心跳</b>：<code>KEYS iot:device:online:*</code> 返回该 Key，<code>TTL</code> ≤ 300。</li>
+      <li><b>ES 有文档</b>：<code>_search</code> 返回 <code>hits.total.value</code> 增长。</li>
+      <li><b>库里有上线时间</b>：<code>last_online_time</code> 更新为刚才时间。</li>
+      <li><b>HTTP 入口</b>：用 <code>curl</code> 调 <code>/prod-api/iot/collect/https/DEV-PLC-0001</code>，返回 <code>code=200</code>。</li>
+      <li><b>限流生效</b>：1 分钟内连续请求超过 100 次，出现「上报过于频繁，请稍后再试」。</li>
+    </ol>
+
+    <h2 id="faq">常见问题</h2>
+    <table>
+      <thead><tr><th>现象</th><th>原因</th><th>处理</th></tr></thead>
+      <tbody>
+        <tr><td>消息发出但 Kafka 无数据</td><td>主题格式不对，第 3 段不是设备编码</td><td>改为 <code>iot/device/{deviceCode}/xxx</code></td></tr>
+        <tr><td>Kafka 无数据且服务端无订阅日志</td><td><code>MQTT_CLIENT_ENABLED=false</code></td><td>compose 中设为 <code>"true"</code> 并重启 iot-server</td></tr>
+        <tr><td>ES 查不到文档</td><td><code>EASY_ES_ENABLE=false</code> 或索引创建失败</td><td>设为 true；查看 iot-server 日志中的 ES 报错</td></tr>
+        <tr><td>Redis 无在线 Key</td><td>消费者未消费到消息</td><td>检查消费组积压与 iot-server 日志</td></tr>
+        <tr><td>HTTP 返回「设备密钥校验失败」</td><td><code>deviceSecret</code> 与库中不一致</td><td>查 <code>iot_device.device_secret</code></td></tr>
+        <tr><td>设备上线时间不更新</td><td>Redis Key 仍存在（5 分钟内重复上报）</td><td>属正常设计，仅首次心跳回写数据库</td></tr>
+      </tbody>
+    </table>
+    <p>从零搭建与完整验收流程见 <a href="05-从零搭建与验证.html#verify">05 · 逐步验证</a>。</p>
+  </main>
 </div>
 </body>
 </html>

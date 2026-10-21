@@ -6,208 +6,444 @@
 <title>Snail-IoT · 系统架构图</title>
 <style>
   *{box-sizing:border-box;}
-  body{
-    margin:0; padding:32px 16px 56px;
+  html{scroll-behavior:smooth;}
+  body{margin:0;padding:24px 20px 64px;
     background:radial-gradient(1200px 600px at 50% -10%, #1e293b 0%, #0b1220 60%, #070b14 100%);
+    background-attachment:fixed;
     font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
-    color:#e6edf7;
-  }
-  .wrap{max-width:1280px;margin:0 auto;}
-  h1{font-size:24px;margin:0 0 6px;font-weight:700;letter-spacing:.5px;}
-  .sub{color:#8fa3bf;font-size:13px;margin:0 0 22px;}
-  .card{
-    background:rgba(17,28,52,.72);
-    border:1px solid rgba(80,120,180,.28);
-    border-radius:16px;
-    padding:18px 18px 8px;
-    box-shadow:0 18px 50px rgba(0,0,0,.45);
-    backdrop-filter:blur(6px);
-  }
+    color:#e6edf7;font-size:14.5px;line-height:1.75;}
+  a{color:#8bc0ff;}
+  code{font-family:"Cascadia Code","Consolas",monospace;font-size:.88em;background:rgba(96,165,250,.13);
+    color:#a8ccff;padding:1px 5px;border-radius:4px;}
+  pre{background:#080e1a;border:1px solid rgba(80,120,180,.25);border-radius:10px;padding:14px 16px;overflow:auto;}
+  pre code{background:none;padding:0;color:#c8d8ee;font-size:12.6px;line-height:1.65;}
+  .layout{display:flex;gap:26px;max-width:1340px;margin:0 auto;align-items:flex-start;}
+  .sidebar{flex:0 0 248px;width:248px;position:sticky;top:24px;max-height:calc(100vh - 48px);overflow:auto;
+    background:rgba(13,22,42,.9);border:1px solid rgba(80,120,180,.25);border-radius:14px;padding:14px 12px;
+    box-shadow:0 14px 40px rgba(0,0,0,.35);}
+  .sidebar::-webkit-scrollbar{width:6px;}
+  .sidebar::-webkit-scrollbar-thumb{background:rgba(96,165,250,.3);border-radius:3px;}
+  .nav-title{font-size:11px;letter-spacing:1.2px;color:#6f89ab;margin:6px 8px 8px;}
+  .nav a{display:block;padding:7px 10px;border-radius:8px;color:#a9c0dc;text-decoration:none;
+    font-size:13px;border-left:2px solid transparent;transition:.15s;}
+  .nav a:hover{background:rgba(96,165,250,.1);color:#dcecff;}
+  .nav a.active{background:rgba(96,165,250,.16);color:#e9f3ff;border-left-color:#60a5fa;font-weight:600;}
+  .nav-sep{height:1px;background:rgba(80,120,180,.2);margin:10px 8px;}
+  .main{flex:1;min-width:0;}
+  h1{font-size:27px;margin:0 0 8px;letter-spacing:.5px;}
+  h2{font-size:19px;margin:34px 0 12px;padding-bottom:8px;border-bottom:1px solid rgba(80,120,180,.22);
+    color:#dbe9fb;scroll-margin-top:20px;}
+  h3{font-size:15.5px;margin:22px 0 8px;color:#c9dcf3;scroll-margin-top:20px;}
+  p{color:#b8cbe2;}
+  .sub{color:#8fa3bf;font-size:13.5px;margin:0 0 22px;}
+  .card{background:rgba(17,28,52,.72);border:1px solid rgba(80,120,180,.28);border-radius:16px;
+    padding:18px 18px 8px;box-shadow:0 18px 50px rgba(0,0,0,.45);backdrop-filter:blur(6px);}
   svg{width:100%;height:auto;display:block;}
   .legend{display:flex;flex-wrap:wrap;gap:16px;margin:14px 4px 6px;font-size:12.5px;color:#9db2cd;}
   .legend span{display:inline-flex;align-items:center;gap:7px;}
   .dot{width:11px;height:11px;border-radius:3px;display:inline-block;}
+  table{width:100%;border-collapse:collapse;margin:12px 0 18px;font-size:13.4px;display:block;overflow-x:auto;}
+  th,td{border:1px solid rgba(80,120,180,.22);padding:8px 10px;text-align:left;vertical-align:top;}
+  th{background:rgba(30,52,90,.6);color:#cfe0f7;font-weight:600;white-space:nowrap;}
+  tbody tr:nth-child(even){background:rgba(255,255,255,.015);}
+  .callout{border-left:3px solid #60a5fa;background:rgba(30,64,120,.25);border-radius:0 10px 10px 0;
+    padding:10px 14px;margin:14px 0;font-size:13.3px;color:#b8cbe2;}
+  .callout.warn{border-left-color:#f59e0b;background:rgba(120,80,20,.22);color:#e7d3ad;}
+  .mod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;}
+  .mod{background:rgba(9,36,48,.55);border:1px solid rgba(42,165,196,.35);border-radius:12px;
+    padding:13px 15px;scroll-margin-top:20px;}
+  .mod h4{margin:0 0 4px;font-size:14.5px;color:#dff6fb;}
+  .mod h4 span{font-size:11.5px;color:#7fb6c7;font-weight:400;margin-left:6px;}
+  .mod p{margin:0 0 6px;font-size:12.8px;color:#a9c6d4;line-height:1.65;}
+  .mod code{font-size:.82em;background:rgba(34,184,214,.13);color:#9fe3f2;}
   text{font-family:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;}
+  @media(max-width:920px){
+    body{padding:16px 12px 48px;}
+    .layout{display:block;}
+    .sidebar{position:static;width:auto;max-height:none;margin-bottom:18px;}
+    .nav{display:flex;flex-wrap:wrap;gap:5px;}
+    .nav a{border-left:none;border:1px solid rgba(80,120,180,.2);padding:5px 9px;font-size:12.5px;}
+    .nav-sep{display:none;}
+    .nav-title{margin:8px 4px 4px;}
+  }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <h1>Snail-IoT · 系统架构图</h1>
-  <p class="sub">分层架构：接入层 → 应用层 → 业务模块层（12 个）→ 通用能力层 → 框架底座 → 基础设施</p>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="nav-title">图表与手册</div>
+    <nav class="nav">
+      <a href="index.html">文档中心</a>
+      <a class="active" href="01-系统架构图.html">01 · 系统架构图</a>
+      <a href="02-部署拓扑图.html">02 · 部署拓扑图</a>
+      <a href="03-数据采集流程.html">03 · 数据采集流程</a>
+      <a href="04-账号密码清单.html">04 · 账号密码清单</a>
+      <a href="05-从零搭建与验证.html">05 · 从零搭建与验证</a>
+    </nav>
+    <div class="nav-sep"></div>
+    <div class="nav-title">本页目录</div>
+    <nav class="nav">
+      <a href="#overview">分层总览</a>
+      <a href="#access">接入层 / 展示层</a>
+      <a href="#app">应用层</a>
+      <a href="#biz">业务模块层</a>
+      <a href="#modules">12 个模块明细</a>
+      <a href="#common">通用能力层</a>
+      <a href="#framework">框架底座</a>
+      <a href="#infra">基础设施</a>
+      <a href="#deps">模块依赖与构建</a>
+    </nav>
+  </aside>
 
-  <div class="card">
-  <svg viewBox="0 0 1240 950" role="img" aria-label="系统分层架构图">
-    <defs>
-      <linearGradient id="gAccess" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stop-color="#1d4ed8" stop-opacity=".28"/>
-        <stop offset="1" stop-color="#1d4ed8" stop-opacity=".10"/>
-      </linearGradient>
-      <linearGradient id="gApp" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stop-color="#7c3aed" stop-opacity=".28"/>
-        <stop offset="1" stop-color="#7c3aed" stop-opacity=".10"/>
-      </linearGradient>
-      <linearGradient id="gBiz" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stop-color="#0891b2" stop-opacity=".28"/>
-        <stop offset="1" stop-color="#0891b2" stop-opacity=".10"/>
-      </linearGradient>
-      <linearGradient id="gCommon" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stop-color="#0d9488" stop-opacity=".28"/>
-        <stop offset="1" stop-color="#0d9488" stop-opacity=".10"/>
-      </linearGradient>
-      <linearGradient id="gFrame" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stop-color="#d97706" stop-opacity=".26"/>
-        <stop offset="1" stop-color="#d97706" stop-opacity=".08"/>
-      </linearGradient>
-      <linearGradient id="gInfra" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stop-color="#475569" stop-opacity=".32"/>
-        <stop offset="1" stop-color="#475569" stop-opacity=".12"/>
-      </linearGradient>
-      <marker id="arrow" markerWidth="10" markerHeight="10" refX="5" refY="3" orient="auto">
-        <path d="M0,0 L6,3 L0,6 z" fill="#5b7aa6"/>
-      </marker>
-    </defs>
+  <main class="main">
+    <h1>Snail-IoT · 系统架构图</h1>
+    <p class="sub">分层架构：接入层 → 应用层 → 业务模块层（12 个）→ 通用能力层 → 框架底座 → 基础设施</p>
 
-    <!-- ============ Layer 1 接入层 ============ -->
-    <rect x="40" y="50" width="1160" height="120" rx="14" fill="url(#gAccess)" stroke="#2f6bd6" stroke-opacity=".55"/>
-    <text x="62" y="74" fill="#8fb6f5" font-size="13" font-weight="700">接入层 / 展示层</text>
+    <h2 id="overview">分层总览</h2>
+    <div class="card">
+    <svg viewBox="0 0 1240 950" role="img" aria-label="系统分层架构图">
+      <defs>
+        <linearGradient id="gAccess" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#1d4ed8" stop-opacity=".28"/>
+          <stop offset="1" stop-color="#1d4ed8" stop-opacity=".10"/>
+        </linearGradient>
+        <linearGradient id="gApp" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#7c3aed" stop-opacity=".28"/>
+          <stop offset="1" stop-color="#7c3aed" stop-opacity=".10"/>
+        </linearGradient>
+        <linearGradient id="gBiz" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#0891b2" stop-opacity=".28"/>
+          <stop offset="1" stop-color="#0891b2" stop-opacity=".10"/>
+        </linearGradient>
+        <linearGradient id="gCommon" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#0d9488" stop-opacity=".28"/>
+          <stop offset="1" stop-color="#0d9488" stop-opacity=".10"/>
+        </linearGradient>
+        <linearGradient id="gFrame" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#d97706" stop-opacity=".26"/>
+          <stop offset="1" stop-color="#d97706" stop-opacity=".08"/>
+        </linearGradient>
+        <linearGradient id="gInfra" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#475569" stop-opacity=".32"/>
+          <stop offset="1" stop-color="#475569" stop-opacity=".12"/>
+        </linearGradient>
+        <marker id="arrow" markerWidth="10" markerHeight="10" refX="5" refY="3" orient="auto">
+          <path d="M0,0 L6,3 L0,6 z" fill="#5b7aa6"/>
+        </marker>
+      </defs>
 
-    <rect x="60" y="92" width="360" height="58" rx="10" fill="#0e1a30" stroke="#3568c4" stroke-opacity=".7"/>
-    <text x="240" y="117" fill="#dce9ff" font-size="14" font-weight="600" text-anchor="middle">plus-ui 前端</text>
-    <text x="240" y="137" fill="#9fb6d6" font-size="11.5" text-anchor="middle">Vue 3 + TypeScript + Element Plus + Vite</text>
+      <!-- Layer 1 接入层 -->
+      <rect x="40" y="50" width="1160" height="120" rx="14" fill="url(#gAccess)" stroke="#2f6bd6" stroke-opacity=".55"/>
+      <text x="62" y="74" fill="#8fb6f5" font-size="13" font-weight="700">接入层 / 展示层</text>
 
-    <rect x="440" y="92" width="360" height="58" rx="10" fill="#0e1a30" stroke="#3568c4" stroke-opacity=".7"/>
-    <text x="620" y="117" fill="#dce9ff" font-size="14" font-weight="600" text-anchor="middle">第三方系统</text>
-    <text x="620" y="137" fill="#9fb6d6" font-size="11.5" text-anchor="middle">CAS / OAuth2 / OIDC 接入</text>
+      <rect x="60" y="92" width="360" height="58" rx="10" fill="#0e1a30" stroke="#3568c4" stroke-opacity=".7"/>
+      <text x="240" y="117" fill="#dce9ff" font-size="14" font-weight="600" text-anchor="middle">plus-ui 前端</text>
+      <text x="240" y="137" fill="#9fb6d6" font-size="11.5" text-anchor="middle">Vue 3 + TypeScript + Element Plus + Vite</text>
 
-    <rect x="820" y="92" width="360" height="58" rx="10" fill="#0e1a30" stroke="#3568c4" stroke-opacity=".7"/>
-    <text x="1000" y="117" fill="#dce9ff" font-size="14" font-weight="600" text-anchor="middle">设备端</text>
-    <text x="1000" y="137" fill="#9fb6d6" font-size="11.5" text-anchor="middle">MQTT 上报 · HTTP 上报</text>
+      <rect x="440" y="92" width="360" height="58" rx="10" fill="#0e1a30" stroke="#3568c4" stroke-opacity=".7"/>
+      <text x="620" y="117" fill="#dce9ff" font-size="14" font-weight="600" text-anchor="middle">第三方系统</text>
+      <text x="620" y="137" fill="#9fb6d6" font-size="11.5" text-anchor="middle">CAS / OAuth2 / OIDC 接入</text>
 
-    <line x1="620" y1="170" x2="620" y2="198" stroke="#5b7aa6" stroke-width="2" marker-end="url(#arrow)"/>
+      <rect x="820" y="92" width="360" height="58" rx="10" fill="#0e1a30" stroke="#3568c4" stroke-opacity=".7"/>
+      <text x="1000" y="117" fill="#dce9ff" font-size="14" font-weight="600" text-anchor="middle">设备端</text>
+      <text x="1000" y="137" fill="#9fb6d6" font-size="11.5" text-anchor="middle">MQTT 上报 · HTTP 上报</text>
 
-    <!-- ============ Layer 2 应用层 ============ -->
-    <rect x="40" y="200" width="1160" height="100" rx="14" fill="url(#gApp)" stroke="#8b5cf6" stroke-opacity=".5"/>
-    <text x="62" y="224" fill="#c4a8ff" font-size="13" font-weight="700">应用层</text>
+      <line x1="620" y1="170" x2="620" y2="198" stroke="#5b7aa6" stroke-width="2" marker-end="url(#arrow)"/>
 
-    <rect x="60" y="242" width="1120" height="44" rx="10" fill="#160f2c" stroke="#8b5cf6" stroke-opacity=".6"/>
-    <text x="620" y="261" fill="#e8dcff" font-size="14" font-weight="600" text-anchor="middle">iot-platform-admin</text>
-    <text x="620" y="278" fill="#b8a6dd" font-size="11.5" text-anchor="middle">登录鉴权 · 验证码 · 全局异常 · 安全过滤链 · SSE 推送 · MCP 服务 · Actuator</text>
+      <!-- Layer 2 应用层 -->
+      <rect x="40" y="200" width="1160" height="100" rx="14" fill="url(#gApp)" stroke="#8b5cf6" stroke-opacity=".5"/>
+      <text x="62" y="224" fill="#c4a8ff" font-size="13" font-weight="700">应用层</text>
 
-    <line x1="620" y1="300" x2="620" y2="328" stroke="#5b7aa6" stroke-width="2" marker-end="url(#arrow)"/>
+      <rect x="60" y="242" width="1120" height="44" rx="10" fill="#160f2c" stroke="#8b5cf6" stroke-opacity=".6"/>
+      <text x="620" y="261" fill="#e8dcff" font-size="14" font-weight="600" text-anchor="middle">iot-platform-admin</text>
+      <text x="620" y="278" fill="#b8a6dd" font-size="11.5" text-anchor="middle">登录鉴权 · 验证码 · 全局异常 · 安全过滤链 · SSE 推送 · MCP 服务 · Actuator</text>
 
-    <!-- ============ Layer 3 业务模块层 ============ -->
-    <rect x="40" y="330" width="1160" height="182" rx="14" fill="url(#gBiz)" stroke="#22b8d6" stroke-opacity=".5"/>
-    <text x="62" y="354" fill="#9fe3f2" font-size="13" font-weight="700">业务模块层 · iot-platform-modules（12 个业务模块）</text>
+      <line x1="620" y1="300" x2="620" y2="328" stroke="#5b7aa6" stroke-width="2" marker-end="url(#arrow)"/>
 
-    <g font-size="12" font-weight="600" text-anchor="middle" fill="#dff6fb">
-      <rect x="66"  y="368" width="176" height="62" rx="9" fill="#0b2430" stroke="#2aa5c4" stroke-opacity=".7"/>
-      <text x="154" y="394">device</text><text x="154" y="414" font-size="10.5" fill="#8fc4d4" font-weight="400">产品 / 设备</text>
+      <!-- Layer 3 业务模块层 -->
+      <rect x="40" y="330" width="1160" height="182" rx="14" fill="url(#gBiz)" stroke="#22b8d6" stroke-opacity=".5"/>
+      <text x="62" y="354" fill="#9fe3f2" font-size="13" font-weight="700">业务模块层 · iot-platform-modules（12 个业务模块）</text>
 
-      <rect x="252" y="368" width="176" height="62" rx="9" fill="#0b2430" stroke="#2aa5c4" stroke-opacity=".7"/>
-      <text x="340" y="394">permission</text><text x="340" y="414" font-size="10.5" fill="#8fc4d4" font-weight="400">三线权限</text>
+      <g font-size="12" font-weight="600" text-anchor="middle" fill="#dff6fb">
+        <rect x="66"  y="368" width="176" height="62" rx="9" fill="#0b2430" stroke="#2aa5c4" stroke-opacity=".7"/>
+        <text x="154" y="394">device</text><text x="154" y="414" font-size="10.5" fill="#8fc4d4" font-weight="400">产品 / 设备</text>
 
-      <rect x="438" y="368" width="176" height="62" rx="9" fill="#0b2430" stroke="#2aa5c4" stroke-opacity=".7"/>
-      <text x="526" y="394">collect</text><text x="526" y="414" font-size="10.5" fill="#8fc4d4" font-weight="400">数据采集</text>
+        <rect x="252" y="368" width="176" height="62" rx="9" fill="#0b2430" stroke="#2aa5c4" stroke-opacity=".7"/>
+        <text x="340" y="394">permission</text><text x="340" y="414" font-size="10.5" fill="#8fc4d4" font-weight="400">三线权限</text>
 
-      <rect x="624" y="368" width="176" height="62" rx="9" fill="#0b2430" stroke="#2aa5c4" stroke-opacity=".7"/>
-      <text x="712" y="394">monitor</text><text x="712" y="414" font-size="10.5" fill="#8fc4d4" font-weight="400">运行监控</text>
+        <rect x="438" y="368" width="176" height="62" rx="9" fill="#0b2430" stroke="#2aa5c4" stroke-opacity=".7"/>
+        <text x="526" y="394">collect</text><text x="526" y="414" font-size="10.5" fill="#8fc4d4" font-weight="400">数据采集</text>
 
-      <rect x="810" y="368" width="176" height="62" rx="9" fill="#0b2430" stroke="#2aa5c4" stroke-opacity=".7"/>
-      <text x="898" y="394">sso</text><text x="898" y="414" font-size="10.5" fill="#8fc4d4" font-weight="400">统一认证 / OIDC / CAS</text>
+        <rect x="624" y="368" width="176" height="62" rx="9" fill="#0b2430" stroke="#2aa5c4" stroke-opacity=".7"/>
+        <text x="712" y="394">monitor</text><text x="712" y="414" font-size="10.5" fill="#8fc4d4" font-weight="400">运行监控</text>
 
-      <rect x="996" y="368" width="176" height="62" rx="9" fill="#0b2430" stroke="#2aa5c4" stroke-opacity=".7"/>
-      <text x="1084" y="394">archive</text><text x="1084" y="414" font-size="10.5" fill="#8fc4d4" font-weight="400">档案管理</text>
+        <rect x="810" y="368" width="176" height="62" rx="9" fill="#0b2430" stroke="#2aa5c4" stroke-opacity=".7"/>
+        <text x="898" y="394">sso</text><text x="898" y="414" font-size="10.5" fill="#8fc4d4" font-weight="400">统一认证 / OIDC / CAS</text>
 
-      <rect x="66"  y="440" width="176" height="62" rx="9" fill="#0b2430" stroke="#2aa5c4" stroke-opacity=".7"/>
-      <text x="154" y="466">report</text><text x="154" y="486" font-size="10.5" fill="#8fc4d4" font-weight="400">报表 / 文件</text>
+        <rect x="996" y="368" width="176" height="62" rx="9" fill="#0b2430" stroke="#2aa5c4" stroke-opacity=".7"/>
+        <text x="1084" y="394">archive</text><text x="1084" y="414" font-size="10.5" fill="#8fc4d4" font-weight="400">档案管理</text>
 
-      <rect x="252" y="440" width="176" height="62" rx="9" fill="#0b2430" stroke="#2aa5c4" stroke-opacity=".7"/>
-      <text x="340" y="466">deploy</text><text x="340" y="486" font-size="10.5" fill="#8fc4d4" font-weight="400">部署 / GitHub 项目</text>
+        <rect x="66"  y="440" width="176" height="62" rx="9" fill="#0b2430" stroke="#2aa5c4" stroke-opacity=".7"/>
+        <text x="154" y="466">report</text><text x="154" y="486" font-size="10.5" fill="#8fc4d4" font-weight="400">报表 / 文件</text>
 
-      <rect x="438" y="440" width="176" height="62" rx="9" fill="#0b2430" stroke="#2aa5c4" stroke-opacity=".7"/>
-      <text x="526" y="466">pay</text><text x="526" y="486" font-size="10.5" fill="#8fc4d4" font-weight="400">聚合支付</text>
+        <rect x="252" y="440" width="176" height="62" rx="9" fill="#0b2430" stroke="#2aa5c4" stroke-opacity=".7"/>
+        <text x="340" y="466">deploy</text><text x="340" y="486" font-size="10.5" fill="#8fc4d4" font-weight="400">部署 / GitHub 项目</text>
 
-      <rect x="624" y="440" width="176" height="62" rx="9" fill="#0b2430" stroke="#2aa5c4" stroke-opacity=".7"/>
-      <text x="712" y="466">ticket</text><text x="712" y="486" font-size="10.5" fill="#8fc4d4" font-weight="400">工单 / 流程</text>
+        <rect x="438" y="440" width="176" height="62" rx="9" fill="#0b2430" stroke="#2aa5c4" stroke-opacity=".7"/>
+        <text x="526" y="466">pay</text><text x="526" y="486" font-size="10.5" fill="#8fc4d4" font-weight="400">聚合支付</text>
 
-      <rect x="810" y="440" width="176" height="62" rx="9" fill="#0b2430" stroke="#2aa5c4" stroke-opacity=".7"/>
-      <text x="898" y="466">cloud</text><text x="898" y="486" font-size="10.5" fill="#8fc4d4" font-weight="400">云平台对接</text>
+        <rect x="624" y="440" width="176" height="62" rx="9" fill="#0b2430" stroke="#2aa5c4" stroke-opacity=".7"/>
+        <text x="712" y="466">ticket</text><text x="712" y="486" font-size="10.5" fill="#8fc4d4" font-weight="400">工单 / 流程</text>
 
-      <rect x="996" y="440" width="176" height="62" rx="9" fill="#0b2430" stroke="#2aa5c4" stroke-opacity=".7"/>
-      <text x="1084" y="466">job</text><text x="1084" y="486" font-size="10.5" fill="#8fc4d4" font-weight="400">任务调度</text>
-    </g>
+        <rect x="810" y="440" width="176" height="62" rx="9" fill="#0b2430" stroke="#2aa5c4" stroke-opacity=".7"/>
+        <text x="898" y="466">cloud</text><text x="898" y="486" font-size="10.5" fill="#8fc4d4" font-weight="400">云平台对接</text>
 
-    <line x1="620" y1="512" x2="620" y2="538" stroke="#5b7aa6" stroke-width="2" marker-end="url(#arrow)"/>
+        <rect x="996" y="440" width="176" height="62" rx="9" fill="#0b2430" stroke="#2aa5c4" stroke-opacity=".7"/>
+        <text x="1084" y="466">job</text><text x="1084" y="486" font-size="10.5" fill="#8fc4d4" font-weight="400">任务调度</text>
+      </g>
 
-    <!-- ============ Layer 4 通用能力层 ============ -->
-    <rect x="40" y="540" width="1160" height="88" rx="14" fill="url(#gCommon)" stroke="#14b8a6" stroke-opacity=".5"/>
-    <text x="62" y="564" fill="#9ff0e4" font-size="13" font-weight="700">通用能力层</text>
-    <rect x="60" y="578" width="1120" height="28" rx="8" fill="#0a2624" stroke="#14b8a6" stroke-opacity=".6"/>
-    <text x="620" y="597" fill="#d5fbf4" font-size="13" font-weight="600" text-anchor="middle">iot-platform-common — 常量 / 枚举 / 领域通用类型</text>
+      <line x1="620" y1="512" x2="620" y2="538" stroke="#5b7aa6" stroke-width="2" marker-end="url(#arrow)"/>
 
-    <line x1="620" y1="628" x2="620" y2="654" stroke="#5b7aa6" stroke-width="2" marker-end="url(#arrow)"/>
+      <!-- Layer 4 通用能力层 -->
+      <rect x="40" y="540" width="1160" height="88" rx="14" fill="url(#gCommon)" stroke="#14b8a6" stroke-opacity=".5"/>
+      <text x="62" y="564" fill="#9ff0e4" font-size="13" font-weight="700">通用能力层</text>
+      <rect x="60" y="578" width="1120" height="28" rx="8" fill="#0a2624" stroke="#14b8a6" stroke-opacity=".6"/>
+      <text x="620" y="597" fill="#d5fbf4" font-size="13" font-weight="600" text-anchor="middle">iot-platform-common — 常量 / 枚举 / 领域通用类型</text>
 
-    <!-- ============ Layer 5 框架底座 ============ -->
-    <rect x="40" y="656" width="1160" height="112" rx="14" fill="url(#gFrame)" stroke="#f59e0b" stroke-opacity=".5"/>
-    <text x="62" y="680" fill="#ffd79a" font-size="13" font-weight="700">框架底座 · thirdparty/iot-vue-plus 6.0.0（提供父 POM）</text>
+      <line x1="620" y1="628" x2="620" y2="654" stroke="#5b7aa6" stroke-width="2" marker-end="url(#arrow)"/>
 
-    <rect x="60" y="698" width="360" height="52" rx="9" fill="#2a1c07" stroke="#f59e0b" stroke-opacity=".6"/>
-    <text x="240" y="720" fill="#ffe6bf" font-size="13" font-weight="600" text-anchor="middle">iot-common-*</text>
-    <text x="240" y="738" fill="#c9a978" font-size="10" text-anchor="middle">core/web/json/log/oss/sms/mail/push/mqtt/ai/mcp/job/bom/doc</text>
+      <!-- Layer 5 框架底座 -->
+      <rect x="40" y="656" width="1160" height="112" rx="14" fill="url(#gFrame)" stroke="#f59e0b" stroke-opacity=".5"/>
+      <text x="62" y="680" fill="#ffd79a" font-size="13" font-weight="700">框架底座 · thirdparty/iot-vue-plus 6.0.0（提供父 POM）</text>
 
-    <rect x="440" y="698" width="360" height="52" rx="9" fill="#2a1c07" stroke="#f59e0b" stroke-opacity=".6"/>
-    <text x="620" y="720" fill="#ffe6bf" font-size="13" font-weight="600" text-anchor="middle">iot-modules</text>
-    <text x="620" y="738" fill="#c9a978" font-size="10" text-anchor="middle">system / demo / gen / job / workflow / ai</text>
+      <rect x="60" y="698" width="360" height="52" rx="9" fill="#2a1c07" stroke="#f59e0b" stroke-opacity=".6"/>
+      <text x="240" y="720" fill="#ffe6bf" font-size="13" font-weight="600" text-anchor="middle">iot-common-*</text>
+      <text x="240" y="738" fill="#c9a978" font-size="10" text-anchor="middle">core/web/json/log/oss/sms/mail/push/mqtt/ai/mcp/job/bom/doc</text>
 
-    <rect x="820" y="698" width="360" height="52" rx="9" fill="#2a1c07" stroke="#f59e0b" stroke-opacity=".6"/>
-    <text x="1000" y="720" fill="#ffe6bf" font-size="13" font-weight="600" text-anchor="middle">iot-extend</text>
-    <text x="1000" y="738" fill="#c9a978" font-size="10" text-anchor="middle">monitor-admin / snailjob-server / snailai-server</text>
+      <rect x="440" y="698" width="360" height="52" rx="9" fill="#2a1c07" stroke="#f59e0b" stroke-opacity=".6"/>
+      <text x="620" y="720" fill="#ffe6bf" font-size="13" font-weight="600" text-anchor="middle">iot-modules</text>
+      <text x="620" y="738" fill="#c9a978" font-size="10" text-anchor="middle">system / demo / gen / job / workflow / ai</text>
 
-    <line x1="620" y1="768" x2="620" y2="794" stroke="#5b7aa6" stroke-width="2" marker-end="url(#arrow)"/>
+      <rect x="820" y="698" width="360" height="52" rx="9" fill="#2a1c07" stroke="#f59e0b" stroke-opacity=".6"/>
+      <text x="1000" y="720" fill="#ffe6bf" font-size="13" font-weight="600" text-anchor="middle">iot-extend</text>
+      <text x="1000" y="738" fill="#c9a978" font-size="10" text-anchor="middle">monitor-admin / snailjob-server / snailai-server</text>
 
-    <!-- ============ Layer 6 基础设施 ============ -->
-    <rect x="40" y="796" width="1160" height="132" rx="14" fill="url(#gInfra)" stroke="#64748b" stroke-opacity=".55"/>
-    <text x="62" y="820" fill="#c3d2e6" font-size="13" font-weight="700">基础设施（Docker / Kubernetes）</text>
+      <line x1="620" y1="768" x2="620" y2="794" stroke="#5b7aa6" stroke-width="2" marker-end="url(#arrow)"/>
 
-    <g font-size="12" font-weight="600" text-anchor="middle" fill="#e7eef8">
-      <rect x="66"  y="838" width="116" height="66" rx="9" fill="#0d1526" stroke="#64748b" stroke-opacity=".7"/>
-      <text x="124" y="864">PostgreSQL</text><text x="124" y="882" font-size="10" fill="#9fb0c6" font-weight="400">pgvector · 5432</text>
+      <!-- Layer 6 基础设施 -->
+      <rect x="40" y="796" width="1160" height="132" rx="14" fill="url(#gInfra)" stroke="#64748b" stroke-opacity=".55"/>
+      <text x="62" y="820" fill="#c3d2e6" font-size="13" font-weight="700">基础设施（Docker / Kubernetes）</text>
 
-      <rect x="190" y="838" width="116" height="66" rx="9" fill="#0d1526" stroke="#64748b" stroke-opacity=".7"/>
-      <text x="248" y="864">Redis</text><text x="248" y="882" font-size="10" fill="#9fb0c6" font-weight="400">缓存/心跳 · 6379</text>
+      <g font-size="12" font-weight="600" text-anchor="middle" fill="#e7eef8">
+        <rect x="66"  y="838" width="116" height="66" rx="9" fill="#0d1526" stroke="#64748b" stroke-opacity=".7"/>
+        <text x="124" y="864">PostgreSQL</text><text x="124" y="882" font-size="10" fill="#9fb0c6" font-weight="400">pgvector · 5432</text>
 
-      <rect x="314" y="838" width="116" height="66" rx="9" fill="#0d1526" stroke="#64748b" stroke-opacity=".7"/>
-      <text x="372" y="864">Elasticsearch</text><text x="372" y="882" font-size="10" fill="#9fb0c6" font-weight="400">时序检索 · 9200</text>
+        <rect x="190" y="838" width="116" height="66" rx="9" fill="#0d1526" stroke="#64748b" stroke-opacity=".7"/>
+        <text x="248" y="864">Redis</text><text x="248" y="882" font-size="10" fill="#9fb0c6" font-weight="400">缓存/心跳 · 6379</text>
 
-      <rect x="438" y="838" width="116" height="66" rx="9" fill="#0d1526" stroke="#64748b" stroke-opacity=".7"/>
-      <text x="496" y="864">Kafka</text><text x="496" y="882" font-size="10" fill="#9fb0c6" font-weight="400">KRaft · 9094</text>
+        <rect x="314" y="838" width="116" height="66" rx="9" fill="#0d1526" stroke="#64748b" stroke-opacity=".7"/>
+        <text x="372" y="864">Elasticsearch</text><text x="372" y="882" font-size="10" fill="#9fb0c6" font-weight="400">时序检索 · 9200</text>
 
-      <rect x="562" y="838" width="116" height="66" rx="9" fill="#0d1526" stroke="#64748b" stroke-opacity=".7"/>
-      <text x="620" y="864">EMQX</text><text x="620" y="882" font-size="10" fill="#9fb0c6" font-weight="400">MQTT · 1883</text>
+        <rect x="438" y="838" width="116" height="66" rx="9" fill="#0d1526" stroke="#64748b" stroke-opacity=".7"/>
+        <text x="496" y="864">Kafka</text><text x="496" y="882" font-size="10" fill="#9fb0c6" font-weight="400">KRaft · 9094</text>
 
-      <rect x="686" y="838" width="116" height="66" rx="9" fill="#0d1526" stroke="#64748b" stroke-opacity=".7"/>
-      <text x="744" y="864">MinIO</text><text x="744" y="882" font-size="10" fill="#9fb0c6" font-weight="400">对象存储 · 9000</text>
+        <rect x="562" y="838" width="116" height="66" rx="9" fill="#0d1526" stroke="#64748b" stroke-opacity=".7"/>
+        <text x="620" y="864">EMQX</text><text x="620" y="882" font-size="10" fill="#9fb0c6" font-weight="400">MQTT · 1883</text>
 
-      <rect x="810" y="838" width="116" height="66" rx="9" fill="#0d1526" stroke="#64748b" stroke-opacity=".7"/>
-      <text x="868" y="864">Nacos</text><text x="868" y="882" font-size="10" fill="#9fb0c6" font-weight="400">注册/配置 · 8848</text>
+        <rect x="686" y="838" width="116" height="66" rx="9" fill="#0d1526" stroke="#64748b" stroke-opacity=".7"/>
+        <text x="744" y="864">MinIO</text><text x="744" y="882" font-size="10" fill="#9fb0c6" font-weight="400">对象存储 · 9000</text>
 
-      <rect x="934" y="838" width="116" height="66" rx="9" fill="#0d1526" stroke="#64748b" stroke-opacity=".7"/>
-      <text x="992" y="864">SnailJob</text><text x="992" y="882" font-size="10" fill="#9fb0c6" font-weight="400">任务调度 · 8800</text>
+        <rect x="810" y="838" width="116" height="66" rx="9" fill="#0d1526" stroke="#64748b" stroke-opacity=".7"/>
+        <text x="868" y="864">Nacos</text><text x="868" y="882" font-size="10" fill="#9fb0c6" font-weight="400">注册/配置 · 8848</text>
 
-      <rect x="1058" y="838" width="116" height="66" rx="9" fill="#0d1526" stroke="#64748b" stroke-opacity=".7"/>
-      <text x="1116" y="864">SnailAI</text><text x="1116" y="882" font-size="10" fill="#9fb0c6" font-weight="400">AI 智能体 · 8900</text>
-    </g>
-  </svg>
+        <rect x="934" y="838" width="116" height="66" rx="9" fill="#0d1526" stroke="#64748b" stroke-opacity=".7"/>
+        <text x="992" y="864">SnailJob</text><text x="992" y="882" font-size="10" fill="#9fb0c6" font-weight="400">任务调度 · 8800</text>
 
-  <div class="legend">
-    <span><i class="dot" style="background:#3568c4"></i>接入 / 展示</span>
-    <span><i class="dot" style="background:#8b5cf6"></i>应用层</span>
-    <span><i class="dot" style="background:#22b8d6"></i>业务模块</span>
-    <span><i class="dot" style="background:#14b8a6"></i>通用能力</span>
-    <span><i class="dot" style="background:#f59e0b"></i>框架底座</span>
-    <span><i class="dot" style="background:#64748b"></i>基础设施</span>
-  </div>
-  </div>
+        <rect x="1058" y="838" width="116" height="66" rx="9" fill="#0d1526" stroke="#64748b" stroke-opacity=".7"/>
+        <text x="1116" y="864">SnailAI</text><text x="1116" y="882" font-size="10" fill="#9fb0c6" font-weight="400">AI 智能体 · 8900</text>
+      </g>
+    </svg>
+
+    <div class="legend">
+      <span><i class="dot" style="background:#3568c4"></i>接入 / 展示</span>
+      <span><i class="dot" style="background:#8b5cf6"></i>应用层</span>
+      <span><i class="dot" style="background:#22b8d6"></i>业务模块</span>
+      <span><i class="dot" style="background:#14b8a6"></i>通用能力</span>
+      <span><i class="dot" style="background:#f59e0b"></i>框架底座</span>
+      <span><i class="dot" style="background:#64748b"></i>基础设施</span>
+    </div>
+    </div>
+
+    <h2 id="access">接入层 / 展示层</h2>
+    <table>
+      <thead><tr><th>接入方</th><th>协议 / 技术</th><th>入口</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td>plus-ui 前端</td><td>Vue 3.5 + TypeScript + Element Plus + Vite 8</td><td><code>http://localhost</code></td><td>开发期 <code>VITE_APP_BASE_API=/dev-api</code> 由 Vite 代理到 8080；生产为 <code>/prod-api</code> 由 Nginx 反代</td></tr>
+        <tr><td>第三方系统</td><td>OAuth2 / OIDC / CAS</td><td><code>/iot/sso/**</code></td><td>平台同时作为 OAuth2 Server、OIDC Provider 与 CAS Server/Client</td></tr>
+        <tr><td>设备端（MQTT）</td><td>MQTT 3.1.1 / 5.0</td><td><code>tcp://localhost:1883</code></td><td>主题 <code>iot/device/{deviceCode}/#</code></td></tr>
+        <tr><td>设备端（HTTP）</td><td>HTTP + JSON</td><td><code>/iot/collect/https/{deviceCode}</code></td><td>与 MQTT 汇入同一 Kafka topic</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="app">应用层</h2>
+    <p><code>iot-platform-admin</code> 是唯一启动入口，负责把所有业务模块装配进同一个 Spring Boot 进程（端口 8080，应用名 <code>iot-platform</code>）。</p>
+    <table>
+      <thead><tr><th>能力</th><th>实现 / 配置</th><th>关键点</th></tr></thead>
+      <tbody>
+        <tr><td>登录鉴权</td><td>Sa-Token 1.45.0 + JWT</td><td><code>token-name: Authorization</code>，<code>is-concurrent: true</code>、<code>is-share: false</code></td></tr>
+        <tr><td>请求加解密</td><td><code>CryptoFilter</code> + <code>api-decrypt</code></td><td>AES 加密 body；AES key 用 RSA 公钥包裹后放入 <code>encrypt-key</code> 头</td></tr>
+        <tr><td>验证码</td><td>math 类型，Redis 存储</td><td>Key <code>global:captcha_codes:{uuid}</code></td></tr>
+        <tr><td>消息推送</td><td>SSE</td><td><code>message.transport: sse</code>，路径 <code>/resource/message</code>，超时 86400000ms，心跳 60s</td></tr>
+        <tr><td>接口文档</td><td>SpringDoc</td><td>13 个分组：<code>1.通用模块</code> … <code>13.任务调度模块</code></td></tr>
+        <tr><td>MCP 服务</td><td><code>spring.ai.mcp</code></td><td>路径 <code>/mcp</code>，协议 <code>STREAMABLE</code></td></tr>
+        <tr><td>健康检查</td><td>Actuator</td><td><code>/actuator/**</code> 需 HTTP Basic（<code>admin/admin123</code>），供 SBA 采集</td></tr>
+        <tr><td>跨域与安全</td><td>Spring Security 过滤链</td><td>统一异常处理、XSS 过滤、幂等/限流由框架 starter 提供</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="biz">业务模块层</h2>
+    <p>业务模块全部位于 <code>iot-platform/iot-platform-modules</code>，统一包前缀 <code>org.dromara.iot</code>。模块之间通过接口与事件解耦，共享 <code>iot-platform-common</code> 中的常量与枚举。</p>
+    <table>
+      <thead><tr><th>#</th><th>模块</th><th>职责</th><th>接口前缀</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td><a href="#m-device">device</a></td><td>产品模型、设备台账、物模型与设备分组</td><td><code>/iot/product</code>、<code>/iot/device</code></td></tr>
+        <tr><td>2</td><td><a href="#m-permission">permission</a></td><td>三线权限：应用 / 数据集 / 分组及授权关系</td><td><code>/iot/app</code>、<code>/iot/dataset</code>、<code>/iot/group</code></td></tr>
+        <tr><td>3</td><td><a href="#m-collect">collect</a></td><td>设备数据上行（HTTP）、限流、消息组装</td><td><code>/iot/collect/https</code></td></tr>
+        <tr><td>4</td><td><a href="#m-monitor">monitor</a></td><td>设备在线状态与服务器运行指标</td><td><code>/iot/monitor/device</code>、<code>/iot/monitor/server</code></td></tr>
+        <tr><td>5</td><td><a href="#m-sso">sso</a></td><td>OAuth2 / OIDC / CAS 统一认证与客户端管理</td><td><code>/iot/sso</code>、<code>/iot/oauth2-client</code></td></tr>
+        <tr><td>6</td><td><a href="#m-archive">archive</a></td><td>档案分类、档案条目与附件</td><td><code>/iot/archive</code></td></tr>
+        <tr><td>7</td><td><a href="#m-report">report</a></td><td>报表定义、生成与文件下载</td><td><code>/iot/report</code></td></tr>
+        <tr><td>8</td><td><a href="#m-deploy">deploy</a></td><td>部署任务、应用/环境登记、GitHub 项目同步与授权</td><td><code>/iot/deploy</code>、<code>/iot/deploy/github</code></td></tr>
+        <tr><td>9</td><td><a href="#m-pay">pay</a></td><td>支付订单、退款、渠道配置与虚拟商品</td><td><code>/iot/pay</code>、<code>/iot/pay/product</code></td></tr>
+        <tr><td>10</td><td><a href="#m-ticket">ticket</a></td><td>工单流转、流转记录与工单规则（对接 Warm-Flow）</td><td><code>/iot/ticket</code>、<code>/iot/ticket/rule</code></td></tr>
+        <tr><td>11</td><td><a href="#m-cloud">cloud</a></td><td>云账号纳管、云资源与 Flink 作业</td><td><code>/iot/cloud/account</code>、<code>/iot/cloud/resource</code>、<code>/iot/cloud/flink</code></td></tr>
+        <tr><td>12</td><td><a href="#m-job">job</a></td><td>业务任务信息与执行日志（对接 SnailJob）</td><td><code>/iot/job/info</code>、<code>/iot/job/log</code></td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="modules">12 个模块明细</h2>
+    <div class="mod-grid">
+      <div class="mod" id="m-device">
+        <h4>device <span>产品 / 设备</span></h4>
+        <p>维护产品分类、产品物模型与设备台账；设备编码 <code>deviceCode</code> 是全链路（MQTT 主题、Kafka 消息、ES 文档）的主键。</p>
+        <p><code>/iot/product</code> · <code>/iot/device</code> · 前端 <code>views/device</code></p>
+      </div>
+      <div class="mod" id="m-permission">
+        <h4>permission <span>三线权限</span></h4>
+        <p>以「应用 → 数据集 → 分组」三线模型组织数据授权，控制不同账号可见的设备与数据范围。</p>
+        <p><code>/iot/app</code> · <code>/iot/dataset</code> · <code>/iot/group</code></p>
+      </div>
+      <div class="mod" id="m-collect">
+        <h4>collect <span>数据采集</span></h4>
+        <p>提供 HTTP 上行入口，校验设备与报文后投递 Kafka；MQTT 侧由 <code>MqttDeviceDataSubscriber</code> 负责，二者最终一致。</p>
+        <p><code>/iot/collect/https/{deviceCode}</code></p>
+      </div>
+      <div class="mod" id="m-monitor">
+        <h4>monitor <span>运行监控</span></h4>
+        <p>设备在线状态（Redis 心跳 TTL 5 分钟）与服务器指标查询；页面侧结合 SBA 展示 JVM、线程与日志。</p>
+        <p><code>/iot/monitor/device</code> · <code>/iot/monitor/server</code></p>
+      </div>
+      <div class="mod" id="m-sso">
+        <h4>sso <span>统一认证</span></h4>
+        <p>自研 Sa-Token OAuth2 Server + OIDC + CAS Server/Client。默认 clientId <code>e5cd7e4891bf95d1d19206ce24a7b32e</code>，ticket 有效期 300s。</p>
+        <p><code>/iot/sso</code> · <code>/iot/oauth2-client</code></p>
+      </div>
+      <div class="mod" id="m-archive">
+        <h4>archive <span>档案管理</span></h4>
+        <p>档案分类树、档案条目与附件管理，附件走 MinIO / OSS 统一存储。</p>
+        <p><code>/iot/archive</code></p>
+      </div>
+      <div class="mod" id="m-report">
+        <h4>report <span>报表 / 文件</span></h4>
+        <p>报表模板与生成任务，支持按时间范围导出设备数据，产物落对象存储。</p>
+        <p><code>/iot/report</code></p>
+      </div>
+      <div class="mod" id="m-deploy">
+        <h4>deploy <span>自动化部署</span></h4>
+        <p>应用/环境登记、构建任务与发布记录；GitHub 项目同步支持公开与私有仓库，并按账号授权可见范围。</p>
+        <p><code>/iot/deploy</code> · <code>/iot/deploy/github</code></p>
+      </div>
+      <div class="mod" id="m-pay">
+        <h4>pay <span>聚合支付</span></h4>
+        <p>支付订单、退款、渠道配置与虚拟商品，渠道参数落库并可热更新。</p>
+        <p><code>/iot/pay</code> · <code>/iot/pay/product</code></p>
+      </div>
+      <div class="mod" id="m-ticket">
+        <h4>ticket <span>工单 / 流程</span></h4>
+        <p>工单创建、流转记录与规则匹配，流程引擎使用 Warm-Flow。</p>
+        <p><code>/iot/ticket</code> · <code>/iot/ticket/rule</code></p>
+      </div>
+      <div class="mod" id="m-cloud">
+        <h4>cloud <span>云平台纳管</span></h4>
+        <p>云账号凭证、纳管资源清单与 Flink 作业管理，支持多类型云平台接入。</p>
+        <p><code>/iot/cloud/account</code> · <code>/iot/cloud/resource</code> · <code>/iot/cloud/flink</code></p>
+      </div>
+      <div class="mod" id="m-job">
+        <h4>job <span>任务调度</span></h4>
+        <p>业务任务定义与执行日志查询，调度执行由 SnailJob Server（8800/17888）承担。</p>
+        <p><code>/iot/job/info</code> · <code>/iot/job/log</code></p>
+      </div>
+    </div>
+
+    <h2 id="common">通用能力层</h2>
+    <p><code>iot-platform-common</code> 只放常量、枚举与领域通用类型，不放业务逻辑，避免模块间循环依赖。</p>
+    <table>
+      <thead><tr><th>内容</th><th>示例</th><th>用途</th></tr></thead>
+      <tbody>
+        <tr><td>常量</td><td>Redis Key 前缀 <code>iot:device:online:</code>、<code>iot:collect:limit:</code></td><td>跨模块共享，避免硬编码</td></tr>
+        <tr><td>枚举</td><td>设备状态、工单状态、部署任务状态</td><td>数据库与前端字典统一取值</td></tr>
+        <tr><td>通用类型</td><td><code>DeviceDataMessage</code> 等消息体</td><td>采集、消费、存储共用同一结构</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="framework">框架底座</h2>
+    <p>框架位于 <code>thirdparty/iot-vue-plus</code>，版本 <code>6.0.0</code>，作为父 POM 提供依赖管理。产品构建前必须先将其安装到本地 Maven 仓库。</p>
+    <table>
+      <thead><tr><th>分组</th><th>内容</th><th>提供的产品能力</th></tr></thead>
+      <tbody>
+        <tr><td><code>iot-common-*</code></td><td>core / web / json / log / oss / sms / mail / push / mqtt / ai / mcp / job / bom / doc</td><td>加解密、日志、对象存储、短信邮件、MQTT 客户端、AI 与 MCP 接入</td></tr>
+        <tr><td><code>iot-modules</code></td><td>system / demo / gen / job / workflow / ai</td><td>用户角色菜单、代码生成、任务调度、Warm-Flow 工作流、AI 能力</td></tr>
+        <tr><td><code>iot-extend</code></td><td>monitor-admin / snailjob-server / snailai-server</td><td>Spring Boot Admin、SnailJob、SnailAI 三个独立控制台</td></tr>
+      </tbody>
+    </table>
+    <pre><code># 首次构建顺序不可颠倒
+cd d:/DevProjects/snail/thirdparty/iot-vue-plus
+mvn -DskipTests clean install
+
+cd d:/DevProjects/snail/iot-platform
+mvn -Pprod -DskipTests clean package</code></pre>
+
+    <h2 id="infra">基础设施</h2>
+    <table>
+      <thead><tr><th>组件</th><th>版本 / 镜像</th><th>端口</th><th>在本项目中的作用</th></tr></thead>
+      <tbody>
+        <tr><td>PostgreSQL</td><td><code>pgvector/pgvector:pg16</code></td><td>5432</td><td>业务主库 <code>ruoyi</code>，并承载 pgvector 向量扩展</td></tr>
+        <tr><td>Redis</td><td><code>redis:7-alpine</code></td><td>6379</td><td>缓存、验证码、Sa-Token 会话、设备在线心跳、采集限流</td></tr>
+        <tr><td>Elasticsearch</td><td><code>elasticsearch:8.15.3</code></td><td>9200</td><td>设备时序数据索引 <code>iot_device_data</code>（Easy-ES）</td></tr>
+        <tr><td>Kafka</td><td><code>apache/kafka:3.9.0</code>（KRaft）</td><td>9094 宿主 / 9092 容器</td><td>采集削峰解耦，topic <code>iot-device-data</code></td></tr>
+        <tr><td>EMQX</td><td><code>emqx/emqx:5.8.4</code></td><td>1883 / 8083 / 18083</td><td>MQTT Broker 与设备接入</td></tr>
+        <tr><td>MinIO</td><td><code>minio/minio:latest</code></td><td>9000 / 9001</td><td>S3 对象存储，桶 <code>ruoyi</code> 由 <code>minio-init</code> 创建为公共读</td></tr>
+        <tr><td>Nacos</td><td><code>nacos/nacos-server:v2.4.3</code></td><td>8848 / 9848</td><td>注册与配置中心；后端默认不接入（<code>NACOS_ENABLED:false</code>）</td></tr>
+        <tr><td>SnailJob</td><td><code>snailjob-server:2.0.2</code></td><td>8800 / 17888</td><td>分布式任务调度中心</td></tr>
+        <tr><td>SnailAI</td><td><code>snailai-server:1.1.1</code></td><td>8900 / 18888</td><td>AI 智能体平台，gRPC 18888</td></tr>
+      </tbody>
+    </table>
+    <div class="callout warn">
+      <strong>端口易混点</strong>：Kafka 的 9092 只用于容器内互访，宿主机调试请连 9094；SnailJob 除 8800 控制台外还需 17888 客户端通信；SnailAI 的 gRPC 固定 18888。
+    </div>
+
+    <h2 id="deps">模块依赖与构建</h2>
+    <table>
+      <thead><tr><th>层级</th><th>模块</th><th>产物 / 依赖关系</th></tr></thead>
+      <tbody>
+        <tr><td>框架</td><td><code>thirdparty/iot-vue-plus</code></td><td>产出 <code>org.dromara:iot-vue-plus:6.0.0</code> 到本地仓库</td></tr>
+        <tr><td>公共</td><td><code>iot-platform-common</code></td><td>被 12 个业务模块依赖</td></tr>
+        <tr><td>业务</td><td><code>iot-platform-modules</code>（12 个）</td><td>依赖 common 与框架 starter</td></tr>
+        <tr><td>启动</td><td><code>iot-platform-admin</code></td><td>聚合全部模块，产出可执行 JAR 与 Docker 镜像</td></tr>
+      </tbody>
+    </table>
+    <p>模块间不直接引用彼此的实现类；跨模块协作通过 common 中的类型或事件完成，新增模块时同步在 SpringDoc <code>group-configs</code> 中追加分组。</p>
+  </main>
 </div>
 </body>
 </html>
