@@ -4,8 +4,8 @@
 
   - 本地仓库复用 docker-compose 挂载的 /var/jenkins_home/.m2/repository（宿主 ~/.m2），
     已有依赖不会重复下载；
-  - central 走阿里云镜像加速，国内构建明显更快；
-  - 只镜像 central，pom 中声明的其它仓库（如私服）保持原样。
+  - central 与 public（thirdparty/iot-vue-plus/pom.xml 声明的华为镜像）统一走阿里云加速，
+    避免依赖从两个源交错下载；pom 中的其它仓库（如私服）保持原样。
 
   由 build-app.sh 通过 MAVEN_ARGS=-s <本文件> 自动注入，构建命令无需手动指定。
 -->
@@ -20,7 +20,7 @@
       <id>aliyun-public</id>
       <name>Aliyun Public</name>
       <url>https://maven.aliyun.com/repository/public</url>
-      <mirrorOf>central</mirrorOf>
+      <mirrorOf>central,public</mirrorOf>
     </mirror>
   </mirrors>
 
