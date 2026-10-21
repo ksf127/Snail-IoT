@@ -5,6 +5,7 @@ import {
   finishBuildTask,
   getJenkinsBuildInfo,
   getJenkinsConsole,
+  getJenkinsQueue,
   triggerAppBuild
 } from '@/api/deploy'
 
@@ -19,6 +20,8 @@ export function useAppBuild(options = {}) {
   const visible = ref(false)
   const triggering = ref(false)
   const log = ref('')
+  // 排队原因提示（Jenkins 同一 Job 串行执行，前面的构建未结束时会排队）
+  const hint = ref('')
   const info = reactive({ number: 0, building: false, result: '' })
   const target = reactive({ appName: '', appCode: '', envCode: '', imageTag: '' })
 
@@ -26,6 +29,8 @@ export function useAppBuild(options = {}) {
   let baselineBuildNumber = 0
   let pollTimer = null
   let queuedPolls = 0
+  // 本次构建入队时间，用于在排队提示中显示已等待时长
+  let queuedSince = 0
   let buildTaskId = null
   let settled = true
 
@@ -62,7 +67,9 @@ export function useAppBuild(options = {}) {
         imageTag
       })
       log.value = ''
+      hint.value = ''
       queuedPolls = 0
+      queuedSince = Date.now()
       settled = false
       buildTaskId = null
       Object.assign(info, { number: 0, building: true, result: '' })
@@ -118,14 +125,17 @@ export function useAppBuild(options = {}) {
       const { data } = await getJenkinsBuildInfo()
       // 新构建尚未出现在 lastBuild 上，说明还在排队
       if (!data || data.number <= baselineBuildNumber) {
-        if (++queuedPolls > 120) {
+        // Jenkins 同一 Job 串行执行，排队时间取决于前一个构建的耗时，最多等 30 分钟
+        if (++queuedPolls > 600) {
           ElMessage.warning('等待构建启动超时，请到 Jenkins 页面查看排队情况')
           await settle('3')
           return
         }
-        schedulePoll(1500)
+        await loadQueueHint()
+        schedulePoll(3000)
         return
       }
+      hint.value = ''
       Object.assign(info, data)
       // 抽屉关闭后只跟踪状态，不再拉取控制台日志
       if (visible.value) {
@@ -144,6 +154,35 @@ export function useAppBuild(options = {}) {
     } catch (e) {
       schedulePoll(3000)
     }
+  }
+
+  /**
+   * 查询 Jenkins 队列，生成「为什么还没开始」的提示。
+   */
+  async function loadQueueHint() {
+    try {
+      const { data } = await getJenkinsQueue()
+      const items = (data?.items || []).filter((item) => item.task?.name === 'snail-app-build')
+      // 刚触发的构建排在队尾
+      hint.value = formatQueueReason(items.length ? items[items.length - 1].why : '')
+    } catch (e) {
+      hint.value = ''
+    }
+  }
+
+  function formatQueueReason(why) {
+    const waited = formatWaited()
+    if (!why) return `排队中：等待空闲执行机${waited}`
+    const running = /Build #(\d+) is already in progress/.exec(why)
+    if (running) return `排队中：构建 #${running[1]} 正在执行${waited}，本次构建会在它结束后自动开始`
+    return `排队中：${why}${waited}`
+  }
+
+  /** 已等待时长（不足 1 分钟不显示） */
+  function formatWaited() {
+    if (!queuedSince) return ''
+    const minutes = Math.floor((Date.now() - queuedSince) / 60000)
+    return minutes >= 1 ? `（已等待 ${minutes} 分钟）` : ''
   }
 
   /**
@@ -171,5 +210,5 @@ export function useAppBuild(options = {}) {
     }
   }
 
-  return { visible, triggering, log, info, target, statusText, statusTag, start, stop }
+  return { visible, triggering, log, hint, info, target, statusText, statusTag, start, stop }
 }

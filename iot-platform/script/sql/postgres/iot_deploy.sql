@@ -202,3 +202,62 @@ VALUES (1900000000000008101, 'dev', '开发环境', 'iot-platform-dev', 30080, '
        (1900000000000008102, 'prod', '生产环境', 'iot-platform-prod', 30081, 'docker-desktop',
         '0', 20, '0', '手动触发发布，入口 http://localhost:30081',
         103, 1, now(), 1, now());
+
+-- ----------------------------------------------------------------------------
+-- 5. GitHub 项目表与账号授权表
+--    从 GitHub 公开 API 同步仓库列表；按账号授权，普通账号仅能看到已授权的项目。
+--    使用 IF NOT EXISTS，可单独重复执行本节而不影响部署数据。
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS iot_github_repo
+(
+    repo_id        BIGINT       NOT NULL,
+    owner_login    VARCHAR(128) NOT NULL,
+    repo_name      VARCHAR(255) NOT NULL,
+    full_name      VARCHAR(255) NOT NULL,
+    html_url       VARCHAR(500),
+    clone_url      VARCHAR(500),
+    description    TEXT,
+    language       VARCHAR(64),
+    default_branch VARCHAR(128),
+    private_flag   CHAR(1)               DEFAULT '0',
+    archived       CHAR(1)               DEFAULT '0',
+    pushed_at      TIMESTAMP,
+    sync_time      TIMESTAMP,
+    del_flag       CHAR(1)               DEFAULT '0',
+    create_dept    BIGINT,
+    create_by      BIGINT,
+    create_time    TIMESTAMP,
+    update_by      BIGINT,
+    update_time    TIMESTAMP,
+    PRIMARY KEY (repo_id)
+);
+CREATE INDEX IF NOT EXISTS idx_iot_github_repo_owner ON iot_github_repo (owner_login);
+CREATE INDEX IF NOT EXISTS idx_iot_github_repo_name ON iot_github_repo (full_name);
+COMMENT ON TABLE iot_github_repo IS 'GitHub 项目表（从 GitHub 同步）';
+COMMENT ON COLUMN iot_github_repo.repo_id        IS 'GitHub 仓库ID';
+COMMENT ON COLUMN iot_github_repo.owner_login    IS '仓库所有者登录名';
+COMMENT ON COLUMN iot_github_repo.repo_name      IS '仓库名称';
+COMMENT ON COLUMN iot_github_repo.full_name      IS '仓库全名（owner/name）';
+COMMENT ON COLUMN iot_github_repo.html_url       IS '仓库页面地址';
+COMMENT ON COLUMN iot_github_repo.clone_url      IS '仓库克隆地址';
+COMMENT ON COLUMN iot_github_repo.description    IS '仓库描述';
+COMMENT ON COLUMN iot_github_repo.language       IS '主要开发语言';
+COMMENT ON COLUMN iot_github_repo.default_branch IS '默认分支';
+COMMENT ON COLUMN iot_github_repo.private_flag   IS '是否私有（0公开 1私有）';
+COMMENT ON COLUMN iot_github_repo.archived       IS '是否已归档（0否 1是）';
+COMMENT ON COLUMN iot_github_repo.pushed_at      IS '最近推送时间';
+COMMENT ON COLUMN iot_github_repo.sync_time      IS '最近同步时间';
+COMMENT ON COLUMN iot_github_repo.del_flag       IS '删除标志（0代表存在 1代表删除）';
+
+CREATE TABLE IF NOT EXISTS iot_github_repo_user
+(
+    repo_id     BIGINT NOT NULL,
+    user_id     BIGINT NOT NULL,
+    create_time TIMESTAMP,
+    PRIMARY KEY (repo_id, user_id)
+);
+CREATE INDEX IF NOT EXISTS idx_iot_github_repo_user_user ON iot_github_repo_user (user_id);
+COMMENT ON TABLE iot_github_repo_user IS 'GitHub 项目授权表（项目 -> 系统账号）';
+COMMENT ON COLUMN iot_github_repo_user.repo_id     IS 'GitHub 仓库ID';
+COMMENT ON COLUMN iot_github_repo_user.user_id     IS '系统用户ID';
+COMMENT ON COLUMN iot_github_repo_user.create_time IS '授权时间';

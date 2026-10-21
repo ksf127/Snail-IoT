@@ -15,7 +15,17 @@
         <el-tag :type="statusTag">{{ statusText }}</el-tag>
       </div>
     </template>
-    <pre ref="logRef" class="build-log">{{ log || '正在触发流水线…' }}</pre>
+    <div class="build-body">
+      <el-alert
+        v-if="hint"
+        :title="hint"
+        type="info"
+        :closable="false"
+        show-icon
+        class="build-hint"
+      />
+      <pre ref="logRef" class="build-log">{{ log || '正在触发流水线…' }}</pre>
+    </div>
   </el-drawer>
 </template>
 
@@ -30,7 +40,8 @@ const props = defineProps({
   statusText: { type: String, default: '' },
   statusTag: { type: String, default: 'info' },
   info: { type: Object, default: () => ({}) },
-  log: { type: String, default: '' }
+  log: { type: String, default: '' },
+  hint: { type: String, default: '' }
 })
 
 const emit = defineEmits(['update:visible', 'closed'])
@@ -58,8 +69,20 @@ watch(
   font-weight: 600;
 }
 
-.build-log {
+.build-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   height: calc(100vh - 130px);
+}
+
+.build-hint {
+  flex: none;
+}
+
+.build-log {
+  flex: 1;
+  min-height: 0;
   padding: 12px;
   margin: 0;
   overflow: auto;

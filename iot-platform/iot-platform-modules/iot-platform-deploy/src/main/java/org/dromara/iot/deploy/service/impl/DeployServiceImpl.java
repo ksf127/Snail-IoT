@@ -206,6 +206,17 @@ public class DeployServiceImpl implements IDeployService {
     }
 
     /**
+     * 批量删除部署/构建任务记录
+     *
+     * @param ids 任务ID集合
+     * @return 是否成功
+     */
+    @Override
+    public Boolean deleteTaskByIds(Collection<Long> ids) {
+        return baseMapper.deleteByIds(ids) > 0;
+    }
+
+    /**
      * 查询部署日志
      *
      * @param taskId 部署任务ID

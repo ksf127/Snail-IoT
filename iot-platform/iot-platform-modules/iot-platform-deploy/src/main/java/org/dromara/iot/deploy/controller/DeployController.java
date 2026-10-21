@@ -99,6 +99,19 @@ public class DeployController extends BaseController {
     }
 
     /**
+     * 批量删除部署/构建任务记录
+     *
+     * @param taskIds 任务ID数组
+     * @return 操作结果
+     */
+    @SaCheckPermission("iot:deploy:task:remove")
+    @Log(title = "自动化部署", businessType = BusinessType.DELETE)
+    @DeleteMapping("/task/{taskIds}")
+    public R<Void> removeTask(@PathVariable Long[] taskIds) {
+        return toAjax(deployService.deleteTaskByIds(List.of(taskIds)));
+    }
+
+    /**
      * 查询已登记的应用列表
      *
      * @return 应用列表

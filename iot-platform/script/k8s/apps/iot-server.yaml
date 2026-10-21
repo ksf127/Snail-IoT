@@ -89,6 +89,13 @@ spec:
               value: iot-snailai
             - name: TZ
               value: Asia/Shanghai
+            # GitHub Token：配置后可同步私有仓库（secret 中未配置时为空，仅同步公开仓库）
+            - name: GITHUB_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: iot-secret
+                  key: GITHUB_TOKEN
+                  optional: true
           readinessProbe:
             tcpSocket:
               port: 8080

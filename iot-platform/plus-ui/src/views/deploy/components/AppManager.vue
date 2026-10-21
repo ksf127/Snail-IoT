@@ -171,6 +171,7 @@
       :status-text="buildStatusText"
       :status-tag="buildStatusTag"
       :log="buildLog"
+      :hint="buildHint"
       @closed="stopBuildPolling"
     />
   </div>
@@ -236,6 +237,7 @@ const {
   visible: buildDrawerVisible,
   triggering,
   log: buildLog,
+  hint: buildHint,
   info: buildInfo,
   target: buildTarget,
   statusText: buildStatusText,

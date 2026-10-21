@@ -56,6 +56,14 @@ public interface IDeployService {
     void finishBuildTask(Long taskId, String status, Integer buildNumber);
 
     /**
+     * 批量删除部署/构建任务记录
+     *
+     * @param ids 任务ID集合
+     * @return 是否成功
+     */
+    Boolean deleteTaskByIds(Collection<Long> ids);
+
+    /**
      * 查询部署日志
      *
      * @param taskId 部署任务ID

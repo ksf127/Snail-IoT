@@ -115,6 +115,13 @@ security:
 
 # 单点登录 / 统一认证中心配置
 iot:
+  # GitHub 项目管理（自动化部署 - GitHub 项目页）
+  github:
+    # 同步的 GitHub 账号；未配置 token 时仅能同步该账号的公开仓库
+    owner: ksf127
+    # Personal Access Token：classic 勾选 repo / fine-grained 授予 Contents:Read
+    # 配置后走 /user/repos 接口，可同步该 token 所属账号的私有仓库
+    token: ${GITHUB_TOKEN:}
   sso:
     # 统一认证中心对外访问地址（同时作为 OIDC issuer 与 CAS Server 地址）
     server-url: http://localhost:8080

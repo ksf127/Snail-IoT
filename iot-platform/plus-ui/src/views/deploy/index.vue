@@ -48,6 +48,13 @@
         </div>
 
         <div class="table-card">
+          <el-alert
+            class="task-tip"
+            type="info"
+            :closable="false"
+            show-icon
+            title="构建记录会保留在列表中，可用【删除】清理历史或异常记录；「执行中」的记录请先确认 Jenkins 构建已结束后再删除。"
+          />
           <div class="table-toolbar">
             <div>
               <el-button v-hasPermi="['iot:deploy:release']" type="primary" :icon="Upload" @click="openRelease">
@@ -92,7 +99,7 @@
               </template>
             </el-table-column>
             <el-table-column prop="createTime" label="创建时间" width="180" />
-            <el-table-column label="操作" width="200" fixed="right">
+            <el-table-column label="操作" width="260" fixed="right">
               <template #default="{ row }">
                 <el-button v-hasPermi="['iot:deploy:query']" link type="primary" @click="showLog(row)">
                   查看日志
@@ -104,6 +111,14 @@
                   @click="downloadJar(row)"
                 >
                   下载 JAR
+                </el-button>
+                <el-button
+                  v-hasPermi="['iot:deploy:task:remove']"
+                  link
+                  type="danger"
+                  @click="handleDelete(row)"
+                >
+                  删除
                 </el-button>
               </template>
             </el-table-column>
@@ -125,6 +140,10 @@
 
       <el-tab-pane label="应用管理" name="app" lazy>
         <AppManager />
+      </el-tab-pane>
+
+      <el-tab-pane label="GitHub 项目" name="github" lazy>
+        <GithubProjectManager />
       </el-tab-pane>
 
       <el-tab-pane label="环境管理" name="env" lazy>
@@ -215,6 +234,7 @@
       :status-text="buildStatusText"
       :status-tag="buildStatusTag"
       :log="buildLog"
+      :hint="buildHint"
       @closed="stopBuildPolling"
     />
   </div>
@@ -222,12 +242,21 @@
 
 <script setup>
 import { onMounted, reactive, ref } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { Refresh, Search, Upload, VideoPlay } from '@element-plus/icons-vue'
-import { buildArtifactUrl, deployLog, listDeploy, listDeployApp, listDeployEnv, releaseDeploy } from '@/api/deploy'
+import {
+  buildArtifactUrl,
+  delDeployTask,
+  deployLog,
+  listDeploy,
+  listDeployApp,
+  listDeployEnv,
+  releaseDeploy
+} from '@/api/deploy'
 import AppManager from './components/AppManager.vue'
 import BuildLogDrawer from './components/BuildLogDrawer.vue'
 import EnvManager from './components/EnvManager.vue'
+import GithubProjectManager from './components/GithubProjectManager.vue'
 import { useAppBuild } from './composables/useAppBuild'
 
 const activeTab = ref('task')
@@ -274,6 +303,7 @@ const {
   visible: buildVisible,
   triggering,
   log: buildLog,
+  hint: buildHint,
   info: buildInfo,
   target: buildTarget,
   statusText: buildStatusText,
@@ -377,6 +407,21 @@ async function showLog(row) {
   logVisible.value = true
 }
 
+async function handleDelete(row) {
+  try {
+    await ElMessageBox.confirm(
+      `确认删除任务 ${row.taskId}（${appNameOf(row)} · ${row.version}）？删除后列表中不再显示，数据仍保留在数据库中。`,
+      '删除任务记录',
+      { type: 'warning', confirmButtonText: '删除', cancelButtonText: '取消' }
+    )
+  } catch (e) {
+    return
+  }
+  await delDeployTask(row.taskId)
+  ElMessage.success('已删除')
+  loadList()
+}
+
 async function openBuild() {
   await loadOptions()
   Object.assign(buildForm, {
@@ -408,6 +453,10 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.task-tip {
+  margin-bottom: 12px;
+}
+
 .app-cell {
   display: flex;
   flex-direction: column;

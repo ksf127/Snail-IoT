@@ -40,6 +40,17 @@ export function getJenkinsConsole() {
 }
 
 /**
+ * 查询 Jenkins 构建队列，用于提示排队原因（如前一个构建正在执行）。
+ *
+ * @returns {Promise} 响应 data 为 { items: [{ id, why, task: { name } }] }
+ */
+export function getJenkinsQueue() {
+  return axios.get('/jenkins-api/queue/api/json', {
+    params: { tree: 'items[id,why,task[name]]' }
+  })
+}
+
+/**
  * 分页查询部署任务。
  *
  * @param {object} query 查询条件 + 分页参数 pageNum/pageSize
@@ -93,6 +104,16 @@ export function finishBuildTask(taskId, status, buildNumber) {
     method: 'put',
     params: { status, buildNumber }
   })
+}
+
+/**
+ * 批量删除部署/构建任务记录。
+ *
+ * @param {string|number|Array} taskIds 任务ID，多个用逗号分隔
+ * @returns {Promise} 操作结果
+ */
+export function delDeployTask(taskIds) {
+  return request({ url: `/iot/deploy/task/${taskIds}`, method: 'delete' })
 }
 
 /**
@@ -223,4 +244,44 @@ export function updateDeployEnv(data) {
  */
 export function delDeployEnv(envIds) {
   return request({ url: `/iot/deploy/env/${envIds}`, method: 'delete' })
+}
+
+/**
+ * 分页查询 GitHub 项目（普通账号仅返回已授权的项目）。
+ *
+ * @param {object} query 查询条件 + 分页参数 pageNum/pageSize
+ * @returns {Promise} 响应 data 为 { rows, total }
+ */
+export function listGithubRepoPage(query) {
+  return request({ url: '/iot/deploy/github/page', method: 'get', params: query })
+}
+
+/**
+ * 从 GitHub 同步仓库列表。
+ *
+ * @returns {Promise} 同步的项目数量
+ */
+export function syncGithubRepos() {
+  return request({ url: '/iot/deploy/github/sync', method: 'post' })
+}
+
+/**
+ * 查询 GitHub 项目已授权的账号ID。
+ *
+ * @param {number|string} repoId GitHub 仓库ID
+ * @returns {Promise} 账号ID列表
+ */
+export function getGithubRepoUsers(repoId) {
+  return request({ url: `/iot/deploy/github/${repoId}/users`, method: 'get' })
+}
+
+/**
+ * 保存 GitHub 项目的授权账号（全量覆盖）。
+ *
+ * @param {number|string} repoId GitHub 仓库ID
+ * @param {Array} userIds 账号ID列表
+ * @returns {Promise} 操作结果
+ */
+export function updateGithubRepoUsers(repoId, userIds) {
+  return request({ url: `/iot/deploy/github/${repoId}/users`, method: 'put', data: userIds })
 }
