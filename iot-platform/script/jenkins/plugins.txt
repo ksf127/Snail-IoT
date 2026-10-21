@@ -1,0 +1,13 @@
+configuration-as-code
+git
+workflow-aggregator
+workflow-cps
+pipeline-stage-view
+pipeline-utility-steps
+credentials-binding
+job-dsl
+matrix-auth
+timestamper
+ansicolor
+ws-cleanup
+docker-workflow

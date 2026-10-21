@@ -1,0 +1,91 @@
+# ============================================================================
+# 中间件 · PostgreSQL（pgvector/pg16）
+# 提供业务库 ruoyi（含 pgvector 扩展，用于向量检索）
+# ============================================================================
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: iot-postgres-data
+  namespace: iot-platform
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: iot-postgres
+  namespace: iot-platform
+  labels:
+    app: iot-postgres
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: iot-postgres
+  template:
+    metadata:
+      labels:
+        app: iot-postgres
+    spec:
+      containers:
+        - name: postgres
+          image: pgvector/pgvector:pg16
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: postgres
+              containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: ruoyi
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: iot-secret
+                  key: POSTGRES_USERNAME
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: iot-secret
+                  key: POSTGRES_PASSWORD
+            - name: TZ
+              value: Asia/Shanghai
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "postgres", "-d", "ruoyi"]
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            # 单机高负载时 kubelet exec 探针可能 1s 内跑不完，放宽容错避免误判
+            timeoutSeconds: 10
+            failureThreshold: 6
+          livenessProbe:
+            exec:
+              command: ["pg_isready", "-U", "postgres", "-d", "ruoyi"]
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            timeoutSeconds: 10
+            failureThreshold: 6
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: iot-postgres-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: iot-postgres
+  namespace: iot-platform
+spec:
+  selector:
+    app: iot-postgres
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432

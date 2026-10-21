@@ -1,0 +1,120 @@
+# ============================================================================
+# 应用 · iot-server（Spring Boot 后端，唯一业务 API 提供方）
+# 镜像由本地 docker build 产出；Docker Desktop 的 k8s 与 Docker 引擎共享镜像
+# 存储，因此 imagePullPolicy: IfNotPresent 可直接命中本地镜像，无需 push。
+# ============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: iot-server
+  namespace: iot-platform
+  labels:
+    app: iot-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: iot-server
+  template:
+    metadata:
+      labels:
+        app: iot-server
+    spec:
+      containers:
+        - name: iot-server
+          image: iot-platform/iot-platform-admin:1.0.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: prod
+            # PostgreSQL
+            - name: POSTGRES_HOST
+              value: iot-postgres
+            - name: POSTGRES_PORT
+              value: "5432"
+            - name: POSTGRES_DB
+              value: ruoyi
+            - name: POSTGRES_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: iot-secret
+                  key: POSTGRES_USERNAME
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: iot-secret
+                  key: POSTGRES_PASSWORD
+            # Redis
+            - name: REDIS_HOST
+              value: iot-redis
+            - name: REDIS_PORT
+              value: "6379"
+            - name: REDIS_DATABASE
+              value: "0"
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: iot-secret
+                  key: REDIS_PASSWORD
+            # Elasticsearch
+            - name: ES_HOST
+              value: iot-elasticsearch
+            - name: ES_PORT
+              value: "9200"
+            - name: EASY_ES_ENABLE
+              value: "true"
+            # Kafka
+            - name: KAFKA_SERVERS
+              value: iot-kafka:9092
+            # MQTT（EMQX）
+            - name: MQTT_HOST
+              value: iot-emqx
+            - name: MQTT_PORT
+              value: "1883"
+            - name: MQTT_CLIENT_ENABLED
+              value: "true"
+            - name: MQTT_CLIENT_ID
+              value: iot-platform-server
+            # 三大控制台 Server 地址
+            - name: SBA_HOST
+              value: iot-sba
+            - name: SBA_PORT
+              value: "9090"
+            - name: SNAILJOB_HOST
+              value: iot-snailjob
+            - name: SNAILAI_HOST
+              value: iot-snailai
+            - name: TZ
+              value: Asia/Shanghai
+          readinessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            failureThreshold: 30
+          # 单机 Docker Desktop 上 5 个 JVM 同时启动，CPU 争抢严重，
+          # 单体启动可能超过 5 分钟，故给足启动宽限（10min + 6×20s），
+          # 避免被 liveness 误杀导致滚动重启永远不收敛。
+          livenessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 600
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 6
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: iot-server
+  namespace: iot-platform
+spec:
+  selector:
+    app: iot-server
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080

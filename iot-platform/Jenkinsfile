@@ -1,0 +1,85 @@
+// ============================================================================
+// Snail-IoT · 全栈 CI/CD 流水线（基于 git 提交的版本）
+//
+//  拉取代码 → 构建后端 → 构建前端 → 构建镜像 → 部署 k8s → 冒烟验证
+//
+// 各阶段的实际命令统一收敛在 script/jenkins/ci.sh，便于本地/容器复用。
+//
+// 运行环境：script/jenkins/docker-compose.yml 启动的 Jenkins 容器
+//   - 已挂载宿主 docker.sock（构建镜像，集群直接复用本地镜像）
+//   - 已挂载宿主 kubeconfig（kubectl 部署）
+//   - 仓库位于工作区内（cpsScm 从 file:///workspace/snail 克隆）
+//
+// 注意：平台页面「重新构建」使用的是同一个 ci.sh，但直接构建挂载的仓库工作区
+//       （/workspace/snail），因此未提交的本地改动也会生效。
+// ============================================================================
+pipeline {
+  agent any
+
+  options {
+    timestamps()
+    ansiColor('xterm')
+    disableConcurrentBuilds()
+    timeout(time: 180, unit: 'MINUTES')
+    buildDiscarder(logRotator(numToKeepStr: '10'))
+  }
+
+  environment {
+    NAMESPACE       = 'iot-platform-dev'
+    IMAGE_PREFIX    = 'iot-platform'
+    TAG             = '1.0.0'
+    DOCKER_BUILDKIT = '0'
+    MAVEN_OPTS      = '-Dmaven.repo.local=/var/jenkins_home/.m2/repository -Dmaven.compiler.useIncrementalCompilation=false'
+  }
+
+  stages {
+
+    stage('拉取代码') {
+      steps {
+        checkout scm
+        sh 'git --no-pager log -1 --pretty=format:"当前提交: %h %s%n" || true'
+      }
+    }
+
+    stage('构建后端') {
+      steps {
+        sh 'bash iot-platform/script/jenkins/ci.sh backend'
+      }
+    }
+
+    stage('构建前端') {
+      steps {
+        sh 'bash iot-platform/script/jenkins/ci.sh frontend'
+      }
+    }
+
+    stage('构建镜像') {
+      steps {
+        sh 'bash iot-platform/script/jenkins/ci.sh images'
+      }
+    }
+
+    stage('部署到 Kubernetes') {
+      steps {
+        sh 'bash iot-platform/script/jenkins/ci.sh deploy'
+      }
+    }
+
+    stage('冒烟验证') {
+      steps {
+        sh 'bash iot-platform/script/jenkins/ci.sh smoke'
+      }
+    }
+  }
+
+  post {
+    success {
+      echo '✅ 构建与部署成功'
+      sh 'export KUBECONFIG=/tmp/kube/config; kubectl -n iot-platform-dev get svc iot-web || true'
+    }
+    failure {
+      echo '❌ 构建或部署失败'
+      sh 'export KUBECONFIG=/tmp/kube/config; kubectl -n iot-platform-dev get pods || true'
+    }
+  }
+}

@@ -1,0 +1,107 @@
+package org.dromara.iot.cloud.domain.bo;
+
+import io.github.linpeilie.annotations.AutoMapper;
+import jakarta.validation.constraints.Size;
+import lombok.Data;
+import org.dromara.iot.cloud.domain.IotCloudResource;
+
+import java.io.Serial;
+import java.io.Serializable;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * 云资源业务对象 iot_cloud_resource
+ *
+ * @author iot team
+ */
+@Data
+@AutoMapper(target = IotCloudResource.class, reverseConvertGenerate = false)
+public class IotCloudResourceBo implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
+
+    /**
+     * 资源ID
+     */
+    private Long resourceId;
+
+    /**
+     * 云账号ID
+     */
+    private Long accountId;
+
+    /**
+     * 云平台
+     */
+    private String provider;
+
+    /**
+     * 资源类型（ecs/flink-job）
+     */
+    private String resourceType;
+
+    /**
+     * 云平台实例ID
+     */
+    private String instanceId;
+
+    /**
+     * 实例名称
+     */
+    private String instanceName;
+
+    /**
+     * 地域ID
+     */
+    private String regionId;
+
+    /**
+     * 状态
+     */
+    private String status;
+
+    /**
+     * 规格
+     */
+    private String spec;
+
+    /**
+     * 内网IP
+     */
+    private String privateIp;
+
+    /**
+     * 公网IP
+     */
+    private String publicIp;
+
+    /**
+     * 业务扩展信息（JSON 文本）
+     */
+    private String bizMeta;
+
+    /**
+     * 最近同步时间
+     */
+    private LocalDateTime lastSyncTime;
+
+    /**
+     * 备注
+     */
+    @Size(max = 500, message = "备注长度不能超过 500 个字符")
+    private String remark;
+
+    /**
+     * 关键字（匹配实例ID / 实例名称）
+     */
+    private String keyword;
+
+    /**
+     * 请求参数
+     */
+    private Map<String, Object> params = new HashMap<>();
+
+}

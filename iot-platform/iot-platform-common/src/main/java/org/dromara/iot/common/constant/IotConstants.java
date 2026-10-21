@@ -113,6 +113,11 @@ public interface IotConstants {
     String PAY_REFUND_NO_PREFIX = "REF";
 
     /**
+     * 商品编号前缀
+     */
+    String PAY_PRODUCT_NO_PREFIX = "PRD";
+
+    /**
      * Redis 缓存前缀：支付渠道配置
      */
     String PAY_CHANNEL_CONFIG_CACHE_PREFIX = "iot:pay:channel:";
@@ -126,5 +131,25 @@ public interface IotConstants {
      * 支付回调幂等锁有效期（秒）
      */
     long PAY_NOTIFY_LOCK_TTL_SECONDS = 60;
+
+    /**
+     * Redis 缓存前缀：部署任务并发锁（应用编码 + 目标环境）
+     */
+    String DEPLOY_TASK_LOCK_PREFIX = "iot:deploy:lock:";
+
+    /**
+     * 部署任务并发锁有效期（秒）
+     */
+    long DEPLOY_TASK_LOCK_TTL_SECONDS = 1800;
+
+    /**
+     * 工单编号前缀
+     */
+    String TICKET_NO_PREFIX = "TIC";
+
+    /**
+     * 工单规则引擎（LiteFlow）链路标识
+     */
+    String TICKET_RULE_CHAIN_ID = "ticketRuleChain";
 
 }

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<flow>
+    <!--
+        工单规则引擎链路：
+        1. 准备并校验规则上下文
+        2. 加载启用的规则（按排序号升序）
+        3. 存在启用规则时执行匹配，命中后应用规则动作（自动分配/调整优先级/自动关闭）
+    -->
+    <chain name="ticketRuleChain">
+        THEN(
+            ticketRulePrepare,
+            ticketRuleLoad,
+            IF(
+                ticketRuleHasRule,
+                THEN(
+                    ticketRuleMatch,
+                    IF(
+                        ticketRuleMatched,
+                        ticketRuleApply,
+                        noop
+                    )
+                ),
+                noop
+            )
+        );
+    </chain>
+</flow>

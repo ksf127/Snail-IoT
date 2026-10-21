@@ -1,0 +1,125 @@
+# ============================================================================
+# 中间件 · MinIO（对象存储，S3 协议）
+# 与 sys_oss_config 默认配置(config_key=minio)匹配：AK=ruoyi / SK=ruoyi123 / bucket=ruoyi
+# 末尾 Job 负责创建 ruoyi 桶并设为公共读。
+# ============================================================================
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: iot-minio-data
+  namespace: iot-platform
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: iot-minio
+  namespace: iot-platform
+  labels:
+    app: iot-minio
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: iot-minio
+  template:
+    metadata:
+      labels:
+        app: iot-minio
+    spec:
+      containers:
+        - name: minio
+          image: minio/minio:latest
+          imagePullPolicy: IfNotPresent
+          args: ["server", "/data", "--console-address", ":9001"]
+          ports:
+            - name: api
+              containerPort: 9000
+            - name: console
+              containerPort: 9001
+          env:
+            - name: MINIO_ROOT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: iot-secret
+                  key: MINIO_ROOT_USER
+            - name: MINIO_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: iot-secret
+                  key: MINIO_ROOT_PASSWORD
+            - name: TZ
+              value: Asia/Shanghai
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          readinessProbe:
+            httpGet:
+              path: /minio/health/ready
+              port: 9000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: iot-minio-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: iot-minio
+  namespace: iot-platform
+spec:
+  selector:
+    app: iot-minio
+  ports:
+    - name: api
+      port: 9000
+      targetPort: 9000
+    - name: console
+      port: 9001
+      targetPort: 9001
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: iot-minio-init
+  namespace: iot-platform
+spec:
+  backoffLimit: 30
+  template:
+    metadata:
+      labels:
+        app: iot-minio-init
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: mc
+          image: minio/mc:latest
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              until mc alias set iot http://iot-minio:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD"; do
+                echo '等待 MinIO 就绪...'; sleep 3;
+              done
+              mc mb --ignore-existing iot/ruoyi
+              mc anonymous set download iot/ruoyi
+              echo 'MinIO 初始化完成'
+          env:
+            - name: MINIO_ROOT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: iot-secret
+                  key: MINIO_ROOT_USER
+            - name: MINIO_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: iot-secret
+                  key: MINIO_ROOT_PASSWORD

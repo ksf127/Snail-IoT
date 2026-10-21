@@ -40,6 +40,11 @@ public class IotPayOrder extends BaseEntity {
     private String bizOrderNo;
 
     /**
+     * 关联商品ID（可为空，为空时为自由下单）
+     */
+    private Long productId;
+
+    /**
      * 支付渠道（mock/wx_native/ali_qr）
      */
     private String channel;

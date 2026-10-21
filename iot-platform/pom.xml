@@ -30,6 +30,8 @@
         <spring-cloud.version>2025.1.0</spring-cloud.version>
         <spring-cloud-alibaba.version>2025.1.0.0</spring-cloud-alibaba.version>
         <ijpay.version>2.9.13</ijpay.version>
+        <!-- Kubernetes Java 客户端（自动化部署：下发镜像 / 滚动重启 / 就绪等待） -->
+        <kubernetes.client.version>25.0.0</kubernetes.client.version>
         <!-- 前端构建（由 plus-ui 子目录独立管理，此处仅占位说明） -->
         <node.version>v22.14.0</node.version>
         <pnpm.version>9.15.5</pnpm.version>
@@ -95,6 +97,28 @@
                 <artifactId>iot-platform-pay</artifactId>
                 <version>${iot.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.dromara</groupId>
+                <artifactId>iot-platform-ticket</artifactId>
+                <version>${iot.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.dromara</groupId>
+                <artifactId>iot-platform-cloud</artifactId>
+                <version>${iot.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.dromara</groupId>
+                <artifactId>iot-platform-job</artifactId>
+                <version>${iot.version}</version>
+            </dependency>
+
+            <!-- Kubernetes Java 客户端（部署模块执行真实发布） -->
+            <dependency>
+                <groupId>io.kubernetes</groupId>
+                <artifactId>client-java</artifactId>
+                <version>${kubernetes.client.version}</version>
+            </dependency>
 
             <!-- IJPay 聚合支付 SDK（iot 父 POM 未纳管，此处显式锁版本） -->
             <dependency>
@@ -111,6 +135,30 @@
                 <groupId>com.github.javen205</groupId>
                 <artifactId>IJPay-AliPay</artifactId>
                 <version>${ijpay.version}</version>
+            </dependency>
+
+            <!-- 统一 okhttp/okio 版本：client-java 需要 okhttp 5.x + okio 3.15.0，
+                 但 IJPay-AliPay 传递的 okhttp 4.12.0/okio 3.6.0 经 nearest-wins 抢占，
+                 且 okio 3.6.0 缺 okio/Socket 导致 NoClassDefFoundError，故此处强制对齐 -->
+            <dependency>
+                <groupId>com.squareup.okhttp3</groupId>
+                <artifactId>okhttp</artifactId>
+                <version>5.1.0</version>
+            </dependency>
+            <dependency>
+                <groupId>com.squareup.okhttp3</groupId>
+                <artifactId>okhttp-jvm</artifactId>
+                <version>5.1.0</version>
+            </dependency>
+            <dependency>
+                <groupId>com.squareup.okio</groupId>
+                <artifactId>okio</artifactId>
+                <version>3.15.0</version>
+            </dependency>
+            <dependency>
+                <groupId>com.squareup.okio</groupId>
+                <artifactId>okio-jvm</artifactId>
+                <version>3.15.0</version>
             </dependency>
 
         </dependencies>

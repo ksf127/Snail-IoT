@@ -66,6 +66,11 @@ public class IotPayChannelConfigVo implements Serializable {
     private String notifyUrl;
 
     /**
+     * 网关地址（为空使用渠道默认地址）
+     */
+    private String gatewayUrl;
+
+    /**
      * 状态（0正常 1停用）
      */
     private String status;

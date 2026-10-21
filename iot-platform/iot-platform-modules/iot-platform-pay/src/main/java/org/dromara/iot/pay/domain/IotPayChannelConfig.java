@@ -77,6 +77,11 @@ public class IotPayChannelConfig extends BaseEntity {
     private String notifyUrl;
 
     /**
+     * 网关地址（为空使用渠道默认地址；支付宝沙箱填 https://openapi-sandbox.dl.alipaydev.com/gateway.do）
+     */
+    private String gatewayUrl;
+
+    /**
      * 状态（0正常 1停用）
      */
     private String status;

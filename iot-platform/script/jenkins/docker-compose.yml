@@ -1,0 +1,47 @@
+# ============================================================================
+# Snail-IoT · Jenkins 容器化启动
+#
+# 启动：docker compose -f script/jenkins/docker-compose.yml up -d --build
+# 访问：http://localhost:8090/        （admin / admin123）
+#
+# 说明：
+#   - 复用宿主 Docker 引擎（挂载 docker.sock）构建业务镜像
+#   - 仓库以 bind mount 方式注入 /workspace/snail，Job 通过 file:// 本地克隆
+#   - 挂载宿主 kubeconfig，容器内用 kubectl 部署到 Docker Desktop 内置 k8s
+# ============================================================================
+services:
+  jenkins:
+    build:
+      context: .
+    image: iot-platform/jenkins:lts-jdk21
+    container_name: iot-jenkins
+    restart: unless-stopped
+    # 访问宿主 docker.sock 需与宿主属组匹配；root 可规避 Docker Desktop socket 属组差异
+    user: root
+    ports:
+      - "8090:8080"     # Web UI
+      - "50000:50000"   # Agent 通信端口
+    environment:
+      CASC_JENKINS_CONFIG: /var/jenkins_home/casc_configs/jenkins.yaml
+      JAVA_OPTS: >-
+        -Djenkins.install.runSetupWizard=false
+        -Dhudson.plugins.git.GitSCM.ALLOW_LOCAL_CHECKOUT=true
+        -Dhudson.security.csrf.GlobalCrumbIssuerConfiguration.DISABLE_CSRF_PROTECTION=true
+        -Duser.timezone=Asia/Shanghai
+      TZ: Asia/Shanghai
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - ./casc:/var/jenkins_home/casc_configs
+      # 复用宿主 Maven 仓库，避免容器内重复下载依赖
+      - ${USERPROFILE}/.m2:/var/jenkins_home/.m2
+      - /var/run/docker.sock:/var/run/docker.sock
+      # 仓库根目录（相对本文件：script/jenkins → 上溯三级 = 仓库根）
+      - ../../../:/workspace/snail
+      # 宿主 kubeconfig（Docker Desktop 启用 Kubernetes 后才会生成）
+      - ${USERPROFILE}/.kube:/root/.kube:ro
+    extra_hosts:
+      # 容器内访问宿主 k8s API（kubeconfig 中的 kubernetes.docker.internal）
+      - "kubernetes.docker.internal:host-gateway"
+
+volumes:
+  jenkins_home:

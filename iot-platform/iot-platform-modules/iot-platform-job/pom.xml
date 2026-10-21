@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <groupId>org.dromara</groupId>
+        <artifactId>iot-platform-modules</artifactId>
+        <version>1.0.0</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>iot-platform-job</artifactId>
+
+    <description>
+        任务调度模块：自建任务管理（Cron/固定频率/手动）+ 执行器 SPI + 本地调度器，
+        并对接 SnailJob 分布式任务调度（@JobExecutor 执行器）
+    </description>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>iot-platform-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>iot-common-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>iot-common-doc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>iot-common-mybatis</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>iot-common-json</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>iot-common-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>iot-common-security</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>iot-common-log</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>iot-common-redis</artifactId>
+        </dependency>
+
+        <!-- SnailJob 客户端（版本由 iot-vue-plus 父 POM dependencyManagement 纳管） -->
+        <dependency>
+            <groupId>com.aizuda</groupId>
+            <artifactId>snail-job-client-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.aizuda</groupId>
+            <artifactId>snail-job-client-job-core</artifactId>
+        </dependency>
+    </dependencies>
+
+</project>

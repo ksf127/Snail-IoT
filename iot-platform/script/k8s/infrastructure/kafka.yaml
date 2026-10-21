@@ -1,0 +1,101 @@
+# ============================================================================
+# 中间件 · Kafka 3.9（KRaft 单节点，免 Zookeeper）
+# 仅暴露集群内 INTERNAL 监听器，应用通过 iot-kafka:9092 访问。
+# ============================================================================
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: iot-kafka-data
+  namespace: iot-platform
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: iot-kafka
+  namespace: iot-platform
+  labels:
+    app: iot-kafka
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: iot-kafka
+  template:
+    metadata:
+      labels:
+        app: iot-kafka
+    spec:
+      containers:
+        - name: kafka
+          image: apache/kafka:3.9.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: internal
+              containerPort: 9092
+          env:
+            - name: KAFKA_NODE_ID
+              value: "1"
+            - name: KAFKA_PROCESS_ROLES
+              value: broker,controller
+            - name: KAFKA_LISTENERS
+              value: INTERNAL://:9092,CONTROLLER://:9093
+            - name: KAFKA_ADVERTISED_LISTENERS
+              value: INTERNAL://iot-kafka:9092
+            - name: KAFKA_CONTROLLER_LISTENER_NAMES
+              value: CONTROLLER
+            - name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
+              value: CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT
+            - name: KAFKA_CONTROLLER_QUORUM_VOTERS
+              value: 1@localhost:9093
+            - name: KAFKA_INTER_BROKER_LISTENER_NAME
+              value: INTERNAL
+            - name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
+              value: "1"
+            - name: KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR
+              value: "1"
+            - name: KAFKA_TRANSACTION_STATE_LOG_MIN_ISR
+              value: "1"
+            - name: KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS
+              value: "0"
+            - name: KAFKA_AUTO_CREATE_TOPICS_ENABLE
+              value: "true"
+            # 必须是合法的 base64(uuid) 形式，否则 kafka-storage 格式化校验失败
+            - name: CLUSTER_ID
+              value: MkU3OEVBNTcwNTJENDM2Qk
+            - name: TZ
+              value: Asia/Shanghai
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/kafka/data
+          readinessProbe:
+            exec:
+              command: ["/opt/kafka/bin/kafka-topics.sh", "--bootstrap-server", "localhost:9092", "--list"]
+            initialDelaySeconds: 25
+            periodSeconds: 15
+            # kafka-topics.sh 是 JVM 脚本，冷启动 + 高负载下远超默认 1s，必须放宽
+            timeoutSeconds: 15
+            failureThreshold: 20
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: iot-kafka-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: iot-kafka
+  namespace: iot-platform
+spec:
+  selector:
+    app: iot-kafka
+  ports:
+    - name: internal
+      port: 9092
+      targetPort: 9092

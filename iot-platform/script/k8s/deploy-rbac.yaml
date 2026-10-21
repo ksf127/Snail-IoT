@@ -1,0 +1,41 @@
+# ============================================================================
+# Snail-IoT · 自动化部署所需 RBAC
+#
+# iot-server 通过集群内 ServiceAccount（默认 default）调用 Kubernetes API 完成
+# 发布：读取命名空间、读取/更新 Deployment（更新镜像并滚动重启）。
+#
+# 清单中的 `namespace: iot-platform` 会被 deploy.sh 按目标环境替换为
+# iot-platform-dev / iot-platform-prod，因此每个环境各自拥有独立授权。
+#
+# 权限范围（最小必要）：
+#   - namespaces      get/list          预检目标命名空间是否存在
+#   - deployments     get/list/update   读取并整体替换 Deployment（更新镜像 / 重启）
+#
+# 使用：
+#   kubectl apply -f script/k8s/deploy-rbac.yaml   # 由 deploy.sh 自动执行
+# ============================================================================
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: iot-deployer
+rules:
+  - apiGroups: [""]
+    resources: ["namespaces"]
+    verbs: ["get", "list"]
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: iot-deployer
+  namespace: iot-platform
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: iot-deployer
+subjects:
+  - kind: ServiceAccount
+    name: default
+    namespace: iot-platform

@@ -1,0 +1,72 @@
+# ============================================================================
+# 中间件 · Redis 7（requirepass 鉴权 + AOF 持久化）
+# ============================================================================
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: iot-redis-data
+  namespace: iot-platform
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: iot-redis
+  namespace: iot-platform
+  labels:
+    app: iot-redis
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: iot-redis
+  template:
+    metadata:
+      labels:
+        app: iot-redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          imagePullPolicy: IfNotPresent
+          command: ["sh", "-c", "exec redis-server --requirepass \"$REDIS_PASSWORD\" --appendonly yes"]
+          ports:
+            - name: redis
+              containerPort: 6379
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: iot-secret
+                  key: REDIS_PASSWORD
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          readinessProbe:
+            exec:
+              command: ["sh", "-c", "redis-cli -a \"$REDIS_PASSWORD\" ping | grep -q PONG"]
+            initialDelaySeconds: 5
+            periodSeconds: 10
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: iot-redis-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: iot-redis
+  namespace: iot-platform
+spec:
+  selector:
+    app: iot-redis
+  ports:
+    - name: redis
+      port: 6379
+      targetPort: 6379

@@ -1,0 +1,66 @@
+# ============================================================================
+# 应用 · iot-web（Nginx 前端，唯一对外入口）
+# Nginx upstream 在启动时解析 iot-server / iot-sba / iot-snailjob / iot-snailai，
+# 因此用 initContainer 等待后端就绪，避免 Nginx 因 DNS 解析失败启动退出。
+# 注：此处 Service 为 LoadBalancer；deploy.sh 渲染时会按环境改写为 NodePort
+#     （dev 30080 / prod 30081），以便两个命名空间同时运行而不抢占宿主 80 端口。
+# ============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: iot-web
+  namespace: iot-platform
+  labels:
+    app: iot-web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: iot-web
+  template:
+    metadata:
+      labels:
+        app: iot-web
+    spec:
+      initContainers:
+        - name: wait-backends
+          image: busybox:1.36
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              for hp in iot-server:8080 iot-sba:9090 iot-snailjob:8800 iot-snailai:8900; do
+                host=${hp%%:*}; port=${hp##*:}
+                until nc -z "$host" "$port"; do echo "等待 $hp ..."; sleep 3; done
+                echo "$hp 已就绪"
+              done
+      containers:
+        - name: iot-web
+          image: iot-platform/plus-ui:1.0.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 80
+          env:
+            - name: TZ
+              value: Asia/Shanghai
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: iot-web
+  namespace: iot-platform
+spec:
+  type: LoadBalancer
+  selector:
+    app: iot-web
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80

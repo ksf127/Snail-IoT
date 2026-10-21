@@ -69,6 +69,12 @@
             <groupId>org.dromara</groupId>
             <artifactId>iot-common-oss</artifactId>
         </dependency>
+
+        <!-- Kubernetes Java 客户端：读取 Deployment、更新镜像、滚动重启、等待就绪 -->
+        <dependency>
+            <groupId>io.kubernetes</groupId>
+            <artifactId>client-java</artifactId>
+        </dependency>
     </dependencies>
 
 </project>

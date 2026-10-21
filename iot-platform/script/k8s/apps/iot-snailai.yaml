@@ -1,0 +1,75 @@
+# ============================================================================
+# 应用 · iot-snailai（SnailAI 控制台，入口 /snail-ai）
+# ============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: iot-snailai
+  namespace: iot-platform
+  labels:
+    app: iot-snailai
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: iot-snailai
+  template:
+    metadata:
+      labels:
+        app: iot-snailai
+    spec:
+      containers:
+        - name: iot-snailai
+          image: iot-platform/snailai-server:1.1.1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8900
+            - name: grpc
+              containerPort: 18888
+          env:
+            - name: POSTGRES_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: iot-secret
+                  key: POSTGRES_USERNAME
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: iot-secret
+                  key: POSTGRES_PASSWORD
+            - name: JAVA_OPTS
+              value: >-
+                -Dspring.profiles.active=prod
+                -Dspring.datasource.driver-class-name=org.postgresql.Driver
+                -Dspring.datasource.url=jdbc:postgresql://iot-postgres:5432/ruoyi
+                -Dspring.datasource.username=$(POSTGRES_USERNAME)
+                -Dspring.datasource.password=$(POSTGRES_PASSWORD)
+                -Dspring.boot.admin.client.url=http://iot-sba:9090/admin
+            # 本地未部署 docling（127.0.0.1:5100），关闭 RAG 文档解析
+            - name: SNAIL_AI_RAG_DOCLING_ENABLED
+              value: "false"
+            - name: TZ
+              value: Asia/Shanghai
+          readinessProbe:
+            tcpSocket:
+              port: 8900
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: iot-snailai
+  namespace: iot-platform
+spec:
+  selector:
+    app: iot-snailai
+  ports:
+    - name: http
+      port: 8900
+      targetPort: 8900
+    - name: grpc
+      port: 18888
+      targetPort: 18888

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none" role="img" aria-label="Snail-IoT">
+  <defs>
+    <linearGradient id="iotFaviconBg" x1="5" y1="3" x2="43" y2="45" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#63B3FF" />
+      <stop offset="0.55" stop-color="#2E7BFF" />
+      <stop offset="1" stop-color="#1B4FD8" />
+    </linearGradient>
+  </defs>
+  <rect x="1" y="1" width="46" height="46" rx="13" fill="url(#iotFaviconBg)" />
+  <g stroke="#ffffff" stroke-width="2.3" stroke-linecap="round" opacity="0.92">
+    <path d="M24 24 L24 11" /><path d="M24 24 L12.5 33.5" /><path d="M24 24 L35.5 33.5" />
+  </g>
+  <circle cx="24" cy="24" r="4.2" fill="#ffffff" />
+  <circle cx="24" cy="10.5" r="3" fill="#ffffff" />
+  <circle cx="12.5" cy="33.5" r="3" fill="#ffffff" />
+  <circle cx="35.5" cy="33.5" r="3" fill="#ffffff" />
+</svg>

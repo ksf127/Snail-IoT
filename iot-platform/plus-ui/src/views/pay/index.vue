@@ -9,12 +9,7 @@
             </el-form-item>
             <el-form-item label="状态">
               <el-select v-model="orderQuery.status" placeholder="全部" clearable style="width: 140px">
-                <el-option
-                  v-for="(label, value) in orderStatusMap"
-                  :key="value"
-                  :label="label"
-                  :value="value"
-                />
+                <el-option v-for="(label, value) in orderStatusMap" :key="value" :label="label" :value="value" />
               </el-select>
             </el-form-item>
             <el-form-item>
@@ -119,6 +114,14 @@
           </div>
         </div>
       </el-tab-pane>
+
+      <el-tab-pane label="渠道配置" name="channel" lazy>
+        <ChannelConfig @refresh="loadChannels" />
+      </el-tab-pane>
+
+      <el-tab-pane label="商品管理" name="product" lazy>
+        <ProductManage />
+      </el-tab-pane>
     </el-tabs>
 
     <el-dialog v-model="createVisible" title="下单" width="520px">
@@ -128,11 +131,22 @@
         </el-form-item>
         <el-form-item label="支付渠道" prop="channel">
           <el-select v-model="createForm.channel" placeholder="请选择支付渠道" style="width: 100%">
+            <el-option v-for="c in channels" :key="c.configKey" :label="c.configName || c.channel" :value="c.channel" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="商品" prop="productId">
+          <el-select
+            v-model="createForm.productId"
+            placeholder="可选：选择虚拟商品（自动带出名称与金额）"
+            clearable
+            style="width: 100%"
+            @change="handleProductChange"
+          >
             <el-option
-              v-for="c in channels"
-              :key="c.configKey"
-              :label="c.configName || c.channel"
-              :value="c.channel"
+              v-for="p in products"
+              :key="p.productId"
+              :label="`${p.productName}（￥${p.price}）`"
+              :value="p.productId"
             />
           </el-select>
         </el-form-item>
@@ -160,7 +174,9 @@
         <el-descriptions-item label="支付单号">{{ payResult.orderNo }}</el-descriptions-item>
         <el-descriptions-item label="渠道">{{ payResult.channel }}</el-descriptions-item>
         <el-descriptions-item label="金额">{{ payResult.amount }}</el-descriptions-item>
-        <el-descriptions-item label="状态">{{ orderStatusMap[payResult.status] || payResult.status }}</el-descriptions-item>
+        <el-descriptions-item label="状态">
+          {{ orderStatusMap[payResult.status] || payResult.status }}
+        </el-descriptions-item>
         <el-descriptions-item label="二维码链接">
           <a :href="payResult.codeUrl" target="_blank">{{ payResult.codeUrl }}</a>
         </el-descriptions-item>
@@ -176,13 +192,7 @@
           <el-input v-model="refundForm.orderNo" disabled />
         </el-form-item>
         <el-form-item label="退款金额" prop="refundAmount">
-          <el-input-number
-            v-model="refundForm.refundAmount"
-            :min="0.01"
-            :precision="2"
-            :step="1"
-            style="width: 100%"
-          />
+          <el-input-number v-model="refundForm.refundAmount" :min="0.01" :precision="2" :step="1" style="width: 100%" />
         </el-form-item>
         <el-form-item label="退款原因" prop="reason">
           <el-input v-model="refundForm.reason" type="textarea" placeholder="退款原因" />
@@ -197,178 +207,202 @@
 </template>
 
 <script setup>
-import { onMounted, reactive, ref } from 'vue'
-import { ElMessage } from 'element-plus'
-import { Plus, Refresh, Search } from '@element-plus/icons-vue'
+import { Plus, Refresh, Search } from '@element-plus/icons-vue';
+import { ElMessage } from 'element-plus';
+import { onMounted, reactive, ref } from 'vue';
 import {
   createPayOrder,
+  listOnSaleProducts,
   listPayChannels,
   listPayOrders,
   listPayRefunds,
   queryPayOrder,
   refundPayOrder
-} from '@/api/pay'
+} from '@/api/pay';
+import ChannelConfig from './components/ChannelConfig.vue';
+import ProductManage from './components/ProductManage.vue';
 
-const activeTab = ref('order')
+const activeTab = ref('order');
 
-const orderStatusMap = { 0: '待支付', 1: '已支付', 2: '已关闭', 3: '已退款' }
-const refundStatusMap = { 0: '退款中', 1: '退款成功', 2: '退款失败' }
+const orderStatusMap = { 0: '待支付', 1: '已支付', 2: '已关闭', 3: '已退款' };
+const refundStatusMap = { 0: '退款中', 1: '退款成功', 2: '退款失败' };
 
-const orderLoading = ref(false)
-const refundLoading = ref(false)
-const creating = ref(false)
-const refunding = ref(false)
+const orderLoading = ref(false);
+const refundLoading = ref(false);
+const creating = ref(false);
+const refunding = ref(false);
 
-const orderList = ref([])
-const orderTotal = ref(0)
-const refundList = ref([])
-const refundTotal = ref(0)
-const channels = ref([])
+const orderList = ref([]);
+const orderTotal = ref(0);
+const refundList = ref([]);
+const refundTotal = ref(0);
+const channels = ref([]);
+const products = ref([]);
 
-const orderQuery = reactive({ orderNo: '', status: '', pageNum: 1, pageSize: 10 })
-const refundQuery = reactive({ orderNo: '', pageNum: 1, pageSize: 10 })
+const orderQuery = reactive({ orderNo: '', status: '', pageNum: 1, pageSize: 10 });
+const refundQuery = reactive({ orderNo: '', pageNum: 1, pageSize: 10 });
 
-const createVisible = ref(false)
-const payResultVisible = ref(false)
-const refundVisible = ref(false)
-const createFormRef = ref()
-const refundFormRef = ref()
-const payResult = ref(null)
+const createVisible = ref(false);
+const payResultVisible = ref(false);
+const refundVisible = ref(false);
+const createFormRef = ref();
+const refundFormRef = ref();
+const payResult = ref(null);
 
 const createForm = reactive({
   bizOrderNo: '',
   channel: '',
+  productId: undefined,
   subject: '',
   amount: 0.01,
   currency: 'CNY',
   remark: ''
-})
-const refundForm = reactive({ orderNo: '', refundAmount: 0.01, reason: '' })
+});
+const refundForm = reactive({ orderNo: '', refundAmount: 0.01, reason: '' });
 
 const createRules = {
   bizOrderNo: [{ required: true, message: '业务单号不能为空', trigger: 'blur' }],
   channel: [{ required: true, message: '请选择支付渠道', trigger: 'change' }],
   amount: [{ required: true, message: '金额不能为空', trigger: 'blur' }]
-}
+};
 const refundRules = {
   refundAmount: [{ required: true, message: '退款金额不能为空', trigger: 'blur' }]
-}
+};
 
 function orderStatusTag(status) {
-  return { 0: 'warning', 1: 'success', 2: 'info', 3: 'danger' }[status] || 'info'
+  return { 0: 'warning', 1: 'success', 2: 'info', 3: 'danger' }[status] || 'info';
 }
 
 function refundStatusTag(status) {
-  return { 0: 'warning', 1: 'success', 2: 'danger' }[status] || 'info'
+  return { 0: 'warning', 1: 'success', 2: 'danger' }[status] || 'info';
 }
 
 async function loadOrders() {
-  orderLoading.value = true
+  orderLoading.value = true;
   try {
-    const res = await listPayOrders(orderQuery)
-    orderList.value = res.data.rows || []
-    orderTotal.value = res.data.total || 0
+    const res = await listPayOrders(orderQuery);
+    orderList.value = res.data.rows || [];
+    orderTotal.value = res.data.total || 0;
   } finally {
-    orderLoading.value = false
+    orderLoading.value = false;
   }
 }
 
 async function loadRefunds() {
-  refundLoading.value = true
+  refundLoading.value = true;
   try {
-    const res = await listPayRefunds(refundQuery)
-    refundList.value = res.data.rows || []
-    refundTotal.value = res.data.total || 0
+    const res = await listPayRefunds(refundQuery);
+    refundList.value = res.data.rows || [];
+    refundTotal.value = res.data.total || 0;
   } finally {
-    refundLoading.value = false
+    refundLoading.value = false;
   }
 }
 
 async function loadChannels() {
-  const res = await listPayChannels()
-  channels.value = res.data || []
+  const res = await listPayChannels();
+  channels.value = res.data || [];
+}
+
+async function loadProducts() {
+  const res = await listOnSaleProducts();
+  products.value = res.data || [];
+}
+
+function handleProductChange(productId) {
+  if (!productId) {
+    return;
+  }
+  const product = products.value.find(p => p.productId === productId);
+  if (product) {
+    createForm.subject = product.productName;
+    createForm.amount = Number(product.price);
+    createForm.currency = product.currency || 'CNY';
+  }
 }
 
 function handleOrderQuery() {
-  orderQuery.pageNum = 1
-  loadOrders()
+  orderQuery.pageNum = 1;
+  loadOrders();
 }
 
 function handleTabChange(name) {
   if (name === 'refund') {
-    loadRefunds()
+    loadRefunds();
   }
 }
 
 function resetOrderQuery() {
-  Object.assign(orderQuery, { orderNo: '', status: '', pageNum: 1 })
-  loadOrders()
+  Object.assign(orderQuery, { orderNo: '', status: '', pageNum: 1 });
+  loadOrders();
 }
 
 function handleRefundQuery() {
-  refundQuery.pageNum = 1
-  loadRefunds()
+  refundQuery.pageNum = 1;
+  loadRefunds();
 }
 
 function resetRefundQuery() {
-  Object.assign(refundQuery, { orderNo: '', pageNum: 1 })
-  loadRefunds()
+  Object.assign(refundQuery, { orderNo: '', pageNum: 1 });
+  loadRefunds();
 }
 
 function openCreateDialog() {
   Object.assign(createForm, {
     bizOrderNo: '',
     channel: '',
+    productId: undefined,
     subject: '',
     amount: 0.01,
     currency: 'CNY',
     remark: ''
-  })
-  createVisible.value = true
+  });
+  createVisible.value = true;
 }
 
 async function handleCreate() {
-  await createFormRef.value.validate()
-  creating.value = true
+  await createFormRef.value.validate();
+  creating.value = true;
   try {
-    const res = await createPayOrder(createForm)
-    payResult.value = res.data
-    createVisible.value = false
-    payResultVisible.value = true
-    ElMessage.success('下单成功')
-    loadOrders()
+    const res = await createPayOrder(createForm);
+    payResult.value = res.data;
+    createVisible.value = false;
+    payResultVisible.value = true;
+    ElMessage.success('下单成功');
+    loadOrders();
   } finally {
-    creating.value = false
+    creating.value = false;
   }
 }
 
 async function handleQueryOrder(row) {
-  const res = await queryPayOrder(row.orderNo)
-  payResult.value = res.data
-  payResultVisible.value = true
+  const res = await queryPayOrder(row.orderNo);
+  payResult.value = res.data;
+  payResultVisible.value = true;
 }
 
 function openRefundDialog(row) {
-  Object.assign(refundForm, { orderNo: row.orderNo, refundAmount: row.amount, reason: '' })
-  refundVisible.value = true
+  Object.assign(refundForm, { orderNo: row.orderNo, refundAmount: row.amount, reason: '' });
+  refundVisible.value = true;
 }
 
 async function handleRefund() {
-  await refundFormRef.value.validate()
-  refunding.value = true
+  await refundFormRef.value.validate();
+  refunding.value = true;
   try {
-    await refundPayOrder(refundForm)
-    ElMessage.success('退款已提交')
-    refundVisible.value = false
-    loadOrders()
-    loadRefunds()
+    await refundPayOrder(refundForm);
+    ElMessage.success('退款已提交');
+    refundVisible.value = false;
+    loadOrders();
+    loadRefunds();
   } finally {
-    refunding.value = false
+    refunding.value = false;
   }
 }
 
 onMounted(async () => {
-  await loadChannels()
-  loadOrders()
-})
+  await loadChannels();
+  await loadProducts();
+  loadOrders();
+});
 </script>

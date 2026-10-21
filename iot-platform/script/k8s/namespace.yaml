@@ -1,0 +1,11 @@
+# ============================================================================
+# Snail-IoT · Kubernetes 命名空间
+# 目标集群：Docker Desktop 内置 Kubernetes
+# ============================================================================
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: iot-platform
+  labels:
+    app.kubernetes.io/part-of: snail-iot
+    app.kubernetes.io/managed-by: jenkins

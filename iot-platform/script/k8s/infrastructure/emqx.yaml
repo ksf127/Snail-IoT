@@ -1,0 +1,85 @@
+# ============================================================================
+# 中间件 · EMQX 5.8（MQTT Broker，设备数据采集入口）
+# ============================================================================
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: iot-emqx-data
+  namespace: iot-platform
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: iot-emqx
+  namespace: iot-platform
+  labels:
+    app: iot-emqx
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: iot-emqx
+  template:
+    metadata:
+      labels:
+        app: iot-emqx
+    spec:
+      containers:
+        - name: emqx
+          image: emqx/emqx:5.8.4
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: mqtt
+              containerPort: 1883
+            - name: ws
+              containerPort: 8083
+            - name: dashboard
+              containerPort: 18083
+          env:
+            - name: EMQX_DASHBOARD__DEFAULT_PASSWORD
+              value: public
+            - name: EMQX_ALLOW_ANONYMOUS
+              value: "true"
+            - name: TZ
+              value: Asia/Shanghai
+          volumeMounts:
+            - name: data
+              mountPath: /opt/emqx/data
+          readinessProbe:
+            exec:
+              command: ["/opt/emqx/bin/emqx", "ctl", "status"]
+            initialDelaySeconds: 20
+            periodSeconds: 15
+            # emqx ctl status 是 Erlang RPC 调用，单机负载高时远超默认 1s，必须放宽
+            timeoutSeconds: 10
+            failureThreshold: 20
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: iot-emqx-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: iot-emqx
+  namespace: iot-platform
+spec:
+  selector:
+    app: iot-emqx
+  ports:
+    - name: mqtt
+      port: 1883
+      targetPort: 1883
+    - name: ws
+      port: 8083
+      targetPort: 8083
+    - name: dashboard
+      port: 18083
+      targetPort: 18083

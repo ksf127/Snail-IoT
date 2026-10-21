@@ -3,7 +3,6 @@ package org.dromara.iot.pay.domain.bo;
 import io.github.linpeilie.annotations.AutoMapper;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 import org.dromara.iot.pay.domain.IotPayOrder;
@@ -43,6 +42,11 @@ public class IotPayOrderBo implements Serializable {
     private String bizOrderNo;
 
     /**
+     * 关联商品ID（指定商品时以其售价与名称下单，此时金额可省略）
+     */
+    private Long productId;
+
+    /**
      * 支付渠道
      */
     @NotBlank(message = "支付渠道不能为空")
@@ -55,9 +59,8 @@ public class IotPayOrderBo implements Serializable {
     private String subject;
 
     /**
-     * 支付金额（元）
+     * 支付金额（元），未指定商品时必填
      */
-    @NotNull(message = "支付金额不能为空")
     @DecimalMin(value = "0.01", message = "支付金额必须大于 0")
     private BigDecimal amount;
 

@@ -204,7 +204,7 @@ springdoc:
       name: iot-platform
       email: dev@iot-platform.local
       url: https://localhost
-  #这里定义了两个分组，可定义多个，也可以不定义
+  # 这里定义了 13 个分组（按业务域/模块划分），可定义多个，也可以不定义
   group-configs:
     - group: 1.通用模块
       packages-to-scan: org.dromara.web
@@ -224,6 +224,14 @@ springdoc:
       packages-to-scan: org.dromara.iot.report
     - group: 9.部署模块
       packages-to-scan: org.dromara.iot.deploy
+    - group: 10.支付模块
+      packages-to-scan: org.dromara.iot.pay
+    - group: 11.工单模块
+      packages-to-scan: org.dromara.iot.ticket
+    - group: 12.云平台模块
+      packages-to-scan: org.dromara.iot.cloud
+    - group: 13.任务调度模块
+      packages-to-scan: org.dromara.iot.job
 
 # 防止XSS攻击
 xss:
@@ -473,3 +481,4 @@ spring:
         password: ${NACOS_PASSWORD:123456}
         group: DEFAULT_GROUP
         file-extension: yml
+

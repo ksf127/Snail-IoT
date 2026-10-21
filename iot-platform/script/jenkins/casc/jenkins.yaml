@@ -1,0 +1,182 @@
+# ============================================================================
+# Snail-IoT · Jenkins Configuration as Code
+# 首次启动即完成：管理员账号、关闭向导、预置流水线 Job
+# 友情提示：admin/admin123 仅适用于本地环境，生产请替换。
+# ============================================================================
+jenkins:
+  systemMessage: "Snail-IoT CI · k8s + Jenkins 自动化构建部署"
+  numExecutors: 2
+  mode: NORMAL
+  scmCheckoutRetryCount: 2
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: "admin"
+          password: "admin123"
+  authorizationStrategy:
+    loggedInUsersCanDoAnything:
+      allowAnonymousRead: false
+
+unclassified:
+  location:
+    url: "http://localhost:8090/"
+  timestamper:
+    allPipelines: true
+
+jobs:
+  - script: |
+      pipelineJob('snail-iot-cicd') {
+        description('Snail-IoT 全栈流水线：直接构建挂载的本地工作区（未提交改动同样生效）→ 镜像 → 部署到 Docker Desktop k8s → 冒烟验证')
+        logRotator {
+          numToKeep(10)
+        }
+        definition {
+          cps {
+            sandbox(true)
+            script('''
+      pipeline {
+        agent any
+        options {
+          timestamps()
+          ansiColor('xterm')
+          disableConcurrentBuilds()
+          timeout(time: 180, unit: 'MINUTES')
+          buildDiscarder(logRotator(numToKeepStr: '10'))
+        }
+        environment {
+          NAMESPACE       = 'iot-platform-dev'
+          IMAGE_PREFIX    = 'iot-platform'
+          TAG             = '1.0.0'
+          DOCKER_BUILDKIT = '0'
+          MAVEN_OPTS      = '-Dmaven.repo.local=/var/jenkins_home/.m2/repository -Dmaven.compiler.useIncrementalCompilation=false'
+          WORKTREE        = '/workspace/snail'
+        }
+        stages {
+          stage('构建后端') {
+            steps {
+              dir(WORKTREE) {
+                sh 'bash iot-platform/script/jenkins/ci.sh backend'
+              }
+            }
+          }
+          stage('构建前端') {
+            steps {
+              dir(WORKTREE) {
+                sh 'bash iot-platform/script/jenkins/ci.sh frontend'
+              }
+            }
+          }
+          stage('构建镜像') {
+            steps {
+              dir(WORKTREE) {
+                sh 'bash iot-platform/script/jenkins/ci.sh images'
+              }
+            }
+          }
+          stage('部署到 Kubernetes') {
+            steps {
+              dir(WORKTREE) {
+                sh 'bash iot-platform/script/jenkins/ci.sh deploy'
+              }
+            }
+          }
+          stage('冒烟验证') {
+            steps {
+              dir(WORKTREE) {
+                sh 'bash iot-platform/script/jenkins/ci.sh smoke'
+              }
+            }
+          }
+        }
+        post {
+          success {
+            echo '构建与部署成功'
+          }
+          failure {
+            echo '构建或部署失败，请查看上方日志'
+          }
+        }
+      }
+      ''')
+          }
+        }
+      }
+  - script: |
+      pipelineJob('snail-app-build') {
+        description('通用应用构建流水线：按应用配置拉取代码 → 执行构建命令 → 构建镜像 → 部署到 k8s')
+        parameters {
+          stringParam('APP_CODE', '', '应用编码')
+          stringParam('REPO_URL', '', '代码仓库地址，或 Jenkins 容器内本地路径（如 /workspace/snail）')
+          stringParam('REPO_BRANCH', 'main', '代码分支')
+          stringParam('BUILD_WORKDIR', '.', '构建目录（相对代码根目录）')
+          textParam('BUILD_COMMAND', '', '构建命令（留空则交由 Dockerfile 构建）')
+          stringParam('IMAGE', '', '镜像名称（不含 tag）')
+          stringParam('IMAGE_TAG', '1.0.0', '镜像 tag / 版本号')
+          stringParam('JAR_PATH', '', '构建产物 JAR 路径（相对代码根目录，留空不归档）')
+          stringParam('DOCKERFILE_PATH', 'Dockerfile', 'Dockerfile 路径（相对代码根目录）')
+          stringParam('K8S_NAMESPACE', '', 'Kubernetes 命名空间')
+          stringParam('K8S_WORKLOAD', '', 'Deployment 名称（留空跳过部署）')
+          stringParam('K8S_CONTAINER', '', '容器名称（留空取首个容器）')
+        }
+        logRotator {
+          numToKeep(20)
+        }
+        definition {
+          cps {
+            sandbox(true)
+            script('''
+      pipeline {
+        agent any
+        options {
+          timestamps()
+          ansiColor('xterm')
+          disableConcurrentBuilds()
+          timeout(time: 180, unit: 'MINUTES')
+          buildDiscarder(logRotator(numToKeepStr: '20'))
+        }
+        environment {
+          DOCKER_BUILDKIT = '0'
+          MAVEN_OPTS      = '-Dmaven.repo.local=/var/jenkins_home/.m2/repository -Dmaven.compiler.useIncrementalCompilation=false'
+        }
+        stages {
+          stage('准备代码') {
+            steps {
+              sh 'bash /workspace/snail/iot-platform/script/jenkins/build-app.sh prepare'
+            }
+          }
+          stage('执行构建') {
+            steps {
+              sh 'bash /workspace/snail/iot-platform/script/jenkins/build-app.sh build'
+            }
+          }
+          stage('归档 JAR') {
+            steps {
+              sh 'bash /workspace/snail/iot-platform/script/jenkins/build-app.sh artifact'
+              archiveArtifacts artifacts: 'artifacts/**', allowEmptyArchive: true
+            }
+          }
+          stage('构建镜像') {
+            steps {
+              sh 'bash /workspace/snail/iot-platform/script/jenkins/build-app.sh image'
+            }
+          }
+          stage('部署到 Kubernetes') {
+            steps {
+              sh 'bash /workspace/snail/iot-platform/script/jenkins/build-app.sh deploy'
+            }
+          }
+        }
+        post {
+          success {
+            echo '构建完成'
+          }
+          failure {
+            echo '构建失败，请查看上方日志'
+          }
+        }
+      }
+      ''')
+          }
+        }
+      }

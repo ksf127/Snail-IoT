@@ -35,6 +35,12 @@
         <module>iot-platform-deploy</module>
         <!-- 聚合支付：统一下单、回调、退款 -->
         <module>iot-platform-pay</module>
+        <!-- 工单管理：普通工单、规则引擎、流程引擎 -->
+        <module>iot-platform-ticket</module>
+        <!-- 云平台：云账号/云资源纳管（阿里云、Flink） -->
+        <module>iot-platform-cloud</module>
+        <!-- 任务调度：自建任务管理 + SnailJob 执行器 -->
+        <module>iot-platform-job</module>
     </modules>
 
 </project>

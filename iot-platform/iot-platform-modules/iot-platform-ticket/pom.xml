@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <groupId>org.dromara</groupId>
+        <artifactId>iot-platform-modules</artifactId>
+        <version>1.0.0</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>iot-platform-ticket</artifactId>
+
+    <description>
+        工单管理模块：普通工单流转、规则引擎（LiteFlow）自动处理、流程引擎（Warm-Flow）审批
+    </description>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>iot-platform-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>iot-common-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>iot-common-doc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>iot-common-mybatis</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>iot-common-json</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>iot-common-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>iot-common-security</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>iot-common-log</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>iot-common-redis</artifactId>
+        </dependency>
+
+        <!-- 工作流对外统一服务（Warm-Flow 流程引擎接入点） -->
+        <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>iot-api</artifactId>
+        </dependency>
+
+        <!-- LiteFlow 规则编排（规则引擎） -->
+        <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>iot-common-liteflow</artifactId>
+        </dependency>
+    </dependencies>
+
+</project>

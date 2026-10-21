@@ -1,0 +1,85 @@
+# ============================================================================
+# Snail-IoT · 开发环境自动部署（dev）
+#
+# 触发：推送到 main 分支（或手动 Run workflow）
+# 流程：拉取代码 → 构建后端 → 构建前端 → 构建镜像 → 部署到 k8s dev → 冒烟验证
+#
+# 运行环境：self-hosted runner（用户本机，需装 Git Bash / JDK21 / Maven /
+#          Node22 + pnpm / Docker Desktop（已启用 Kubernetes）/ kubectl）
+#          并打上自定义标签 `snail-iot`
+# ============================================================================
+name: 部署开发环境
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'iot-platform/**'
+      - 'thirdparty/**'
+      - 'init-vector.sql'
+      - '.github/workflows/deploy-dev.yml'
+  workflow_dispatch:
+
+# 同一时间只允许一个 dev 部署，避免并发 apply 互相干扰
+concurrency:
+  group: deploy-dev
+  cancel-in-progress: false
+
+env:
+  IMAGE_PREFIX: iot-platform
+  IMAGE_TAG: '1.0.0'
+  NAMESPACE: iot-platform-dev
+
+jobs:
+  deploy-dev:
+    name: 构建并部署到 dev
+    runs-on: [self-hosted, snail-iot]
+    timeout-minutes: 120
+    steps:
+      - name: 拉取代码
+        uses: actions/checkout@v4
+
+      - name: 构建后端（框架底座 + 业务）
+        shell: bash
+        run: |
+          set -e
+          echo "==> ① 安装框架底座 iot-vue-plus（含 monitor-admin / snailjob / snailai 扩展）"
+          mvn -B -DskipTests -f thirdparty/iot-vue-plus/pom.xml clean install
+          echo "==> ② 打包业务 iot-platform（prod profile）"
+          mvn -B -Pprod -DskipTests -f iot-platform/pom.xml clean package
+
+      - name: 构建前端
+        shell: bash
+        run: |
+          set -e
+          cd iot-platform/plus-ui
+          pnpm install --frozen-lockfile
+          pnpm run build:prod
+
+      - name: 构建镜像
+        shell: bash
+        run: |
+          set -e
+          docker build -t $IMAGE_PREFIX/iot-platform-admin:$IMAGE_TAG iot-platform/iot-platform-admin
+          docker build -t $IMAGE_PREFIX/monitor-admin:6.0.0        thirdparty/iot-vue-plus/iot-extend/iot-monitor-admin
+          docker build -t $IMAGE_PREFIX/snailjob-server:2.0.2      thirdparty/iot-vue-plus/iot-extend/iot-snailjob-server
+          docker build -t $IMAGE_PREFIX/snailai-server:1.1.1       thirdparty/iot-vue-plus/iot-extend/iot-snailai-server
+          docker build -t $IMAGE_PREFIX/plus-ui:$IMAGE_TAG          iot-platform/plus-ui
+
+      - name: 部署到 dev（Kubernetes）
+        shell: bash
+        run: bash iot-platform/script/k8s/deploy.sh dev
+
+      - name: 冒烟验证
+        shell: bash
+        run: |
+          set -e
+          kubectl -n $NAMESPACE get pods
+          kubectl -n $NAMESPACE get svc iot-web
+          echo "—— 前端 Nginx 自检 ——"
+          kubectl -n $NAMESPACE exec deploy/iot-web -- wget -q -O /dev/null http://127.0.0.1/ && echo "前端页面 OK"
+          echo "—— 后端连通性自检 ——"
+          for hp in iot-server:8080 iot-sba:9090 iot-snailjob:8800 iot-snailai:8900; do
+            kubectl -n $NAMESPACE exec deploy/iot-web -- sh -c "nc -z ${hp%%:*} ${hp##*:}" && echo "$hp 连通"
+          done
+          echo "开发环境入口： http://localhost:30080/"

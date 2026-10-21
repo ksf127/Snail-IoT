@@ -37,6 +37,11 @@ public class IotPayOrderVo implements Serializable {
     private String bizOrderNo;
 
     /**
+     * 关联商品ID
+     */
+    private Long productId;
+
+    /**
      * 支付渠道
      */
     private String channel;

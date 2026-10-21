@@ -83,6 +83,12 @@ public class IotPayChannelConfigBo implements Serializable {
     private String notifyUrl;
 
     /**
+     * 网关地址（为空使用渠道默认地址；支付宝沙箱填 https://openapi-sandbox.dl.alipaydev.com/gateway.do）
+     */
+    @Size(max = 255, message = "网关地址长度不能超过 255 个字符")
+    private String gatewayUrl;
+
+    /**
      * 状态（0正常 1停用）
      */
     private String status;

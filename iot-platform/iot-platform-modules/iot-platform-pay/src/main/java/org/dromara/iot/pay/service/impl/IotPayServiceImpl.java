@@ -1,5 +1,6 @@
 package org.dromara.iot.pay.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.RandomUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -7,6 +8,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import org.dromara.common.core.domain.PageResult;
 import org.dromara.common.core.exception.ServiceException;
+import org.dromara.common.core.utils.MapstructUtils;
 import org.dromara.common.core.utils.StringUtils;
 import org.dromara.common.mybatis.core.page.PageQuery;
 import org.dromara.common.redis.utils.RedisUtils;
@@ -19,7 +21,9 @@ import org.dromara.iot.pay.channel.model.PrePayResult;
 import org.dromara.iot.pay.channel.model.RefundResult;
 import org.dromara.iot.pay.domain.IotPayChannelConfig;
 import org.dromara.iot.pay.domain.IotPayOrder;
+import org.dromara.iot.pay.domain.IotPayProduct;
 import org.dromara.iot.pay.domain.IotPayRefund;
+import org.dromara.iot.pay.domain.bo.IotPayChannelConfigBo;
 import org.dromara.iot.pay.domain.bo.IotPayOrderBo;
 import org.dromara.iot.pay.domain.bo.IotPayRefundBo;
 import org.dromara.iot.pay.domain.vo.IotPayChannelConfigVo;
@@ -30,6 +34,7 @@ import org.dromara.iot.pay.enums.PayStatusEnum;
 import org.dromara.iot.pay.enums.RefundStatusEnum;
 import org.dromara.iot.pay.mapper.IotPayChannelConfigMapper;
 import org.dromara.iot.pay.mapper.IotPayOrderMapper;
+import org.dromara.iot.pay.mapper.IotPayProductMapper;
 import org.dromara.iot.pay.mapper.IotPayRefundMapper;
 import org.dromara.iot.pay.service.IotPayService;
 import org.springframework.stereotype.Service;
@@ -38,6 +43,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -70,6 +76,8 @@ public class IotPayServiceImpl implements IotPayService {
 
     private final IotPayChannelConfigMapper channelConfigMapper;
 
+    private final IotPayProductMapper productMapper;
+
     private final PayChannelFactory channelFactory;
 
     @Override
@@ -82,13 +90,37 @@ public class IotPayServiceImpl implements IotPayService {
         order.setOrderNo(generateNo(IotConstants.PAY_ORDER_NO_PREFIX));
         order.setBizOrderNo(bo.getBizOrderNo());
         order.setChannel(bo.getChannel());
-        order.setSubject(bo.getSubject());
-        order.setAmount(bo.getAmount());
-        order.setCurrency(StringUtils.isBlank(bo.getCurrency()) ? "CNY" : bo.getCurrency());
         order.setStatus(PayStatusEnum.WAIT.getCode());
         order.setUserId(LoginHelper.getUserId());
         order.setExpireTime(LocalDateTime.now().plusMinutes(ORDER_EXPIRE_MINUTES));
         order.setRemark(bo.getRemark());
+
+        // 指定商品：以商品名称与售价下单，避免客户端篡改金额；未指定则按自由金额下单
+        IotPayProduct product = null;
+        if (bo.getProductId() != null) {
+            product = productMapper.selectById(bo.getProductId());
+            if (product == null) {
+                throw new ServiceException("商品不存在：" + bo.getProductId());
+            }
+            if (!"0".equals(product.getStatus())) {
+                throw new ServiceException("商品已下架：" + product.getProductName());
+            }
+            order.setProductId(product.getProductId());
+            order.setSubject(StringUtils.isNotBlank(bo.getSubject()) ? bo.getSubject() : product.getProductName());
+            order.setAmount(product.getPrice());
+        } else {
+            if (bo.getAmount() == null) {
+                throw new ServiceException("支付金额不能为空");
+            }
+            order.setSubject(bo.getSubject());
+            order.setAmount(bo.getAmount());
+        }
+        String currency = bo.getCurrency();
+        if (StringUtils.isBlank(currency)) {
+            currency = product != null && StringUtils.isNotBlank(product.getCurrency())
+                ? product.getCurrency() : "CNY";
+        }
+        order.setCurrency(currency);
         orderMapper.insert(order);
 
         IPayChannel channel = channelFactory.getChannel(bo.getChannel());
@@ -211,12 +243,90 @@ public class IotPayServiceImpl implements IotPayService {
             .orderByAsc(IotPayChannelConfig::getConfigId));
     }
 
+    @Override
+    public IotPayChannelConfigVo queryChannelConfigById(Long configId) {
+        return channelConfigMapper.selectVoById(configId);
+    }
+
+    @Override
+    public PageResult<IotPayChannelConfigVo> queryChannelConfigPageList(IotPayChannelConfigBo bo, PageQuery pageQuery) {
+        LambdaQueryWrapper<IotPayChannelConfig> lqw = Wrappers.lambdaQuery();
+        lqw.like(StringUtils.isNotBlank(bo.getConfigKey()), IotPayChannelConfig::getConfigKey, bo.getConfigKey());
+        lqw.like(StringUtils.isNotBlank(bo.getConfigName()), IotPayChannelConfig::getConfigName, bo.getConfigName());
+        lqw.eq(StringUtils.isNotBlank(bo.getChannel()), IotPayChannelConfig::getChannel, bo.getChannel());
+        lqw.eq(StringUtils.isNotBlank(bo.getStatus()), IotPayChannelConfig::getStatus, bo.getStatus());
+        lqw.orderByAsc(IotPayChannelConfig::getConfigId);
+        Page<IotPayChannelConfigVo> page = channelConfigMapper.selectVoPage(pageQuery.build(), lqw);
+        return PageResult.build(page.getRecords(), page.getTotal());
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Boolean createChannelConfig(IotPayChannelConfigBo bo) {
+        requireChannel(bo.getChannel());
+        checkConfigKeyUnique(bo.getConfigKey(), null);
+        IotPayChannelConfig add = MapstructUtils.convert(bo, IotPayChannelConfig.class);
+        boolean flag = channelConfigMapper.insert(add) > 0;
+        evictChannelConfigCache(add.getChannel());
+        return flag;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Boolean updateChannelConfig(IotPayChannelConfigBo bo) {
+        IotPayChannelConfig exist = channelConfigMapper.selectById(bo.getConfigId());
+        if (exist == null) {
+            throw new ServiceException("渠道配置不存在：" + bo.getConfigId());
+        }
+        requireChannel(bo.getChannel());
+        checkConfigKeyUnique(bo.getConfigKey(), bo.getConfigId());
+        IotPayChannelConfig update = MapstructUtils.convert(bo, IotPayChannelConfig.class);
+        boolean flag = channelConfigMapper.updateById(update) > 0;
+        // 渠道编码可能变更，新旧缓存一并失效
+        evictChannelConfigCache(exist.getChannel());
+        evictChannelConfigCache(update.getChannel());
+        return flag;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Boolean deleteChannelConfig(Collection<Long> configIds) {
+        if (CollUtil.isEmpty(configIds)) {
+            return false;
+        }
+        List<IotPayChannelConfig> configs = channelConfigMapper.selectByIds(configIds);
+        boolean flag = channelConfigMapper.deleteByIds(configIds) > 0;
+        configs.forEach(config -> evictChannelConfigCache(config.getChannel()));
+        return flag;
+    }
+
     /**
      * 校验渠道标识合法性
      */
     private void requireChannel(String channel) {
         if (PayChannelEnum.fromCode(channel) == null) {
             throw new ServiceException("不支持的支付渠道：" + channel);
+        }
+    }
+
+    /**
+     * 校验配置键唯一
+     */
+    private void checkConfigKeyUnique(String configKey, Long configId) {
+        boolean exists = channelConfigMapper.exists(Wrappers.<IotPayChannelConfig>lambdaQuery()
+            .eq(IotPayChannelConfig::getConfigKey, configKey)
+            .ne(configId != null, IotPayChannelConfig::getConfigId, configId));
+        if (exists) {
+            throw new ServiceException("配置键已存在：" + configKey);
+        }
+    }
+
+    /**
+     * 清除渠道配置缓存
+     */
+    private void evictChannelConfigCache(String channelCode) {
+        if (StringUtils.isNotBlank(channelCode)) {
+            RedisUtils.deleteObject(IotConstants.PAY_CHANNEL_CONFIG_CACHE_PREFIX + channelCode);
         }
     }
 

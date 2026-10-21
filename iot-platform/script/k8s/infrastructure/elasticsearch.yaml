@@ -1,0 +1,87 @@
+# ============================================================================
+# 中间件 · Elasticsearch 8.15（单节点，关闭安全特性，用于设备时序检索）
+# 说明：ES 要求宿主机 vm.max_map_count >= 262144，Docker Desktop 虚拟机已内置该值。
+# ============================================================================
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: iot-es-data
+  namespace: iot-platform
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: iot-elasticsearch
+  namespace: iot-platform
+  labels:
+    app: iot-elasticsearch
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: iot-elasticsearch
+  template:
+    metadata:
+      labels:
+        app: iot-elasticsearch
+    spec:
+      containers:
+        - name: elasticsearch
+          image: docker.elastic.co/elasticsearch/elasticsearch:8.15.3
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 9200
+          env:
+            - name: discovery.type
+              value: single-node
+            - name: xpack.security.enabled
+              value: "false"
+            - name: xpack.security.enrollment.enabled
+              value: "false"
+            - name: bootstrap.memory_lock
+              value: "false"
+            - name: ES_JAVA_OPTS
+              value: "-Xms512m -Xmx512m"
+            - name: TZ
+              value: Asia/Shanghai
+          resources:
+            requests:
+              cpu: 200m
+              memory: 1Gi
+            limits:
+              memory: 2Gi
+          volumeMounts:
+            - name: data
+              mountPath: /usr/share/elasticsearch/data
+          readinessProbe:
+            httpGet:
+              path: /_cluster/health
+              port: 9200
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            failureThreshold: 30
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: iot-es-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: iot-elasticsearch
+  namespace: iot-platform
+spec:
+  selector:
+    app: iot-elasticsearch
+  ports:
+    - name: http
+      port: 9200
+      targetPort: 9200

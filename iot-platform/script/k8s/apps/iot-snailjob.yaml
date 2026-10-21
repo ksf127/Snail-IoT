@@ -1,0 +1,74 @@
+# ============================================================================
+# 应用 · iot-snailjob（SnailJob 任务调度中心，入口 /snail-job）
+# JAVA_OPTS 中通过 $(VAR) 引用已声明的环境变量（Kubernetes 原生变量展开）
+# ============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: iot-snailjob
+  namespace: iot-platform
+  labels:
+    app: iot-snailjob
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: iot-snailjob
+  template:
+    metadata:
+      labels:
+        app: iot-snailjob
+    spec:
+      containers:
+        - name: iot-snailjob
+          image: iot-platform/snailjob-server:2.0.2
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8800
+            - name: client
+              containerPort: 17888
+          env:
+            - name: POSTGRES_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: iot-secret
+                  key: POSTGRES_USERNAME
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: iot-secret
+                  key: POSTGRES_PASSWORD
+            # 不可含 & 等 shell 元字符（Dockerfile 为 shell 形式 ENTRYPOINT）
+            - name: JAVA_OPTS
+              value: >-
+                -Dspring.profiles.active=prod
+                -Dspring.datasource.driver-class-name=org.postgresql.Driver
+                -Dspring.datasource.url=jdbc:postgresql://iot-postgres:5432/ruoyi
+                -Dspring.datasource.username=$(POSTGRES_USERNAME)
+                -Dspring.datasource.password=$(POSTGRES_PASSWORD)
+                -Dspring.boot.admin.client.url=http://iot-sba:9090/admin
+            - name: TZ
+              value: Asia/Shanghai
+          readinessProbe:
+            tcpSocket:
+              port: 8800
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: iot-snailjob
+  namespace: iot-platform
+spec:
+  selector:
+    app: iot-snailjob
+  ports:
+    - name: http
+      port: 8800
+      targetPort: 8800
+    - name: client
+      port: 17888
+      targetPort: 17888

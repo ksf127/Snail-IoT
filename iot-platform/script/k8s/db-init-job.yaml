@@ -1,0 +1,137 @@
+# ============================================================================
+# 数据库初始化 Job
+# 挂载由 db-init.sh 生成的 4 个 ConfigMap（vector / base / framework / iot），
+# 按固定顺序执行 SQL。
+# 增量策略：
+#   - 基础/框架脚本（vector/base/framework）：仅首次（系统表 sys_user 不存在）执行
+#   - 业务脚本（iot/*.sql）：按 iot_schema_history 台账增量执行，每个脚本只跑一次，
+#     新增脚本自动生效（避免 DROP TABLE 重复执行清空业务数据）
+# 依赖：ConfigMap iot-sql-{vector,base,framework,iot} 已创建。
+# ============================================================================
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: iot-db-init
+  namespace: iot-platform
+spec:
+  backoffLimit: 6
+  template:
+    metadata:
+      labels:
+        app: iot-db-init
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: db-init
+          image: pgvector/pgvector:pg16
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: POSTGRES_HOST
+              value: iot-postgres
+            - name: POSTGRES_PORT
+              value: "5432"
+            - name: POSTGRES_DB
+              value: ruoyi
+            - name: POSTGRES_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: iot-secret
+                  key: POSTGRES_USERNAME
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: iot-secret
+                  key: POSTGRES_PASSWORD
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              set -euo pipefail
+              export PGPASSWORD="$POSTGRES_PASSWORD"
+              PSQL="psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $POSTGRES_USERNAME -d $POSTGRES_DB -v ON_ERROR_STOP=1 -q"
+
+              echo "等待 PostgreSQL 就绪..."
+              until pg_isready -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_USERNAME" >/dev/null 2>&1; do
+                sleep 3
+              done
+
+              # 脚本台账：记录已执行的文件名。iot_*.sql 内含 DROP TABLE / DELETE+INSERT，
+              # 重复执行会清空业务数据，因此用台账保证「每个脚本只跑一次」，
+              # 同时新增脚本能自动增量生效，无需清库。
+              $PSQL -c "CREATE TABLE IF NOT EXISTS iot_schema_history (file_name TEXT PRIMARY KEY, applied_at TIMESTAMP DEFAULT now())"
+
+              # ---- 基础 / 框架脚本：仅首次（系统表不存在）执行 ----
+              initialized=$($PSQL -tAc "SELECT to_regclass('public.sys_user') IS NOT NULL")
+              if [ "$initialized" = "t" ]; then
+                echo "检测到 sys_user 已存在，跳过基础/框架脚本。"
+              else
+                BASE_FILES="
+                /sql/vector/init-vector.sql
+                /sql/base/postgres_iot_vue.sql
+                /sql/framework/postgres_iot_job.sql
+                /sql/framework/postgres_iot_workflow.sql
+                /sql/framework/postgres_iot_ai.sql
+                /sql/framework/snail_ai_schema_pgsql.sql
+                "
+                for f in $BASE_FILES; do
+                  if [ -f "$f" ]; then
+                    echo "==> 执行 $f"
+                    $PSQL -f "$f"
+                  else
+                    echo "!! 缺失 $f（跳过）"
+                  fi
+                done
+              fi
+
+              # ---- 业务脚本：按台账增量应用（已应用的跳过，未应用的执行后登记） ----
+              IOT_FILES="
+              /sql/iot/iot_platform.sql
+              /sql/iot/iot_permission.sql
+              /sql/iot/iot_sso.sql
+              /sql/iot/iot_pay.sql
+              /sql/iot/iot_ticket.sql
+              /sql/iot/iot_archive.sql
+              /sql/iot/iot_deploy.sql
+              /sql/iot/iot_cloud.sql
+              /sql/iot/iot_job.sql
+              "
+              for f in $IOT_FILES; do
+                name="$(basename "$f")"
+                if [ "$($PSQL -tAc "SELECT 1 FROM iot_schema_history WHERE file_name = '$name'")" = "1" ]; then
+                  echo "==> 已应用，跳过 $name"
+                  continue
+                fi
+                if [ -f "$f" ]; then
+                  echo "==> 执行 $f"
+                  $PSQL -f "$f"
+                  $PSQL -c "INSERT INTO iot_schema_history (file_name) VALUES ('$name') ON CONFLICT DO NOTHING"
+                else
+                  echo "!! 缺失 $f（跳过）"
+                fi
+              done
+              echo "数据库初始化完成。"
+          volumeMounts:
+            - name: vector
+              mountPath: /sql/vector
+              readOnly: true
+            - name: base
+              mountPath: /sql/base
+              readOnly: true
+            - name: framework
+              mountPath: /sql/framework
+              readOnly: true
+            - name: iot
+              mountPath: /sql/iot
+              readOnly: true
+      volumes:
+        - name: vector
+          configMap:
+            name: iot-sql-vector
+        - name: base
+          configMap:
+            name: iot-sql-base
+        - name: framework
+          configMap:
+            name: iot-sql-framework
+        - name: iot
+          configMap:
+            name: iot-sql-iot
