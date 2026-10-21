@@ -43,7 +43,14 @@ K8S_WORKLOAD="${K8S_WORKLOAD:-}"
 K8S_CONTAINER="${K8S_CONTAINER:-}"
 ARTIFACT_DIR="${WORKSPACE:-/tmp}/artifacts"
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+MAVEN_SETTINGS="${MAVEN_SETTINGS:-$SCRIPT_DIR/maven/settings.xml}"
+
+# 本地仓库复用挂载的 ~/.m2，central 走 settings.xml 中的阿里云镜像
 export MAVEN_OPTS="${MAVEN_OPTS:--Dmaven.repo.local=/var/jenkins_home/.m2/repository}"
+if [ -f "$MAVEN_SETTINGS" ] && [ -z "${MAVEN_ARGS:-}" ]; then
+  export MAVEN_ARGS="-s $MAVEN_SETTINGS"
+fi
 export DOCKER_BUILDKIT="${DOCKER_BUILDKIT:-0}"
 
 # 各阶段在独立的 shell 中执行，源码路径通过临时文件传递
@@ -98,6 +105,7 @@ stage_build() {
     return 0
   fi
   log "[build] 在 $workdir 执行构建命令"
+  log "[build] Maven 参数：${MAVEN_ARGS:-未注入}"
   cd "$workdir"
   bash -c "$BUILD_COMMAND"
 }

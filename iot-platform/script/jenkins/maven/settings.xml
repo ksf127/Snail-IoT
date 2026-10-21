@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Snail-IoT · Jenkins 构建用 Maven 配置
+
+  - 本地仓库复用 docker-compose 挂载的 /var/jenkins_home/.m2/repository（宿主 ~/.m2），
+    已有依赖不会重复下载；
+  - central 走阿里云镜像加速，国内构建明显更快；
+  - 只镜像 central，pom 中声明的其它仓库（如私服）保持原样。
+
+  由 build-app.sh 通过 MAVEN_ARGS=-s <本文件> 自动注入，构建命令无需手动指定。
+-->
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 https://maven.apache.org/xsd/settings-1.0.0.xsd">
+
+  <localRepository>/var/jenkins_home/.m2/repository</localRepository>
+
+  <mirrors>
+    <mirror>
+      <id>aliyun-public</id>
+      <name>Aliyun Public</name>
+      <url>https://maven.aliyun.com/repository/public</url>
+      <mirrorOf>central</mirrorOf>
+    </mirror>
+  </mirrors>
+
+</settings>
